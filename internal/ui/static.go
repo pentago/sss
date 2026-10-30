@@ -4,7 +4,8 @@
 package ui
 
 import (
-	_ "embed"
+	"cmp"
+	"embed"
 	"net/http"
 	"strings"
 	"time"
@@ -14,10 +15,23 @@ import (
 	"sss/internal/mediaproxy"
 )
 
-//go:embed icon.svg
-var appIcon []byte
+//go:embed icons
+var appIcons embed.FS
 
-var appIconChecksum = checksum(appIcon)
+// appIconChecksums maps each icon file name to its content hash, used in /icon/ URLs.
+var appIconChecksums = func() map[string]string {
+	entries, _ := appIcons.ReadDir("icons")
+	sums := make(map[string]string, len(entries))
+	for _, e := range entries {
+		data, _ := appIcons.ReadFile("icons/" + e.Name())
+		sums[e.Name()] = checksum(data)
+	}
+	return sums
+}()
+
+func appIconURL(name string) string {
+	return route("/icon/%s/%s", appIconChecksums[name], name)
+}
 
 const assetCacheDuration = 365 * 24 * time.Hour
 
@@ -78,9 +92,16 @@ func serveUserContent(w http.ResponseWriter, r *http.Request, body, contentType 
 	response.NewBuilder(w, r).WithHeader("Content-Type", contentType).WithBodyAsString(body).Write()
 }
 
+// showFavicon serves /favicon.ico and the /icon/{checksum}/{filename} app icons.
 func (h *handler) showFavicon(w http.ResponseWriter, r *http.Request) {
-	response.NewBuilder(w, r).WithCaching(appIconChecksum, 7*24*time.Hour, func(b *response.Builder) {
-		b.WithHeader("Content-Type", "image/svg+xml").WithBodyAsBytes(appIcon).Write()
+	name := cmp.Or(r.PathValue("filename"), "favicon.ico")
+	data, err := appIcons.ReadFile("icons/" + name)
+	if err != nil {
+		response.HTMLNotFound(w, r)
+		return
+	}
+	response.NewBuilder(w, r).WithCaching(appIconChecksums[name], 7*24*time.Hour, func(b *response.Builder) {
+		b.WithHeader("Content-Type", http.DetectContentType(data)).WithBodyAsBytes(data).Write()
 	})
 }
 
@@ -106,7 +127,10 @@ func (h *handler) showWebManifest(w http.ResponseWriter, r *http.Request) {
 		"display":     displayMode,
 		"start_url":   route("/"),
 		"scope":       route("/"),
-		"icons":       []icon{{Source: route("/icon/%s/icon.svg", appIconChecksum), Sizes: "any", Type: "image/svg+xml", Purpose: "any"}},
+		"icons": []icon{
+			{Source: appIconURL("android-chrome-192x192.png"), Sizes: "192x192", Type: "image/png", Purpose: "any"},
+			{Source: appIconURL("android-chrome-512x512.png"), Sizes: "512x512", Type: "image/png", Purpose: "any"},
+		},
 		"share_target": map[string]any{
 			"action":  route("/bookmarklet"),
 			"method":  http.MethodGet,

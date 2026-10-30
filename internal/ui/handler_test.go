@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -179,6 +180,34 @@ func TestPages(t *testing.T) {
 		if w.Code != http.StatusOK {
 			t.Errorf("GET %s: %d %s", path, w.Code, w.Body.String())
 		}
+	}
+}
+
+// TestAppIcons checks that browsers get a real favicon and that every manifest icon resolves
+// with the type it advertises, without a session (install prompts fetch them anonymously).
+func TestAppIcons(t *testing.T) {
+	h, _ := newAccountTestServer(t)
+	get := func(path string) *httptest.ResponseRecorder {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest(http.MethodGet, path, nil))
+		return w
+	}
+	if w := get("/favicon.ico"); w.Code != http.StatusOK || w.Header().Get("Content-Type") != "image/x-icon" {
+		t.Fatalf("favicon: %d %q", w.Code, w.Header().Get("Content-Type"))
+	}
+	var manifest struct {
+		Icons []struct{ Src, Type string }
+	}
+	if err := json.Unmarshal(get("/manifest.json").Body.Bytes(), &manifest); err != nil || len(manifest.Icons) == 0 {
+		t.Fatalf("manifest icons: %v %v", manifest.Icons, err)
+	}
+	for _, icon := range manifest.Icons {
+		if w := get(icon.Src); w.Code != http.StatusOK || w.Header().Get("Content-Type") != icon.Type {
+			t.Errorf("%s: %d %q, want %q", icon.Src, w.Code, w.Header().Get("Content-Type"), icon.Type)
+		}
+	}
+	if w := get("/icon/x/missing.png"); w.Code != http.StatusNotFound {
+		t.Errorf("missing icon: %d", w.Code)
 	}
 }
 
