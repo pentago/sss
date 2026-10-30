@@ -7,8 +7,8 @@
 </fieldset><button>Search</button></form>
 {{end}}
 <nav aria-label="Page actions"><ul>
-{{if .entries}}{{if not (eq .page "history" "shares" "starred")}}<li><form method="post" action="{{route "/entry/status"}}">{{range .entries}}{{if eq .Status "unread"}}<input type="hidden" name="id" value="{{.ID}}">{{end}}{{end}}<input type="hidden" name="status" value="read"><button>Mark this page as read</button></form></li>{{end}}{{end}}
-{{if eq .page "unread"}}{{if .entries}}<li><details><summary>Mark all as read</summary><form method="post" action="{{route "/mark-all-as-read"}}"><button>Confirm marking all as read</button></form></details></li>{{end}}
+{{template "mark_page" .}}
+{{if eq .page "unread"}}{{template "mark_all" .}}
 {{else if eq .page "history"}}<li><a href="{{route "/shares"}}">Shared entries</a></li>
 {{if .entries}}<li><details><summary>Flush history</summary><form method="post" action="{{route "/history/flush"}}"><button>Confirm flushing history</button></form></details></li>{{end}}
 {{else if eq .page "feed"}}{{with .feed}}
@@ -16,7 +16,7 @@
 <li><a href="{{route "/feed/%d/edit" .ID}}">Edit</a></li>
 <li><a href="{{untrustedURL .SiteURL}}" rel="noopener noreferrer" referrerpolicy="no-referrer" {{newTab $.user}}>Website</a></li>
 <li><form method="post" action="{{route "/feed/%d/refresh" .ID}}"><button>Refresh</button></form></li>
-{{if $.entries}}<li><details><summary>Mark all as read</summary><form method="post" action="{{route "/feed/%d/mark-all-as-read" .ID}}"><button>Confirm marking all as read</button></form></details></li>{{end}}
+{{template "mark_all" $}}
 <li><details><summary>Remove</summary><form method="post" action="{{route "/feed/%d/remove" .ID}}"><button>Confirm removal</button></form></details></li>
 {{end}}{{else if eq .page "category"}}{{with .category}}
 {{if ne $.filter "unread"}}<li><a href="{{route "/category/%d/entries" .ID}}">Unread entries</a></li>{{end}}
@@ -25,9 +25,18 @@
 <li><a href="{{route "/category/%d/feeds" .ID}}">Feeds</a></li>
 <li><a href="{{route "/category/%d/edit" .ID}}">Edit</a></li>
 <li><form method="post" action="{{route "/category/%d/entries/refresh" .ID}}"><button>Refresh</button></form></li>
-{{if $.entries}}<li><details><summary>Mark all as read</summary><form method="post" action="{{route "/category/%d/mark-all-as-read" .ID}}"><button>Confirm marking all as read</button></form></details></li>{{end}}
+{{template "mark_all" $}}
 {{end}}{{end}}
 </ul></nav>
 {{if or .entries (ne .page "search") .searchQuery}}{{template "entries" .}}{{end}}
+{{if .entries}}<nav aria-label="Bottom page actions"><ul>
+<li><a href="#top">Back to top</a></li>
+{{template "mark_page" .}}
+{{if eq .page "unread" "feed" "category"}}{{template "mark_all" .}}{{end}}
+</ul></nav>{{end}}
 {{template "pagination" .}}
 {{end}}
+
+{{define "mark_page"}}{{if .entries}}{{if not (eq .page "history" "shares" "starred")}}<li><form method="post" action="{{route "/entry/status"}}">{{range .entries}}{{if eq .Status "unread"}}<input type="hidden" name="id" value="{{.ID}}">{{end}}{{end}}<input type="hidden" name="status" value="read"><button>Mark this page as read</button></form></li>{{end}}{{end}}{{end}}
+
+{{define "mark_all"}}{{if .entries}}<li><details><summary>Mark all as read</summary><form method="post" action="{{if eq .page "feed"}}{{route "/feed/%d/mark-all-as-read" .feed.ID}}{{else if eq .page "category"}}{{route "/category/%d/mark-all-as-read" .category.ID}}{{else}}{{route "/mark-all-as-read"}}{{end}}"><button>Confirm marking all as read</button></form></details></li>{{end}}{{end}}

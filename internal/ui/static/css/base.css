@@ -154,6 +154,7 @@ button[aria-pressed="true"]::before {
 }
 
 nav[aria-label="Page actions"],
+nav[aria-label="Bottom page actions"],
 nav[aria-label="Entry actions"] {
     margin: 0.5rem 0;
     font-size: 0.9rem;
