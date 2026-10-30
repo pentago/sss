@@ -81,6 +81,8 @@ Push a `v*` tag. The release workflow publishes binaries, the four Linux package
 
 `.github/workflows/ci.yml` runs formatting, vet, race tests and a Docker build on every PR and push to `main`. After those pass on `main` (a merged PR), it publishes multi-arch images tagged `main` and `sha-<commit>`.
 
+Release artifacts, release images and `main` images get signed build provenance attestations. Verify one with `gh attestation verify <file> --owner <owner>` or `gh attestation verify oci://ghcr.io/<owner>/sss:<tag> --owner <owner>`.
+
 ## Configuration
 
 Settings use [Miniflux's configuration names](https://miniflux.app/docs/configuration.html), including the `_FILE` variants for secrets. They can come from two places:
