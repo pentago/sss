@@ -10,7 +10,7 @@
 /* ---------- Fonts and sizes (themes may override) ---------- */
 
 :root {
-    --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+    --font-body: sans-serif;
     --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
     --font-size: 1rem;
     --content-font-size: 1.0625rem;
