@@ -15,6 +15,13 @@ RUN GOARM="${TARGETVARIANT#v}" CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH g
 RUN mkdir /out/config && printf 'LISTEN_ADDR=0.0.0.0:8080\nDATABASE_URL=/config/sss.db\nRUN_MIGRATIONS=1\n' > /out/config/sss.conf
 
 FROM scratch
+LABEL org.opencontainers.image.title=sss
+LABEL org.opencontainers.image.description="Minimalist self-hosted feed reader"
+LABEL org.opencontainers.image.vendor=pentago
+LABEL org.opencontainers.image.licenses=Apache-2.0
+LABEL org.opencontainers.image.url=https://github.com/pentago/sss
+LABEL org.opencontainers.image.source=https://github.com/pentago/sss
+LABEL org.opencontainers.image.documentation=https://github.com/pentago/sss#readme
 
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /out/sss /sss

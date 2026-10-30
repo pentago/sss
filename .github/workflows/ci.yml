@@ -29,7 +29,7 @@ jobs:
       - run: docker build -t sss:ci .
       - run: docker run --rm sss:ci -version
 
-  # Merged PRs (pushes to main) publish ghcr.io/<owner>/sss:main and :sha-<commit>.
+  # Merged PRs (pushes to main) publish ghcr.io/<owner>/sss:dev and :sha-<commit>.
   # Tagged releases publish versioned images via GoReleaser (release.yml).
   publish:
     if: github.event_name == 'push'
@@ -58,6 +58,13 @@ jobs:
           build-args: |
             COMMIT=${{ github.sha }}
             BUILD_DATE=${{ steps.meta.outputs.date }}
+          labels: |
+            org.opencontainers.image.version=2.3.x-dev
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ steps.meta.outputs.date }}
+          # ghcr reads a multi-arch package's description from the index annotation, not labels.
+          annotations: |
+            index:org.opencontainers.image.description=Minimalist self-hosted feed reader
           tags: |
             ${{ steps.meta.outputs.image }}:dev
             ${{ steps.meta.outputs.image }}:sha-${{ github.sha }}
