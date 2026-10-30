@@ -9,12 +9,12 @@ import (
 
 func TestParse(t *testing.T) {
 	data := `<?xml version="1.0" encoding="ISO-8859-1"?>
-<opml version="2.0" xmlns:miniflux="https://miniflux.app/opml">
+<opml version="2.0" xmlns:sss="https://github.com/pentago/sss/opml">
 <head><title>x</title></head>
 <body>
   <outline text="Top" xmlUrl="https://top/feed" />
   <outline text="Cat &amp; Dogs">
-    <outline title="A" text="ignored" xmlUrl="https://a/feed" htmlUrl="https://a/" miniflux:crawler="true" miniflux:userAgent="UA"/>
+    <outline title="A" text="ignored" xmlUrl="https://a/feed" htmlUrl="https://a/" sss:crawler="true" sss:userAgent="UA"/>
     <outline text="Nested"><outline xmlUrl="https://b/feed"/></outline>
   </outline>
   <outline text="Empty"/>
@@ -36,7 +36,7 @@ func TestParse(t *testing.T) {
 		t.Errorf("b: %+v", f)
 	}
 
-	if _, err := Parse(strings.NewReader(`<opml><body><outline xmlns:miniflux="https://miniflux.app/opml" xmlUrl="x" miniflux:crawler="maybe"/></body></opml>`)); err == nil {
+	if _, err := Parse(strings.NewReader(`<opml><body><outline xmlns:sss="https://github.com/pentago/sss/opml" xmlUrl="x" sss:crawler="maybe"/></body></opml>`)); err == nil {
 		t.Error("expected invalid bool error")
 	}
 }
@@ -50,7 +50,7 @@ func TestSerializeRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out, `miniflux:disableHTTP2="true"`) || !strings.Contains(out, `type="rss"`) {
+	if !strings.Contains(out, `sss:disableHTTP2="true"`) || !strings.Contains(out, `type="rss"`) {
 		t.Error(out)
 	}
 	feeds, err := Parse(strings.NewReader(out))

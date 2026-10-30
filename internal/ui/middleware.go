@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package ui
@@ -19,7 +18,7 @@ import (
 	"sss/internal/storage"
 )
 
-const sessionCookieName = "MinifluxSessionID"
+const sessionCookieName = "SssSessionID"
 
 type contextKey struct{}
 

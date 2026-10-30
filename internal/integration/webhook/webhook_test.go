@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package webhook
@@ -43,10 +42,10 @@ func TestSendNewEntriesWebhookEvent(t *testing.T) {
 
 	mac := hmac.New(sha256.New, []byte("secret"))
 	mac.Write(body)
-	if got, want := hdr.Get("X-Miniflux-Signature"), hex.EncodeToString(mac.Sum(nil)); got != want {
+	if got, want := hdr.Get("X-Sss-Signature"), hex.EncodeToString(mac.Sum(nil)); got != want {
 		t.Errorf("signature = %q, want %q", got, want)
 	}
-	if got := hdr.Get("X-Miniflux-Event-Type"); got != NewEntriesEventType {
+	if got := hdr.Get("X-Sss-Event-Type"); got != NewEntriesEventType {
 		t.Errorf("event type header = %q", got)
 	}
 	if got := hdr.Get("Content-Type"); got != "application/json" {

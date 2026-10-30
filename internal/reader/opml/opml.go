@@ -1,9 +1,8 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 // Package opml parses and serializes OPML subscription lists, including
-// Miniflux's per-feed settings namespace.
+// the sss per-feed settings namespace.
 package opml
 
 import (
@@ -21,14 +20,14 @@ import (
 	"sss/internal/model"
 )
 
-const minifluxNamespace = "https://miniflux.app/opml"
+const sssNamespace = "https://github.com/pentago/sss/opml"
 
 type document struct {
-	XMLName           xml.Name  `xml:"opml"`
-	Version           string    `xml:"version,attr"`
-	MinifluxNamespace string    `xml:"xmlns:miniflux,attr,omitempty"`
-	Header            header    `xml:"head"`
-	Outlines          []outline `xml:"body>outline"`
+	XMLName      xml.Name  `xml:"opml"`
+	Version      string    `xml:"version,attr"`
+	SSSNamespace string    `xml:"xmlns:sss,attr,omitempty"`
+	Header       header    `xml:"head"`
+	Outlines     []outline `xml:"body>outline"`
 }
 
 type header struct {
@@ -45,26 +44,26 @@ type outline struct {
 	Type        string    `xml:"type,attr,omitempty"`
 	Outlines    []outline `xml:"outline,omitempty"`
 
-	ScraperRules                string `xml:"miniflux:scraperRules,attr,omitempty"`
-	RewriteRules                string `xml:"miniflux:rewriteRules,attr,omitempty"`
-	UrlRewriteRules             string `xml:"miniflux:urlRewriteRules,attr,omitempty"`
-	BlocklistRules              string `xml:"miniflux:blocklistRules,attr,omitempty"`
-	KeeplistRules               string `xml:"miniflux:keeplistRules,attr,omitempty"`
-	BlockFilterEntryRules       string `xml:"miniflux:blockFilterEntryRules,attr,omitempty"`
-	KeepFilterEntryRules        string `xml:"miniflux:keepFilterEntryRules,attr,omitempty"`
-	UserAgent                   string `xml:"miniflux:userAgent,attr,omitempty"`
-	Crawler                     bool   `xml:"miniflux:crawler,attr,omitempty"`
-	IgnoreHTTPCache             bool   `xml:"miniflux:ignoreHTTPCache,attr,omitempty"`
-	FetchViaProxy               bool   `xml:"miniflux:fetchViaProxy,attr,omitempty"`
-	Disabled                    bool   `xml:"miniflux:disabled,attr,omitempty"`
-	NoMediaPlayer               bool   `xml:"miniflux:noMediaPlayer,attr,omitempty"`
-	HideGlobally                bool   `xml:"miniflux:hideGlobally,attr,omitempty"`
-	AllowSelfSignedCertificates bool   `xml:"miniflux:allowSelfSignedCertificates,attr,omitempty"`
-	DisableHTTP2                bool   `xml:"miniflux:disableHTTP2,attr,omitempty"`
-	IgnoreEntryUpdates          bool   `xml:"miniflux:ignoreEntryUpdates,attr,omitempty"`
+	ScraperRules                string `xml:"sss:scraperRules,attr,omitempty"`
+	RewriteRules                string `xml:"sss:rewriteRules,attr,omitempty"`
+	UrlRewriteRules             string `xml:"sss:urlRewriteRules,attr,omitempty"`
+	BlocklistRules              string `xml:"sss:blocklistRules,attr,omitempty"`
+	KeeplistRules               string `xml:"sss:keeplistRules,attr,omitempty"`
+	BlockFilterEntryRules       string `xml:"sss:blockFilterEntryRules,attr,omitempty"`
+	KeepFilterEntryRules        string `xml:"sss:keepFilterEntryRules,attr,omitempty"`
+	UserAgent                   string `xml:"sss:userAgent,attr,omitempty"`
+	Crawler                     bool   `xml:"sss:crawler,attr,omitempty"`
+	IgnoreHTTPCache             bool   `xml:"sss:ignoreHTTPCache,attr,omitempty"`
+	FetchViaProxy               bool   `xml:"sss:fetchViaProxy,attr,omitempty"`
+	Disabled                    bool   `xml:"sss:disabled,attr,omitempty"`
+	NoMediaPlayer               bool   `xml:"sss:noMediaPlayer,attr,omitempty"`
+	HideGlobally                bool   `xml:"sss:hideGlobally,attr,omitempty"`
+	AllowSelfSignedCertificates bool   `xml:"sss:allowSelfSignedCertificates,attr,omitempty"`
+	DisableHTTP2                bool   `xml:"sss:disableHTTP2,attr,omitempty"`
+	IgnoreEntryUpdates          bool   `xml:"sss:ignoreEntryUpdates,attr,omitempty"`
 }
 
-// UnmarshalXML decodes the standard attributes, then the namespaced Miniflux settings
+// UnmarshalXML decodes the standard attributes, then the namespaced sss settings
 // (encoding/xml does not map prefixed tag names on decode).
 func (o *outline) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	type plain outline
@@ -72,7 +71,7 @@ func (o *outline) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 		return err
 	}
 	for _, attr := range start.Attr {
-		if attr.Name.Space != minifluxNamespace {
+		if attr.Name.Space != sssNamespace {
 			continue
 		}
 		v := attr.Value
@@ -116,7 +115,7 @@ func (o *outline) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 		if target != nil {
 			b, err := strconv.ParseBool(v)
 			if err != nil {
-				return fmt.Errorf("opml: invalid miniflux attribute %q: %w", attr.Name.Local, err)
+				return fmt.Errorf("opml: invalid sss attribute %q: %w", attr.Name.Local, err)
 			}
 			*target = b
 		}
@@ -186,9 +185,9 @@ func cmpOr(values ...string) string {
 // Serialize returns an OPML 2.0 document with feeds grouped by category title (sorted).
 func Serialize(feeds []*model.Feed) (string, error) {
 	doc := document{
-		Version:           "2.0",
-		MinifluxNamespace: minifluxNamespace,
-		Header:            header{Title: "sss", DateCreated: time.Now().Format("Mon, 02 Jan 2006 15:04:05 MST")},
+		Version:      "2.0",
+		SSSNamespace: sssNamespace,
+		Header:       header{Title: "sss", DateCreated: time.Now().Format("Mon, 02 Jan 2006 15:04:05 MST")},
 	}
 
 	groups := make(map[string][]outline)

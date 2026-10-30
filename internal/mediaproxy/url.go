@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 // Package mediaproxy signs media URLs and rewrites HTML so remote media is served through /proxy.
@@ -32,7 +31,7 @@ func ProxifyRelativeURL(mediaURL string) string {
 	mac.Write(mediaURLBytes)
 	digest := mac.Sum(nil)
 
-	// Preserve the configured base path so proxied URLs still work when Miniflux is served from a subfolder.
+	// Preserve the configured base path so proxied URLs still work when sss is served from a subfolder.
 	return fmt.Sprintf("%s/proxy/%s/%s", config.Opts.BasePath, base64.URLEncoding.EncodeToString(digest), base64.URLEncoding.EncodeToString(mediaURLBytes))
 }
 

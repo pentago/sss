@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package rewrite
@@ -981,7 +980,6 @@ func TestRewriteRemoveTables(t *testing.T) {
 }
 
 func TestRewriteRemoveTablesKeepsSurroundingContentOrder(t *testing.T) {
-	// Regression test for https://github.com/miniflux/v2/issues/3110
 	// When a table is unwrapped, its content and the content surrounding it
 	// must keep their original document order. Previously the unwrapped
 	// content was appended to the end of the parent, so anything after the

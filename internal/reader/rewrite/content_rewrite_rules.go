@@ -1,13 +1,10 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package rewrite
 
 // List of predefined rewrite rules (alphabetically sorted)
 // domain => rule name
-//
-// See https://miniflux.app/docs/rules.html#rewrite-rules
 var predefinedRules = map[string]string{
 	"abstrusegoose.com":      "add_image_title",
 	"amazingsuperpowers.com": "add_image_title",

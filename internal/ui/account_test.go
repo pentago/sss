@@ -49,7 +49,7 @@ func postForm(h http.Handler, path string, form url.Values, cookies ...*http.Coo
 // sessionCookie returns the last session cookie set (login rotates the anonymous one).
 func sessionCookie(w *httptest.ResponseRecorder) (last *http.Cookie) {
 	for _, c := range w.Result().Cookies() {
-		if c.Name == "MinifluxSessionID" && c.Value != "" {
+		if c.Name == sessionCookieName && c.Value != "" {
 			last = c
 		}
 	}

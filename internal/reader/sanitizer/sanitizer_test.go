@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package sanitizer
@@ -19,25 +18,6 @@ func sanitizeHTMLWithDefaultOptions(baseURL, rawHTML string) string {
 	return SanitizeHTML(baseURL, rawHTML, &SanitizerOptions{
 		OpenLinksInNewTab: true,
 	})
-}
-
-func BenchmarkSanitize(b *testing.B) {
-	var testCases = map[string][]string{
-		"miniflux_github.html":    {"https://github.com/miniflux/v2", ""},
-		"miniflux_wikipedia.html": {"https://fr.wikipedia.org/wiki/Miniflux", ""},
-	}
-	for filename := range testCases {
-		data, err := os.ReadFile("testdata/" + filename)
-		if err != nil {
-			b.Fatalf(`Unable to read file %q: %v`, filename, err)
-		}
-		testCases[filename][1] = string(data)
-	}
-	for b.Loop() {
-		for _, v := range testCases {
-			sanitizeHTMLWithDefaultOptions(v[0], v[1])
-		}
-	}
 }
 
 func FuzzSanitizer(f *testing.F) {

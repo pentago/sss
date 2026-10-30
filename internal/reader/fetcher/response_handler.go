@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package fetcher
@@ -151,7 +150,7 @@ func (r *ResponseHandler) ReadBody(maxBodySize int64) ([]byte, error) {
 }
 
 // LocalizedError returns a plain-English error for client failures and error
-// status codes, or nil. The name mirrors upstream Miniflux.
+// status codes, or nil.
 func (r *ResponseHandler) LocalizedError() error {
 	if r.clientErr != nil {
 		switch {

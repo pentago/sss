@@ -1,12 +1,11 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package model
 
 import "strings"
 
-// Theme values stored in User.Theme use Miniflux's names: a color scheme
+// Theme values stored in User.Theme are a color scheme
 // followed by "_serif" or "_sans_serif", or "none" (custom CSS only).
 const (
 	ThemeDefault = "dark_serif"
