@@ -1,38 +1,16 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package readability
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/PuerkitoBio/goquery"
 )
-
-func BenchmarkExtractContent(b *testing.B) {
-	var testCases = map[string][]byte{
-		"miniflux_github.html":    {},
-		"miniflux_wikipedia.html": {},
-	}
-	for filename := range testCases {
-		data, err := os.ReadFile("testdata/" + filename)
-		if err != nil {
-			b.Fatalf(`Unable to read file %q: %v`, filename, err)
-		}
-		testCases[filename] = data
-	}
-	for range b.N {
-		for _, v := range testCases {
-			ExtractContent(bytes.NewReader(v))
-		}
-	}
-}
 
 func BenchmarkGetWeight(b *testing.B) {
 	testCases := []string{

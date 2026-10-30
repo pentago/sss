@@ -1,8 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
-// Package config parses sss settings from a Miniflux-style config file and environment variables.
+// Package config parses sss settings from a KEY=VALUE config file and environment variables.
 package config
 
 import (
@@ -112,7 +111,7 @@ type Options struct {
 }
 
 // Load parses the config file and the process environment into Opts. Environment
-// variables override file values, as in Miniflux. An empty path means
+// variables override file values. An empty path means
 // $XDG_CONFIG_HOME/sss/sss.conf, which is skipped when it does not exist.
 func Load(path string) error {
 	environ := os.Environ()

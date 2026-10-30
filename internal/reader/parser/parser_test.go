@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package parser
@@ -48,7 +47,6 @@ func BenchmarkParse(b *testing.B) {
 	var testCases = map[string][]string{
 		"large_atom.xml": {"https://dustri.org/b", ""},
 		"large_rss.xml":  {"https://dustri.org/b", ""},
-		"small_atom.xml": {"https://github.com/miniflux/v2/commits/main", ""},
 	}
 	for filename := range testCases {
 		data, err := os.ReadFile("./testdata/" + filename)

@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package filter
@@ -21,7 +20,7 @@ func createTestEntry() *model.Entry {
 		Content:     "This is the test entry content",
 		Author:      "Test Author",
 		Date:        time.Now(),
-		Tags:        []string{"golang", "testing", "miniflux"},
+		Tags:        []string{"golang", "testing", "rss"},
 	}
 }
 

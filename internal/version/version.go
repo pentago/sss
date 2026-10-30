@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package version
@@ -44,7 +43,7 @@ func getBuildDate() string {
 // Falls back to values from the Go module's build info when available.
 func init() {
 	if Version == "" {
-		// Some Miniflux clients expect a specific version format.
+		// Some API clients expect a specific version format.
 		// For example, Flux News converts the string version to an integer.
 		Version = "2.3.x-dev"
 	}

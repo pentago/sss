@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package telegrambot
@@ -41,12 +40,12 @@ func PushEntry(feed *model.Feed, entry *model.Entry, botToken, chatID string, to
 		baseURL := config.Opts.BaseURL
 		entryPath := "/unread/entry/" + strconv.FormatInt(entry.ID, 10)
 
-		minifluxEntryURL, err := urllib.JoinBaseURLAndPath(baseURL, entryPath)
+		sssEntryURL, err := urllib.JoinBaseURLAndPath(baseURL, entryPath)
 		if err != nil {
 			slog.Error("Unable to create entry URL", slog.Any("error", err))
 		} else {
-			minifluxEntryURLButton := InlineKeyboardButton{Text: "Go to sss", URL: minifluxEntryURL}
-			markupRow = append(markupRow, &minifluxEntryURLButton)
+			sssEntryURLButton := InlineKeyboardButton{Text: "Go to sss", URL: sssEntryURL}
+			markupRow = append(markupRow, &sssEntryURLButton)
 		}
 
 		articleURLButton := InlineKeyboardButton{Text: "Go to article", URL: entry.URL}

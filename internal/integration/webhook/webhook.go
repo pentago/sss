@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package webhook
@@ -129,8 +128,8 @@ func (c *Client) makeRequest(eventType string, payload any) error {
 	response, err := client.NewRequestBuilder(c.webhookURL).
 		WithMethod(http.MethodPost).
 		WithJSONBody(requestBody).
-		WithHeader("X-Miniflux-Signature", crypto.GenerateSHA256Hmac(c.webhookSecret, requestBody)).
-		WithHeader("X-Miniflux-Event-Type", eventType).
+		WithHeader("X-Sss-Signature", crypto.GenerateSHA256Hmac(c.webhookSecret, requestBody)).
+		WithHeader("X-Sss-Event-Type", eventType).
 		Do()
 	if err != nil {
 		return fmt.Errorf("webhook: %w", err)

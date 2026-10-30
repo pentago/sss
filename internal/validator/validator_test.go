@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package validator
@@ -46,8 +45,8 @@ func TestValidateDirection(t *testing.T) {
 
 func TestIsValidRegex(t *testing.T) {
 	scenarios := map[string]bool{
-		"(?i)miniflux": true,
-		"[":            false,
+		"(?i)sss": true,
+		"[":       false,
 	}
 
 	for expr, expected := range scenarios {

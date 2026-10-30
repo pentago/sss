@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package version
@@ -11,7 +10,7 @@ import (
 	"unicode"
 )
 
-// Some Miniflux clients expect a specific version format with at least a digit.
+// Some API clients expect a specific version format with at least a digit.
 func TestVersionConvertedToInteger(t *testing.T) {
 	var b strings.Builder
 	for _, r := range Version {

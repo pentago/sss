@@ -1,14 +1,9 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
 package sanitizer
 
-import (
-	"os"
-	"strconv"
-	"testing"
-)
+import "testing"
 
 func TestTruncateHTML(t *testing.T) {
 	tests := []struct {
@@ -152,48 +147,6 @@ func TestTruncateHTML(t *testing.T) {
 				t.Errorf("TruncateHTML(%q, %d) = %q, want %q",
 					tt.input, tt.maxLen, result, tt.expected)
 			}
-		})
-	}
-}
-
-func BenchmarkTruncateHTML(b *testing.B) {
-	benches := []struct {
-		filename string
-		limit    int
-	}{
-		{
-			filename: "miniflux_github.html",
-			limit:    100,
-		},
-		{
-			filename: "miniflux_github.html",
-			limit:    10_000,
-		},
-		{
-			filename: "miniflux_wikipedia.html",
-			limit:    100,
-		},
-		{
-			filename: "miniflux_wikipedia.html",
-			limit:    100_000,
-		},
-	}
-
-	for _, f := range benches {
-		data, err := os.ReadFile("testdata/" + f.filename)
-		if err != nil {
-			b.Fatalf(`Unable to read file %q: %v`, f.filename, err)
-		}
-
-		b.Run(f.filename+"_"+strconv.Itoa(f.limit), func(b *testing.B) {
-			var junk string
-
-			str := string(data)
-			for b.Loop() {
-				junk = TruncateHTML(str, 100)
-			}
-
-			_ = junk
 		})
 	}
 }

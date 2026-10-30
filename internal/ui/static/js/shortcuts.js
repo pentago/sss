@@ -1,5 +1,4 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 //
 // Keyboard shortcuts (opt-in). Press "?" for the list. Acts only through the
@@ -100,7 +99,7 @@
             return;
         }
         open(link, true);
-        // Like Miniflux: on lists other than Starred, mark as read and move on.
+        // On lists other than Starred, mark as read and move on.
         if ($('nav[aria-label="Main"] [aria-current="page"]')?.getAttribute("href").endsWith("/starred")) return;
         select(1);
         if (article.dataset.status === "unread") toggleRead(article);

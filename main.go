@@ -1,8 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
-// Derived from Miniflux (https://github.com/miniflux/v2).
 // SPDX-License-Identifier: Apache-2.0
 
-// Command sss is a minimalist RSS reader compatible with Miniflux clients.
+// Command sss is a minimalist, self-hosted feed reader.
 package main
 
 import (

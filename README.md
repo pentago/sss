@@ -1,13 +1,13 @@
 # sss
 
-A minimalist, self-hosted feed reader written in Go. It works like [Miniflux](https://miniflux.app), with these differences:
+A minimalist, self-hosted feed reader written in Go:
 
 - **SQLite** storage. It uses the pure Go driver (no CGO), so the binary stays static.
 - **Classless semantic HTML.** Pages use only plain elements, with no `class`, `id` or `style` attributes, so a theme needs very little CSS.
 - **No JavaScript by default.** Every action is a plain HTML form. Keyboard shortcuts, swipe gestures, mark-as-read-on-scroll, the offline service worker and passkeys are opt-in.
 - **XDG paths when run as a user:** the config file lives at `~/.config/sss/sss.conf` and the database at `~/.local/share/sss/sss.db`.
-- **Fewer integrations:** Apprise, Discord, Gotify, Instapaper, Linkwarden, Matrix, Notion, Ntfy, Pushover, RSS-Bridge, Slack, Telegram and Webhook.
-- **API compatibility:** the Miniflux REST API (`/v1/`), the Fever API (`/fever/`) and the Google Reader API (`/reader/api/0/`), so existing Miniflux clients keep working.
+- **Integrations:** Apprise, Discord, Gotify, Instapaper, Linkwarden, Matrix, Notion, Ntfy, Pushover, RSS-Bridge, Slack, Telegram and Webhook.
+- **API compatibility:** the Miniflux REST API (`/v1/`), the Fever API (`/fever/`) and the Google Reader API (`/reader/api/0/`), so existing Miniflux clients keep working. Webhooks send `X-Sss-Signature` and `X-Sss-Event-Type` headers. OPML per-feed settings use the `sss:` namespace (`https://github.com/pentago/sss/opml`), so a Miniflux OPML export imports its feeds and categories but not their per-feed settings.
 - **English only.**
 
 ## Install
@@ -47,7 +47,7 @@ Edit `/etc/sss.conf`. It is root-only and systemd reads it as an `EnvironmentFil
 sudo systemctl enable --now sss
 ```
 
-The unit (`packaging/systemd/sss.service`) is based on Miniflux's: it uses `Type=notify` with a watchdog and `DynamicUser`. It is sandboxed following the [Arch wiki](https://wiki.archlinux.org/title/Systemd/Sandboxing): read-only system, no home directories, a system-call allowlist, and only IPv4/IPv6/Unix sockets. Its only capability is binding ports below 1024. Because of `ProtectHome`, `CERT_FILE` and `KEY_FILE` must not be under `/home`. It sets only `XDG_DATA_HOME=/var/lib`, so the database lives in `/var/lib/sss/sss.db`.
+The unit (`packaging/systemd/sss.service`) uses `Type=notify` with a watchdog and `DynamicUser`. It is sandboxed following the [Arch wiki](https://wiki.archlinux.org/title/Systemd/Sandboxing): read-only system, no home directories, a system-call allowlist, and only IPv4/IPv6/Unix sockets. Its only capability is binding ports below 1024. Because of `ProtectHome`, `CERT_FILE` and `KEY_FILE` must not be under `/home`. It sets only `XDG_DATA_HOME=/var/lib`, so the database lives in `/var/lib/sss/sss.db`.
 
 ### From source
 
