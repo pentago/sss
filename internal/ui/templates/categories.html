@@ -12,7 +12,7 @@
 <footer><ul>
 <li><a href="{{route "/category/%d/feeds" .ID}}">Feeds</a></li>
 <li><a href="{{route "/category/%d/edit" .ID}}">Edit</a></li>
-{{if deref .TotalUnread}}<li><form method="post" action="{{route "/category/%d/mark-all-as-read" .ID}}"><button>Mark all as read</button></form></li>{{end}}
+{{if deref .TotalUnread}}<li><form method="post" action="{{route "/category/%d/mark-all-as-read" .ID}}"><button>Read all</button></form></li>{{end}}
 {{if not (deref .FeedCount)}}<li><details><summary>Remove</summary><form method="post" action="{{route "/category/%d/remove" .ID}}"><button>Confirm removal</button></form></details></li>{{end}}
 </ul></footer>
 </article>

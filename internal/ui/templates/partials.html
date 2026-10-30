@@ -39,7 +39,7 @@ Checked <time datetime="{{isodate .CheckedAt}}" title="{{date $.user.Timezone .C
 <footer><ul>
 <li><a href="{{route "/feed/%d/edit" .ID}}">Edit</a></li>
 <li><form method="post" action="{{route "/feed/%d/refresh" .ID}}"><button>Refresh</button></form></li>
-{{if .UnreadCount}}<li><form method="post" action="{{if $.category}}{{route "/category/%d/feed/%d/mark-all-as-read" $.category.ID .ID}}{{else}}{{route "/feed/%d/mark-all-as-read" .ID}}{{end}}"><button>Mark all as read</button></form></li>{{end}}
+{{if .UnreadCount}}<li><form method="post" action="{{if $.category}}{{route "/category/%d/feed/%d/mark-all-as-read" $.category.ID .ID}}{{else}}{{route "/feed/%d/mark-all-as-read" .ID}}{{end}}"><button>Read all</button></form></li>{{end}}
 <li><details><summary>Remove</summary><form method="post" action="{{if $.category}}{{route "/category/%d/feed/%d/remove" $.category.ID .ID}}{{else}}{{route "/feed/%d/remove" .ID}}{{end}}"><button>Confirm removal</button></form></details></li>
 </ul></footer>
 </article>

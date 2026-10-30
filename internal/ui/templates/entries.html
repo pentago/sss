@@ -1,14 +1,14 @@
 {{define "content"}}
 <h1>{{if eq .page "tag"}}Tag: {{end}}{{.title}} <data value="{{.total}}">({{.total}})</data></h1>
 {{if eq .page "search"}}
-<form action="{{route "/search"}}"><fieldset><legend>Search</legend>
-<label>Query <input type="search" name="q" value="{{.searchQuery}}" required></label>
+<form role="search" action="{{route "/search"}}"><fieldset><legend>Search</legend>
+<label>Query <input type="search" name="q" value="{{.searchQuery}}" required{{if not .searchQuery}} autofocus{{end}}></label>
 <label><input type="checkbox" name="unread" value="1"{{if .unreadOnly}} checked{{end}}> Unread only</label>
 </fieldset><button>Search</button></form>
 {{end}}
 <nav aria-label="Page actions"><ul>
-{{template "mark_page" (dict "p" . "label" "Mark this page as read")}}
-{{if eq .page "unread"}}{{template "mark_all" (dict "p" . "label" "Mark all as read")}}
+{{template "mark_page" (dict "p" . "label" "Read page")}}
+{{if eq .page "unread"}}{{template "mark_all" (dict "p" . "label" "Read all")}}
 {{else if eq .page "history"}}<li><a href="{{route "/shares"}}">Shared entries</a></li>
 {{if .entries}}<li><details><summary>Flush history</summary><form method="post" action="{{route "/history/flush"}}"><button>Confirm flushing history</button></form></details></li>{{end}}
 {{else if eq .page "feed"}}{{with .feed}}
@@ -16,7 +16,7 @@
 <li><a href="{{route "/feed/%d/edit" .ID}}">Edit</a></li>
 <li><a href="{{untrustedURL .SiteURL}}" rel="noopener noreferrer" referrerpolicy="no-referrer" {{newTab $.user}}>Website</a></li>
 <li><form method="post" action="{{route "/feed/%d/refresh" .ID}}"><button>Refresh</button></form></li>
-{{template "mark_all" (dict "p" $ "label" "Mark all as read")}}
+{{template "mark_all" (dict "p" $ "label" "Read all")}}
 <li><details><summary>Remove</summary><form method="post" action="{{route "/feed/%d/remove" .ID}}"><button>Confirm removal</button></form></details></li>
 {{end}}{{else if eq .page "category"}}{{with .category}}
 {{if ne $.filter "unread"}}<li><a href="{{route "/category/%d/entries" .ID}}">Unread entries</a></li>{{end}}
@@ -25,7 +25,7 @@
 <li><a href="{{route "/category/%d/feeds" .ID}}">Feeds</a></li>
 <li><a href="{{route "/category/%d/edit" .ID}}">Edit</a></li>
 <li><form method="post" action="{{route "/category/%d/entries/refresh" .ID}}"><button>Refresh</button></form></li>
-{{template "mark_all" (dict "p" $ "label" "Mark all as read")}}
+{{template "mark_all" (dict "p" $ "label" "Read all")}}
 {{end}}{{end}}
 </ul></nav>
 {{if or .entries (ne .page "search") .searchQuery}}{{template "entries" .}}{{end}}
