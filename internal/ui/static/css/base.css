@@ -397,6 +397,24 @@ button:disabled {
     cursor: default;
 }
 
+/* ---------- Sign-in page: centered, no fieldset or labels ---------- */
+
+main:has(form[action$="/login"]) {
+    text-align: center;
+}
+
+form[action$="/login"] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+form[action$="/login"] input {
+    width: 100%;
+    max-width: 18rem;
+}
+
 /* ---------- Disclosure: advanced sections and confirmations ---------- */
 
 details {

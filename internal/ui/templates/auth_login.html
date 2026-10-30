@@ -3,11 +3,8 @@
 {{if .localAuth}}
 <form method="post" action="{{route "/login"}}">
   <input type="hidden" name="redirect_url" value="{{.redirectURL}}">
-  <fieldset>
-    <legend>Username and password</legend>
-    <label>Username <input name="username" value="{{.username}}" autocomplete="username webauthn" required autofocus></label>
-    <label>Password <input type="password" name="password" autocomplete="current-password" required></label>
-  </fieldset>
+  <input name="username" value="{{.username}}" placeholder="Username" aria-label="Username" autocomplete="username webauthn" required autofocus>
+  <input type="password" name="password" placeholder="Password" aria-label="Password" autocomplete="current-password" required>
   <button>Sign in</button>
 </form>
 {{end}}
