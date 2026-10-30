@@ -122,7 +122,7 @@ Custom CSS and Custom JS are user settings. The markup is stable and uses only s
 | Feed with errors / unread items | `article[data-errors]`, `article[data-unread]` |
 | Entry content | `main > article > section` |
 | Action buttons | `article footer form button`, `nav[aria-label="Entry actions"]` |
-| Page actions, pagination | `nav[aria-label="Page actions"]`, `nav[aria-label="Pagination"] a[rel=prev\|next]` |
+| Page actions, pagination | `nav[aria-label="Page actions"]`, `nav[aria-label="Bottom page actions"]` (end of entry lists), `nav[aria-label="Pagination"] a[rel=prev\|next]` |
 | Messages | `[role="alert"]` (errors), `[role="status"]` (info) |
 | Confirmations | `details > summary` + `form` |
 
