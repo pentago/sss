@@ -77,7 +77,9 @@ The image ships a default `sss.conf` with `LISTEN_ADDR=0.0.0.0:8080`, `DATABASE_
 
 ### Releasing
 
-Push a `v*` tag. The release workflow publishes binaries, the four Linux package types, and multi-arch images to `ghcr.io/<owner>/sss`. The Homebrew cask goes to `<owner>/homebrew-tap`, but only when the repository secret `HOMEBREW_TAP_TOKEN` is set. That secret needs to be a token with write access to the tap repository. `.github/workflows/ci.yml` runs formatting, vet, race tests and a Docker build on every push and PR.
+Push a `v*` tag. The release workflow publishes binaries, the four Linux package types, and multi-arch images to `ghcr.io/<owner>/sss` (tagged with the version and `latest`). The Homebrew cask goes to `<owner>/homebrew-tap`, but only when the repository secret `HOMEBREW_TAP_TOKEN` is set. That secret needs to be a token with write access to the tap repository.
+
+`.github/workflows/ci.yml` runs formatting, vet, race tests and a Docker build on every PR and push to `main`. After those pass on `main` (a merged PR), it publishes multi-arch images tagged `main` and `sha-<commit>`.
 
 ## Configuration
 
