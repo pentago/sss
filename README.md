@@ -73,6 +73,8 @@ The image is built from `scratch` and runs as an unprivileged user. Its layout:
 
 The image ships a default `sss.conf` with `LISTEN_ADDR=0.0.0.0:8080`, `DATABASE_URL=/config/sss.db` and `RUN_MIGRATIONS=1`. A named volume picks that file up automatically. If you bind-mount your own directory, it must contain an `sss.conf` with those lines. Environment variables override the file.
 
+`examples/compose.yaml` runs the `:dev` image with `examples/config` (a ready `sss.conf`; the database is created there) bind-mounted to `/config`.
+
 `docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7,linux/riscv64 .` builds the image for several architectures.
 
 ### Releasing

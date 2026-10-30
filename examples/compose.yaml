@@ -1,0 +1,20 @@
+services:
+  sss:
+    container_name: sss
+    hostname: sss
+    image: ghcr.io/pentago/sss:dev
+    pull_policy: always
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges=true
+    ports:
+      - "80:8080"
+    volumes:
+      - ./config:/config
+    healthcheck:
+      test: ["CMD", "/sss", "-c", "/config/sss.conf", "-healthcheck", "auto"]
+      interval: 10s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
+    restart: unless-stopped
