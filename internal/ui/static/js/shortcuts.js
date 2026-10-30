@@ -154,8 +154,8 @@
         [["+"], "Add subscription", () => { location.href = new URL("subscribe", base); }],
         [["#"], "Remove feed", removeFeed],
         [["a"], "Toggle attachments", () => { const d = $("main > article > footer > details"); if (d) d.open = !d.open; }],
-        [["A"], "Mark page as read", () => $('nav[aria-label="Page actions"] form[action$="/entry/status"]')?.requestSubmit()],
-        [["/"], "Search", () => $('form[role="search"] input')?.focus()],
+        [["A"], "Read page", () => $('nav[aria-label="Page actions"] form[action$="/entry/status"]')?.requestSubmit()],
+        [["/"], "Go to search", () => goTo("/search")],
         [["?"], "Show this help", showHelp],
     ];
 
