@@ -164,6 +164,25 @@ nav[aria-label="Bottom page actions"] {
     font-size: 1rem;
 }
 
+/* Read all on the left, Go to top centered, Read page on the right; slots stay put when an action is absent. */
+nav[aria-label="Bottom page actions"] ul {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+}
+
+nav[aria-label="Bottom page actions"] li {
+    grid-row: 1;
+}
+
+nav[aria-label="Bottom page actions"] li:has(a[href="#top"]) {
+    grid-column: 2;
+}
+
+nav[aria-label="Bottom page actions"] li:has(form[action$="/entry/status"]) {
+    grid-column: 3;
+    justify-self: end;
+}
+
 /* ---------- Pagination and entry navigation ---------- */
 
 nav[aria-label="Pagination"],
