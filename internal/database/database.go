@@ -39,8 +39,10 @@ func Open(dsn string) (*sql.DB, error) {
 	if strings.Contains(dsn, "?") {
 		sep = "&"
 	}
+	// temp_store(MEMORY): the scratch Docker image has no /tmp, so file-backed
+	// temp files (statement journals, sorts) fail with SQLITE_IOERR_GETTEMPPATH.
 	dsn += sep + "_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(1)" +
-		"&_pragma=synchronous(NORMAL)&_txlock=immediate&_time_integer_format=unix"
+		"&_pragma=synchronous(NORMAL)&_pragma=temp_store(MEMORY)&_txlock=immediate&_time_integer_format=unix"
 
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
