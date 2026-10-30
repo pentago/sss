@@ -1,0 +1,14 @@
+{{define "content"}}
+<h1>New user</h1>
+{{template "settings_nav" .}}
+<form method="post" action="{{route "/user/save"}}">
+  <fieldset>
+    <legend>User</legend>
+    <label>Username <input name="username" value="{{with .form}}{{.Username}}{{end}}" autocomplete="off" required autofocus></label>
+    <label>Password <input type="password" name="password" autocomplete="new-password" minlength="6" required></label>
+    <label>Confirmation <input type="password" name="confirmation" autocomplete="new-password" required></label>
+    <label><input type="checkbox" name="is_admin"{{with .form}}{{if .IsAdmin}} checked{{end}}{{end}}> Administrator</label>
+  </fieldset>
+  <button>Save</button>
+</form>
+{{end}}

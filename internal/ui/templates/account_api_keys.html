@@ -1,0 +1,23 @@
+{{define "content"}}
+<h1>API keys</h1>
+{{template "settings_nav" .}}
+<nav aria-label="Page actions"><ul><li><a href="{{route "/keys/create"}}">Create a new API key</a></li></ul></nav>
+<p>API endpoint: <code>{{.apiEndpoint}}</code></p>
+{{if .keys}}
+<table>
+  <thead><tr><th scope="col">Description</th><th scope="col">Last used</th><th scope="col">Created</th><th scope="col">Actions</th></tr></thead>
+  <tbody>
+  {{range .keys}}
+    <tr>
+      <td>{{.Description}}</td>
+      <td>{{with .LastUsedAt}}<time datetime="{{isodate .}}" title="{{date $.user.Timezone .}}">{{elapsed $.user.Timezone .}}</time>{{else}}Never{{end}}</td>
+      <td><time datetime="{{isodate .CreatedAt}}" title="{{date $.user.Timezone .CreatedAt}}">{{elapsed $.user.Timezone .CreatedAt}}</time></td>
+      <td><details><summary>Remove</summary><form method="post" action="{{route "/keys/%d/delete" .ID}}"><button>Confirm removal</button></form></details></td>
+    </tr>
+  {{end}}
+  </tbody>
+</table>
+{{else}}
+<p>There are no API keys.</p>
+{{end}}
+{{end}}

@@ -1,0 +1,17 @@
+{{define "content"}}
+<h1>Sessions</h1>
+{{template "settings_nav" .}}
+<table>
+  <thead><tr><th scope="col">Date</th><th scope="col">IP address</th><th scope="col">User agent</th><th scope="col">Actions</th></tr></thead>
+  <tbody>
+  {{range .sessions}}
+    <tr>
+      <td><time datetime="{{isodate .CreatedAt}}" title="{{date $.user.Timezone .CreatedAt}}">{{elapsed $.user.Timezone .CreatedAt}}</time></td>
+      <td>{{.IP}}</td>
+      <td>{{.UserAgent}}</td>
+      <td>{{if eq .ID $.currentSessionID}}<strong>Current session</strong>{{else}}<form method="post" action="{{route "/sessions/%s/remove" .ID}}"><button>Remove</button></form>{{end}}</td>
+    </tr>
+  {{end}}
+  </tbody>
+</table>
+{{end}}

@@ -1,0 +1,11 @@
+{{define "content"}}
+<h1>API key created</h1>
+{{template "settings_nav" .}}
+<p role="status">Copy this token now, it will not be shown again.</p>
+<dl>
+  <dt>Description</dt><dd>{{.key.Description}}</dd>
+  <dt>Token</dt><dd><code>{{.key.Token}}</code></dd>
+  <dt>API endpoint</dt><dd><code>{{.apiEndpoint}}</code></dd>
+</dl>
+<p><a href="{{route "/keys"}}">Back to API keys</a></p>
+{{end}}

@@ -1,0 +1,28 @@
+// Copyright The Miniflux Authors. Modified by The sss Authors.
+// Derived from Miniflux (https://github.com/miniflux/v2).
+// SPDX-License-Identifier: Apache-2.0
+
+package validator
+
+import (
+	"testing"
+
+	"sss/internal/model"
+)
+
+func TestValidateEnclosureUpdateRequest(t *testing.T) {
+	request := &model.EnclosureUpdateRequest{MediaProgression: -1}
+	if err := ValidateEnclosureUpdateRequest(request); err == nil {
+		t.Error("A negative media progression should generate an error")
+	}
+
+	request.MediaProgression = 0
+	if err := ValidateEnclosureUpdateRequest(request); err != nil {
+		t.Fatalf("Zero media progression should be accepted: %v", err)
+	}
+
+	request.MediaProgression = 42
+	if err := ValidateEnclosureUpdateRequest(request); err != nil {
+		t.Fatalf("Positive media progression should be accepted: %v", err)
+	}
+}

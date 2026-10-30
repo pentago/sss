@@ -1,0 +1,30 @@
+{{define "content"}}
+<h1>Choose a subscription</h1>
+{{range .subscriptions}}
+<article>
+<header><h2>{{.Title}}</h2><p><a href="{{untrustedURL .URL}}" rel="noopener noreferrer">{{.URL}}</a> <small>{{.Type}}</small></p></header>
+<footer><form method="post" action="{{route "/subscriptions"}}">
+<input type="hidden" name="url" value="{{.URL}}">
+{{with $.form}}<input type="hidden" name="category_id" value="{{.CategoryID}}">
+<input type="hidden" name="feed_username" value="{{.Username}}">
+<input type="hidden" name="feed_password" value="{{.Password}}">
+<input type="hidden" name="user_agent" value="{{.UserAgent}}">
+<input type="hidden" name="cookie" value="{{.Cookie}}">
+<input type="hidden" name="proxy_url" value="{{.ProxyURL}}">
+<input type="hidden" name="scraper_rules" value="{{.ScraperRules}}">
+<input type="hidden" name="rewrite_rules" value="{{.RewriteRules}}">
+<input type="hidden" name="urlrewrite_rules" value="{{.UrlRewriteRules}}">
+<input type="hidden" name="blocklist_rules" value="{{.BlocklistRules}}">
+<input type="hidden" name="keeplist_rules" value="{{.KeeplistRules}}">
+<input type="hidden" name="block_filter_entry_rules" value="{{.BlockFilterEntryRules}}">
+<input type="hidden" name="keep_filter_entry_rules" value="{{.KeepFilterEntryRules}}">
+{{if .Crawler}}<input type="hidden" name="crawler" value="1">{{end}}
+{{if .IgnoreEntryUpdates}}<input type="hidden" name="ignore_entry_updates" value="1">{{end}}
+{{if .AllowSelfSignedCertificates}}<input type="hidden" name="allow_self_signed_certificates" value="1">{{end}}
+{{if .DisableHTTP2}}<input type="hidden" name="disable_http2" value="1">{{end}}
+{{if .FetchViaProxy}}<input type="hidden" name="fetch_via_proxy" value="1">{{end}}{{end}}
+<button>Subscribe</button>
+</form></footer>
+</article>
+{{end}}
+{{end}}

@@ -1,0 +1,19 @@
+{{define "content"}}
+<h1>Users</h1>
+{{template "settings_nav" .}}
+<nav aria-label="Page actions"><ul><li><a href="{{route "/user/create"}}">Add user</a></li></ul></nav>
+<table>
+  <thead><tr><th scope="col">Username</th><th scope="col">Administrator</th><th scope="col">Last login</th><th scope="col">Actions</th></tr></thead>
+  <tbody>
+  {{range .users}}
+    <tr>
+      <td>{{.Username}}</td>
+      <td>{{if .IsAdmin}}Yes{{else}}No{{end}}</td>
+      <td>{{with .LastLoginAt}}<time datetime="{{isodate .}}" title="{{date $.user.Timezone .}}">{{elapsed $.user.Timezone .}}</time>{{else}}Never{{end}}</td>
+      <td><a href="{{route "/users/%d/edit" .ID}}">Edit</a>
+        {{if ne .ID $.user.ID}}<details><summary>Remove</summary><form method="post" action="{{route "/users/%d/remove" .ID}}"><button>Confirm removal</button></form></details>{{end}}</td>
+    </tr>
+  {{end}}
+  </tbody>
+</table>
+{{end}}

@@ -1,0 +1,94 @@
+version: 2
+
+builds:
+  - env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w -X sss/internal/version.Version={{.Version}} -X sss/internal/version.Commit={{.ShortCommit}} -X sss/internal/version.BuildDate={{.Date}}
+    goos: [linux, darwin, freebsd]
+    goarch: [amd64, arm64, arm, riscv64, ppc64le, s390x]
+    goarm: ["6", "7"]
+    ignore:
+      - { goos: darwin, goarch: arm }
+      - { goos: darwin, goarch: riscv64 }
+      - { goos: darwin, goarch: ppc64le }
+      - { goos: darwin, goarch: s390x }
+      - { goos: freebsd, goarch: arm }
+      - { goos: freebsd, goarch: riscv64 }
+      - { goos: freebsd, goarch: ppc64le }
+      - { goos: freebsd, goarch: s390x }
+
+archives:
+  - formats: [tar.gz]
+    files:
+      - LICENSE
+      - NOTICE
+      - README.md
+      - packaging/sss.conf
+      - packaging/systemd/sss.service
+      - packaging/systemd/user/sss.service
+
+checksum:
+  name_template: checksums.txt
+
+nfpms:
+  - package_name: sss
+    description: Minimalist self-hosted feed reader (single binary, SQLite)
+    homepage: 'https://github.com/{{ envOrDefault "GITHUB_REPOSITORY" "sss/sss" }}'
+    vendor: '{{ envOrDefault "GITHUB_REPOSITORY_OWNER" "sss" }}'
+    maintainer: '{{ envOrDefault "GITHUB_REPOSITORY_OWNER" "sss" }} <noreply@github.com>'
+    license: Apache-2.0
+    formats: [deb, rpm, apk, archlinux]
+    bindir: /usr/bin
+    contents:
+      - src: packaging/systemd/sss.service
+        dst: /usr/lib/systemd/system/sss.service
+      - src: packaging/systemd/user/sss.service
+        dst: /usr/lib/systemd/user/sss.service
+      - src: packaging/sss.conf
+        dst: /etc/sss.conf
+        type: config|noreplace
+        file_info: { mode: 0600, owner: root, group: root }
+      - src: packaging/sss.conf
+        dst: /usr/share/doc/sss/sss.conf.example
+      - src: README.md
+        dst: /usr/share/doc/sss/README.md
+      - src: NOTICE
+        dst: /usr/share/doc/sss/NOTICE
+      - src: LICENSE
+        dst: /usr/share/doc/sss/LICENSE
+        packager: deb
+      - src: LICENSE
+        dst: /usr/share/doc/sss/LICENSE
+        packager: rpm
+      - src: LICENSE
+        dst: /usr/share/doc/sss/LICENSE
+        packager: apk
+      - src: LICENSE
+        dst: /usr/share/licenses/sss/LICENSE
+        packager: archlinux
+
+homebrew_casks:
+  - name: sss
+    homepage: 'https://github.com/{{ envOrDefault "GITHUB_REPOSITORY" "sss/sss" }}'
+    description: Minimalist self-hosted feed reader
+    license: Apache-2.0
+    binaries: [sss]
+    repository:
+      owner: '{{ envOrDefault "GITHUB_REPOSITORY_OWNER" "sss" }}'
+      name: homebrew-tap
+      token: '{{ envOrDefault "HOMEBREW_TAP_TOKEN" "" }}'
+    skip_upload: '{{ if envOrDefault "HOMEBREW_TAP_TOKEN" "" }}false{{ else }}true{{ end }}'
+    hooks:
+      post:
+        # Binaries are not notarized; drop the quarantine flag.
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/sss"]
+          end
+
+dockers_v2:
+  - dockerfile: packaging/Dockerfile.goreleaser
+    images: ['ghcr.io/{{ envOrDefault "REGISTRY_OWNER" "sss" | tolower }}/sss']
+    tags: ["{{ .Version }}", latest]
+    platforms: [linux/amd64, linux/arm64, linux/arm/v7, linux/riscv64]

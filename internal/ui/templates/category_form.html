@@ -1,0 +1,10 @@
+{{define "content"}}
+<h1>{{.title}}</h1>
+<form method="post" action="{{if .category.ID}}{{route "/category/%d/update" .category.ID}}{{else}}{{route "/category/save"}}{{end}}">
+<fieldset><legend>Category</legend>
+<label>Title <input name="title" value="{{.category.Title}}" required autofocus></label>
+<label><input type="checkbox" name="hide_globally" value="1"{{if .category.HideGlobally}} checked{{end}}> Hide entries in the unread list</label>
+</fieldset>
+<button>Save</button>
+</form>
+{{end}}

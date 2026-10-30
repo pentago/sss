@@ -1,0 +1,26 @@
+/* sss dark theme: colors only. Layout lives in base.css. */
+:root {
+    color-scheme: dark;
+
+    /* Page */
+    --bg: #18191b;
+    --fg: #dcdcdc;
+    --muted: #9a9a9a;
+    --border: #353638;
+    --surface: #232426;   /* code, table headers, dialogs */
+    --selected: #2c2a20;  /* keyboard-selected list item */
+
+    /* Links and controls */
+    --link: #8ab4f8;
+    --accent: #8ab4f8;    /* focus rings, current nav item */
+    --button-bg: #3b5f9e;
+    --button-fg: #fff;
+    --input-bg: #111214;
+
+    /* Messages */
+    --alert-fg: #ffb4ab;
+    --alert-bg: #3b1d1b;
+    --status-fg: #a8dab5;
+    --status-bg: #1c3324;
+    --star: #f2c14e;
+}

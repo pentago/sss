@@ -1,0 +1,159 @@
+{{define "content"}}
+<h1>Integrations</h1>
+{{template "settings_nav" .}}
+<form method="post" action="{{route "/integration"}}">
+{{with .integration}}
+<details{{if .FeverEnabled}} open{{end}}>
+  <summary>Fever</summary>
+  <fieldset>
+    <legend>Fever</legend>
+    <label><input type="checkbox" name="fever_enabled"{{if .FeverEnabled}} checked{{end}}> Enable Fever</label>
+    <label>Username <input type="text" name="fever_username" value="{{.FeverUsername}}"></label>
+    <label>Password (leave empty to keep the current one) <input type="password" name="fever_password" autocomplete="new-password"></label>
+    {{if not $.disableAPI}}<p>Fever API endpoint: <code>{{$.rootURL}}/fever/</code></p>{{end}}
+  </fieldset>
+</details>
+<details{{if .GoogleReaderEnabled}} open{{end}}>
+  <summary>Google Reader</summary>
+  <fieldset>
+    <legend>Google Reader</legend>
+    <label><input type="checkbox" name="googlereader_enabled"{{if .GoogleReaderEnabled}} checked{{end}}> Enable Google Reader</label>
+    <label>Username <input type="text" name="googlereader_username" value="{{.GoogleReaderUsername}}"></label>
+    <label>Password (leave empty to keep the current one) <input type="password" name="googlereader_password" autocomplete="new-password"></label>
+    <p>Google Reader API endpoint: <code>{{$.rootURL}}</code></p>
+  </fieldset>
+</details>
+<details{{if .AppriseEnabled}} open{{end}}>
+  <summary>Apprise</summary>
+  <fieldset>
+    <legend>Apprise</legend>
+    <label><input type="checkbox" name="apprise_enabled"{{if .AppriseEnabled}} checked{{end}}> Enable Apprise</label>
+    <label>Apprise API URL <input type="url" name="apprise_url" value="{{.AppriseURL}}"></label>
+    <label>Service URLs (comma separated) <input type="text" name="apprise_services_url" value="{{.AppriseServicesURL}}"></label>
+  </fieldset>
+</details>
+<details{{if .DiscordEnabled}} open{{end}}>
+  <summary>Discord</summary>
+  <fieldset>
+    <legend>Discord</legend>
+    <label><input type="checkbox" name="discord_enabled"{{if .DiscordEnabled}} checked{{end}}> Enable Discord</label>
+    <label>Webhook URL <input type="url" name="discord_webhook_link" value="{{.DiscordWebhookLink}}"></label>
+  </fieldset>
+</details>
+<details{{if .GotifyEnabled}} open{{end}}>
+  <summary>Gotify</summary>
+  <fieldset>
+    <legend>Gotify</legend>
+    <label><input type="checkbox" name="gotify_enabled"{{if .GotifyEnabled}} checked{{end}}> Enable Gotify</label>
+    <label>Server URL <input type="url" name="gotify_url" value="{{.GotifyURL}}"></label>
+    <label>Application token <input type="password" name="gotify_token" value="{{.GotifyToken}}" autocomplete="off"></label>
+    <label>Priority <input type="number" name="gotify_priority" value="{{.GotifyPriority}}"></label>
+  </fieldset>
+</details>
+<details{{if .InstapaperEnabled}} open{{end}}>
+  <summary>Instapaper</summary>
+  <fieldset>
+    <legend>Instapaper</legend>
+    <label><input type="checkbox" name="instapaper_enabled"{{if .InstapaperEnabled}} checked{{end}}> Enable Instapaper</label>
+    <label>Username <input type="text" name="instapaper_username" value="{{.InstapaperUsername}}"></label>
+    <label>Password <input type="password" name="instapaper_password" value="{{.InstapaperPassword}}" autocomplete="off"></label>
+  </fieldset>
+</details>
+<details{{if .LinkwardenEnabled}} open{{end}}>
+  <summary>Linkwarden</summary>
+  <fieldset>
+    <legend>Linkwarden</legend>
+    <label><input type="checkbox" name="linkwarden_enabled"{{if .LinkwardenEnabled}} checked{{end}}> Enable Linkwarden</label>
+    <label>Linkwarden URL <input type="url" name="linkwarden_url" value="{{.LinkwardenURL}}"></label>
+    <label>API key <input type="password" name="linkwarden_api_key" value="{{.LinkwardenAPIKey}}" autocomplete="off"></label>
+    <label>Collection ID <input type="number" name="linkwarden_collection_id" value="{{with .LinkwardenCollectionID}}{{.}}{{end}}"></label>
+  </fieldset>
+</details>
+<details{{if .MatrixBotEnabled}} open{{end}}>
+  <summary>Matrix Bot</summary>
+  <fieldset>
+    <legend>Matrix Bot</legend>
+    <label><input type="checkbox" name="matrix_bot_enabled"{{if .MatrixBotEnabled}} checked{{end}}> Enable Matrix Bot</label>
+    <label>Bot username <input type="text" name="matrix_bot_user" value="{{.MatrixBotUser}}"></label>
+    <label>Bot password <input type="password" name="matrix_bot_password" value="{{.MatrixBotPassword}}" autocomplete="off"></label>
+    <label>Matrix server URL <input type="url" name="matrix_bot_url" value="{{.MatrixBotURL}}"></label>
+    <label>Chat ID <input type="text" name="matrix_bot_chat_id" value="{{.MatrixBotChatID}}"></label>
+  </fieldset>
+</details>
+<details{{if .NotionEnabled}} open{{end}}>
+  <summary>Notion</summary>
+  <fieldset>
+    <legend>Notion</legend>
+    <label><input type="checkbox" name="notion_enabled"{{if .NotionEnabled}} checked{{end}}> Enable Notion</label>
+    <label>API token <input type="password" name="notion_token" value="{{.NotionToken}}" autocomplete="off"></label>
+    <label>Page ID <input type="text" name="notion_page_id" value="{{.NotionPageID}}"></label>
+  </fieldset>
+</details>
+<details{{if .NtfyEnabled}} open{{end}}>
+  <summary>Ntfy</summary>
+  <fieldset>
+    <legend>Ntfy</legend>
+    <label><input type="checkbox" name="ntfy_enabled"{{if .NtfyEnabled}} checked{{end}}> Enable Ntfy</label>
+    <label>Topic <input type="text" name="ntfy_topic" value="{{.NtfyTopic}}"></label>
+    <label>Server URL (leave empty for ntfy.sh) <input type="url" name="ntfy_url" value="{{.NtfyURL}}"></label>
+    <label>API token <input type="password" name="ntfy_api_token" value="{{.NtfyAPIToken}}" autocomplete="off"></label>
+    <label>Username <input type="text" name="ntfy_username" value="{{.NtfyUsername}}"></label>
+    <label>Password <input type="password" name="ntfy_password" value="{{.NtfyPassword}}" autocomplete="off"></label>
+    <label>Icon URL <input type="url" name="ntfy_icon_url" value="{{.NtfyIconURL}}"></label>
+    <label><input type="checkbox" name="ntfy_internal_links"{{if .NtfyInternalLinks}} checked{{end}}> Link to the entry in sss instead of the original article</label>
+  </fieldset>
+</details>
+<details{{if .PushoverEnabled}} open{{end}}>
+  <summary>Pushover</summary>
+  <fieldset>
+    <legend>Pushover</legend>
+    <label><input type="checkbox" name="pushover_enabled"{{if .PushoverEnabled}} checked{{end}}> Enable Pushover</label>
+    <label>User key <input type="text" name="pushover_user" value="{{.PushoverUser}}"></label>
+    <label>Application token <input type="password" name="pushover_token" value="{{.PushoverToken}}" autocomplete="off"></label>
+    <label>Device (optional) <input type="text" name="pushover_device" value="{{.PushoverDevice}}"></label>
+    <label>Title prefix (optional) <input type="text" name="pushover_prefix" value="{{.PushoverPrefix}}"></label>
+  </fieldset>
+</details>
+<details{{if .RSSBridgeEnabled}} open{{end}}>
+  <summary>RSS-Bridge</summary>
+  <fieldset>
+    <legend>RSS-Bridge</legend>
+    <label><input type="checkbox" name="rssbridge_enabled"{{if .RSSBridgeEnabled}} checked{{end}}> Enable RSS-Bridge</label>
+    <label>RSS-Bridge URL <input type="url" name="rssbridge_url" value="{{.RSSBridgeURL}}"></label>
+    <label>Access token (optional) <input type="password" name="rssbridge_token" value="{{.RSSBridgeToken}}" autocomplete="off"></label>
+  </fieldset>
+</details>
+<details{{if .SlackEnabled}} open{{end}}>
+  <summary>Slack</summary>
+  <fieldset>
+    <legend>Slack</legend>
+    <label><input type="checkbox" name="slack_enabled"{{if .SlackEnabled}} checked{{end}}> Enable Slack</label>
+    <label>Webhook URL <input type="url" name="slack_webhook_link" value="{{.SlackWebhookLink}}"></label>
+  </fieldset>
+</details>
+<details{{if .TelegramBotEnabled}} open{{end}}>
+  <summary>Telegram Bot</summary>
+  <fieldset>
+    <legend>Telegram Bot</legend>
+    <label><input type="checkbox" name="telegram_bot_enabled"{{if .TelegramBotEnabled}} checked{{end}}> Enable Telegram Bot</label>
+    <label>Bot token <input type="password" name="telegram_bot_token" value="{{.TelegramBotToken}}" autocomplete="off"></label>
+    <label>Chat ID <input type="text" name="telegram_bot_chat_id" value="{{.TelegramBotChatID}}"></label>
+    <label>Topic ID (optional) <input type="number" name="telegram_bot_topic_id" value="{{with .TelegramBotTopicID}}{{.}}{{end}}"></label>
+    <label><input type="checkbox" name="telegram_bot_disable_web_page_preview"{{if .TelegramBotDisableWebPagePreview}} checked{{end}}> Disable web page preview</label>
+    <label><input type="checkbox" name="telegram_bot_disable_notification"{{if .TelegramBotDisableNotification}} checked{{end}}> Disable notification</label>
+    <label><input type="checkbox" name="telegram_bot_disable_buttons"{{if .TelegramBotDisableButtons}} checked{{end}}> Disable buttons</label>
+  </fieldset>
+</details>
+<details{{if .WebhookEnabled}} open{{end}}>
+  <summary>Webhook</summary>
+  <fieldset>
+    <legend>Webhook</legend>
+    <label><input type="checkbox" name="webhook_enabled"{{if .WebhookEnabled}} checked{{end}}> Enable Webhook</label>
+    <label>Webhook URL <input type="url" name="webhook_url" value="{{.WebhookURL}}"></label>
+    {{if .WebhookSecret}}<p>Webhook secret: <code>{{.WebhookSecret}}</code></p>{{end}}
+  </fieldset>
+</details>
+{{end}}
+<button>Save</button>
+</form>
+{{end}}

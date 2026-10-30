@@ -1,0 +1,13 @@
+{{define "content"}}
+<h1>About</h1>
+{{template "settings_nav" .}}
+<dl>
+  <dt>Version</dt><dd>{{.version}}</dd>
+  <dt>Git commit</dt><dd>{{.commit}}</dd>
+  <dt>Build date</dt><dd>{{.buildDate}}</dd>
+  <dt>Go version</dt><dd>{{.goVersion}}</dd>
+  <dt>SQLite version</dt><dd>{{.dbVersion}}</dd>
+  <dt>Database size</dt><dd>{{.dbSize}}</dd>
+</dl>
+<p>sss is free software, derived from <a href="https://miniflux.app/">Miniflux</a> (Apache-2.0).</p>
+{{end}}

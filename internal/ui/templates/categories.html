@@ -1,0 +1,22 @@
+{{define "content"}}
+<h1>Categories <data value="{{len .categories}}">({{len .categories}})</data></h1>
+<nav aria-label="Page actions"><ul>
+<li><a href="{{route "/category/create"}}">New category</a></li>
+</ul></nav>
+{{range .categories}}
+<article data-id="{{.ID}}" data-unread="{{deref .TotalUnread}}">
+<header>
+<h2><a href="{{route "/category/%d/entries" .ID}}">{{.Title}}</a> <data value="{{deref .TotalUnread}}">({{deref .TotalUnread}})</data></h2>
+<p>{{plural (deref .FeedCount) "feed" "feeds"}}{{if .HideGlobally}}, hidden from the unread list{{end}}</p>
+</header>
+<footer><ul>
+<li><a href="{{route "/category/%d/feeds" .ID}}">Feeds</a></li>
+<li><a href="{{route "/category/%d/edit" .ID}}">Edit</a></li>
+{{if deref .TotalUnread}}<li><form method="post" action="{{route "/category/%d/mark-all-as-read" .ID}}"><button>Mark all as read</button></form></li>{{end}}
+{{if not (deref .FeedCount)}}<li><details><summary>Remove</summary><form method="post" action="{{route "/category/%d/remove" .ID}}"><button>Confirm removal</button></form></details></li>{{end}}
+</ul></footer>
+</article>
+{{else}}
+<p role="status">There are no categories.</p>
+{{end}}
+{{end}}

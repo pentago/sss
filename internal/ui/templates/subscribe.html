@@ -1,0 +1,17 @@
+{{define "content"}}
+<h1>New subscription</h1>
+{{if .categories}}
+<form method="post" action="{{route "/subscribe"}}">
+<fieldset><legend>Subscription</legend>
+<label>URL <input type="url" name="url" value="{{.form.FeedURL}}" required autofocus placeholder="https://domain.tld/"></label>
+{{template "category_select" (dict "categories" .categories "selected" .form.CategoryID)}}
+</fieldset>
+{{template "feed_fetch_fields" .}}
+<button>Find a subscription</button>
+</form>
+<p>Bookmarklet: drag <a href="{{bookmarklet}}">Add to sss</a> to your bookmarks.</p>
+{{else}}
+<p role="alert">There is no category. You must have at least one category.</p>
+<p><a href="{{route "/category/create"}}">Create a category</a></p>
+{{end}}
+{{end}}

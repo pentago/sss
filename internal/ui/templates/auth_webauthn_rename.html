@@ -1,0 +1,11 @@
+{{define "content"}}
+<h1>Rename passkey</h1>
+{{template "settings_nav" .}}
+<form method="post" action="{{route "/webauthn/%s/save" .credential.HandleEncoded}}">
+  <fieldset>
+    <legend>Passkey</legend>
+    <label>Name <input name="name" value="{{.name}}" required autofocus></label>
+  </fieldset>
+  <button>Save</button>
+</form>
+{{end}}

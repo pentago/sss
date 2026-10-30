@@ -1,0 +1,12 @@
+{{define "content"}}{{with .entry}}
+<article data-id="{{.ID}}"{{with or .Language .Feed.Language}} lang="{{.}}"{{end}} dir="auto">
+<header>
+<h1><a href="{{untrustedURL .URL}}" rel="noopener noreferrer" referrerpolicy="no-referrer">{{or .Title .URL}}</a></h1>
+<p>{{.Feed.Title}} <time datetime="{{isodate .Date}}">{{date "UTC" .Date}}</time>{{with .Author}} by <strong>{{.}}</strong>{{end}}</p>
+</header>
+<section>
+{{safeHTML .Content}}
+</section>
+{{template "entry_footer" (dict "user" nil "entry" . "proxy" false)}}
+</article>
+{{end}}{{end}}

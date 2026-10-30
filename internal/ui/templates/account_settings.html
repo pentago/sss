@@ -1,0 +1,69 @@
+{{define "content"}}
+<h1>Settings</h1>
+{{template "settings_nav" .}}
+<form method="post" action="{{route "/settings"}}">
+  {{with .form}}
+  <fieldset>
+    <legend>Appearance</legend>
+    <label>Theme <select name="theme">{{range $k, $v := $.themes}}<option value="{{$k}}"{{if eq $k $.form.Theme}} selected{{end}}>{{$v}}</option>{{end}}</select></label>
+    <label>Light theme from (hour, with the "light by day" theme) <input type="number" name="theme_light_hour" min="0" max="23" value="{{.ThemeLightHour}}"></label>
+    <label>Dark theme from (hour, with the "light by day" theme) <input type="number" name="theme_dark_hour" min="0" max="23" value="{{.ThemeDarkHour}}"></label>
+    <label>Timezone <select name="timezone">{{range $.timezones}}<option{{if eq . $.form.Timezone}} selected{{end}}>{{.}}</option>{{end}}</select></label>
+    <label>Web app display mode <select name="display_mode">
+      <option value="standalone"{{if eq .DisplayMode "standalone"}} selected{{end}}>Standalone</option>
+      <option value="fullscreen"{{if eq .DisplayMode "fullscreen"}} selected{{end}}>Fullscreen</option>
+      <option value="minimal-ui"{{if eq .DisplayMode "minimal-ui"}} selected{{end}}>Minimal UI</option>
+      <option value="browser"{{if eq .DisplayMode "browser"}} selected{{end}}>Browser</option>
+    </select></label>
+  </fieldset>
+  <fieldset>
+    <legend>Reading</legend>
+    <label>Default home page <select name="default_home_page">{{range $k, $v := $.homePages}}<option value="{{$k}}"{{if eq $k $.form.DefaultHomePage}} selected{{end}}>{{$v}}</option>{{end}}</select></label>
+    <label>Categories sorting <select name="categories_sorting_order">{{range $k, $v := $.categoriesSorting}}<option value="{{$k}}"{{if eq $k $.form.CategoriesSortingOrder}} selected{{end}}>{{$v}}</option>{{end}}</select></label>
+    <label>Entry sorting <select name="entry_order">
+      <option value="published_at"{{if eq .EntryOrder "published_at"}} selected{{end}}>Published date</option>
+      <option value="created_at"{{if eq .EntryOrder "created_at"}} selected{{end}}>Date added</option>
+    </select></label>
+    <label>Entry direction <select name="entry_direction">
+      <option value="desc"{{if eq .EntryDirection "desc"}} selected{{end}}>Newest first</option>
+      <option value="asc"{{if eq .EntryDirection "asc"}} selected{{end}}>Oldest first</option>
+    </select></label>
+    <label>Entries per page <input type="number" name="entries_per_page" min="1" max="{{$.maxEntriesPerPage}}" value="{{.EntriesPerPage}}"></label>
+    <label><input type="checkbox" name="show_reading_time"{{if .ShowReadingTime}} checked{{end}}> Show estimated reading time</label>
+    <label>Reading speed for Latin scripts (words per minute) <input type="number" name="default_reading_speed" min="1" value="{{.DefaultReadingSpeed}}"></label>
+    <label>Reading speed for Chinese, Japanese and Korean (characters per minute) <input type="number" name="cjk_reading_speed" min="1" value="{{.CJKReadingSpeed}}"></label>
+    <label><input type="checkbox" name="mark_read_on_view"{{if .MarkReadOnView}} checked{{end}}> Mark entries as read when viewed</label>
+    <label><input type="checkbox" name="open_external_links_in_new_tab"{{if .OpenExternalLinksInNewTab}} checked{{end}}> Open external links in a new tab</label>
+    <label><input type="checkbox" name="always_open_external_links"{{if .AlwaysOpenExternalLinks}} checked{{end}}> Always open the original article instead of the entry page</label>
+  </fieldset>
+  <fieldset>
+    <legend>Optional JavaScript features</legend>
+    <p>Each of these features loads a small script. Without them, sss works without any JavaScript.</p>
+    <label><input type="checkbox" name="keyboard_shortcuts"{{if .KeyboardShortcuts}} checked{{end}}> Keyboard shortcuts</label>
+    <label><input type="checkbox" name="entry_swipe"{{if .EntrySwipe}} checked{{end}}> Swipe entries on touch screens</label>
+    <label>Gesture navigation between entries <select name="gesture_nav">
+      <option value="none"{{if eq .GestureNav "none"}} selected{{end}}>None</option>
+      <option value="tap"{{if eq .GestureNav "tap"}} selected{{end}}>Double tap</option>
+      <option value="swipe"{{if eq .GestureNav "swipe"}} selected{{end}}>Swipe</option>
+    </select></label>
+    <label><input type="checkbox" name="mark_read_on_scroll"{{if .MarkReadOnScroll}} checked{{end}}> Mark entries as read when scrolled past</label>
+    <label><input type="checkbox" name="service_worker"{{if .ServiceWorker}} checked{{end}}> Offline page (service worker)</label>
+  </fieldset>
+  <details>
+    <summary>Advanced</summary>
+    <fieldset>
+      <legend>Global filters</legend>
+      <label>Block rules (one per line, e.g. <code>EntryTitle=(?i)sponsored</code>) <textarea name="block_filter_entry_rules" rows="4">{{.BlockFilterEntryRules}}</textarea></label>
+      <label>Keep rules (one per line) <textarea name="keep_filter_entry_rules" rows="4">{{.KeepFilterEntryRules}}</textarea></label>
+    </fieldset>
+    <fieldset>
+      <legend>Customization</legend>
+      <label>Custom CSS <textarea name="custom_css" rows="6">{{.Stylesheet}}</textarea></label>
+      <label>Custom JavaScript <textarea name="custom_js" rows="6">{{.CustomJS}}</textarea></label>
+      <label>External font hosts (space separated domains) <input name="external_font_hosts" value="{{.ExternalFontHosts}}"></label>
+    </fieldset>
+  </details>
+  {{end}}
+  <button>Save</button>
+</form>
+{{end}}

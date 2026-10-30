@@ -1,0 +1,11 @@
+{{define "content"}}
+<h1>New API key</h1>
+{{template "settings_nav" .}}
+<form method="post" action="{{route "/keys/save"}}">
+  <fieldset>
+    <legend>API key</legend>
+    <label>Description <input name="description" value="{{.description}}" required autofocus></label>
+  </fieldset>
+  <button>Save</button>
+</form>
+{{end}}

@@ -1,0 +1,42 @@
+{{define "content"}}{{with .feed}}
+<h1>Edit feed: {{.Title}}</h1>
+<nav aria-label="Page actions"><ul>
+<li><a href="{{route "/feed/%d/entries" .ID}}">Entries</a></li>
+<li><form method="post" action="{{route "/feed/%d/refresh" .ID}}"><button>Refresh</button></form></li>
+<li><details><summary>Remove</summary><form method="post" action="{{route "/feed/%d/remove" .ID}}"><button>Confirm removal</button></form></details></li>
+</ul></nav>
+<section aria-label="Feed status">
+<dl>
+<dt>Last check</dt><dd><time datetime="{{isodate .CheckedAt}}">{{date $.user.Timezone .CheckedAt}}</time></dd>
+<dt>Next check</dt><dd><time datetime="{{isodate .NextCheckAt}}">{{date $.user.Timezone .NextCheckAt}}</time></dd>
+{{with .EtagHeader}}<dt>ETag</dt><dd>{{.}}</dd>{{end}}
+{{with .LastModifiedHeader}}<dt>Last-Modified</dt><dd>{{.}}</dd>{{end}}
+</dl>
+{{if .ParsingErrorCount}}<p role="alert">Last error ({{plural .ParsingErrorCount "time" "times"}}): {{.ParsingErrorMsg}}</p>{{end}}
+</section>
+{{end}}
+<form method="post" action="{{route "/feed/%d/update" .feed.ID}}">
+{{with .feed}}<fieldset><legend>Feed</legend>
+<label>Title <input name="title" value="{{.Title}}" required></label>
+<label>Site URL <input type="url" name="site_url" value="{{.SiteURL}}" required></label>
+<label>Feed URL <input type="url" name="feed_url" value="{{.FeedURL}}" required></label>
+<label>Description <textarea name="description" rows="2">{{.Description}}</textarea></label>
+{{template "category_select" (dict "categories" $.categories "selected" .Category.ID)}}
+<label><input type="checkbox" name="disabled" value="1"{{if .Disabled}} checked{{end}}> Do not refresh this feed</label>
+<label><input type="checkbox" name="hide_globally" value="1"{{if .HideGlobally}} checked{{end}}> Hide entries in the unread list</label>
+<label><input type="checkbox" name="no_media_player" value="1"{{if .NoMediaPlayer}} checked{{end}}> No media player (audio/video)</label>
+<label><input type="checkbox" name="ignore_http_cache" value="1"{{if .IgnoreHTTPCache}} checked{{end}}> Ignore HTTP cache</label>
+</fieldset>{{end}}
+{{template "feed_fetch_fields" (dict "form" .feed "defaultUserAgent" .defaultUserAgent "hasProxyConfigured" .hasProxyConfigured)}}
+{{with .feed}}<details><summary>Notifications</summary><fieldset><legend>Notifications</legend>
+<label>Apprise service URLs <input name="apprise_service_urls" value="{{.AppriseServiceURLs}}" spellcheck="false"></label>
+<label>Webhook URL <input type="url" name="webhook_url" value="{{.WebhookURL}}" spellcheck="false"></label>
+<label><input type="checkbox" name="ntfy_enabled" value="1"{{if .NtfyEnabled}} checked{{end}}> Push to ntfy</label>
+<label>ntfy topic <input name="ntfy_topic" value="{{.NtfyTopic}}"></label>
+<label>ntfy priority <input type="number" name="ntfy_priority" min="0" max="5" value="{{.NtfyPriority}}"></label>
+<label><input type="checkbox" name="pushover_enabled" value="1"{{if .PushoverEnabled}} checked{{end}}> Push to Pushover</label>
+<label>Pushover priority <input type="number" name="pushover_priority" min="-2" max="2" value="{{.PushoverPriority}}"></label>
+</fieldset></details>{{end}}
+<button>Save</button>
+</form>
+{{end}}

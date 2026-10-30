@@ -1,0 +1,16 @@
+{{define "content"}}
+<h1>Import</h1>
+<form method="post" action="{{route "/upload"}}" enctype="multipart/form-data">
+<fieldset><legend>Upload an OPML file</legend>
+<label>OPML file <input type="file" name="file" accept=".opml,.xml,text/xml,application/xml,text/x-opml" required></label>
+</fieldset>
+<button>Import</button>
+</form>
+<form method="post" action="{{route "/fetch"}}">
+<fieldset><legend>Fetch an OPML file</legend>
+<label>OPML file URL <input type="url" name="url" required></label>
+</fieldset>
+<button>Import</button>
+</form>
+<p><a href="{{route "/export"}}">Export your subscriptions</a></p>
+{{end}}

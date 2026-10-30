@@ -1,0 +1,13 @@
+{{define "content"}}
+<h1>{{if .category}}Category: {{end}}{{.title}} <data value="{{len .feeds}}">({{len .feeds}})</data></h1>
+<nav aria-label="Page actions"><ul>
+{{with .category}}<li><a href="{{route "/category/%d/entries" .ID}}">Entries</a></li>
+<li><a href="{{route "/category/%d/edit" .ID}}">Edit</a></li>
+<li><form method="post" action="{{route "/category/%d/feeds/refresh" .ID}}"><button>Refresh</button></form></li>
+{{else}}<li><a href="{{route "/subscribe"}}">Add subscription</a></li>
+<li><form method="post" action="{{route "/feeds/refresh"}}"><button>Refresh all feeds</button></form></li>
+<li><a href="{{route "/import"}}">Import</a></li>
+<li><a href="{{route "/export"}}">Export</a></li>
+{{end}}</ul></nav>
+{{template "feeds" .}}
+{{end}}

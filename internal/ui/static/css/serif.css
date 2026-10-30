@@ -1,0 +1,5 @@
+/* Serif font option: overrides the base.css font stack for body and entry content. */
+
+:root {
+    --font-body: Georgia, "Times New Roman", Times, serif;
+}

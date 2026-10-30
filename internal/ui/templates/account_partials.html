@@ -1,0 +1,11 @@
+{{define "settings_nav"}}
+<nav aria-label="Settings"><ul>
+  <li><a href="{{route "/settings"}}"{{if eq .page "settings"}} aria-current="page"{{end}}>Settings</a></li>
+  {{if or .localAuth .webAuthnEnabled}}<li><a href="{{route "/authentication"}}"{{if eq .page "authentication"}} aria-current="page"{{end}}>Authentication</a></li>{{end}}
+  <li><a href="{{route "/integrations"}}"{{if eq .page "integrations"}} aria-current="page"{{end}}>Integrations</a></li>
+  {{if .apiEnabled}}<li><a href="{{route "/keys"}}"{{if eq .page "keys"}} aria-current="page"{{end}}>API keys</a></li>{{end}}
+  <li><a href="{{route "/sessions"}}"{{if eq .page "sessions"}} aria-current="page"{{end}}>Sessions</a></li>
+  {{if .user.IsAdmin}}<li><a href="{{route "/users"}}"{{if eq .page "users"}} aria-current="page"{{end}}>Users</a></li>{{end}}
+  <li><a href="{{route "/about"}}"{{if eq .page "about"}} aria-current="page"{{end}}>About</a></li>
+</ul></nav>
+{{end}}

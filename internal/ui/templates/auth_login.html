@@ -1,0 +1,20 @@
+{{define "content"}}
+<h1>Sign in</h1>
+{{if .localAuth}}
+<form method="post" action="{{route "/login"}}">
+  <input type="hidden" name="redirect_url" value="{{.redirectURL}}">
+  <fieldset>
+    <legend>Username and password</legend>
+    <label>Username <input name="username" value="{{.username}}" autocomplete="username webauthn" required autofocus></label>
+    <label>Password <input type="password" name="password" autocomplete="current-password" required></label>
+  </fieldset>
+  <button>Sign in</button>
+</form>
+{{end}}
+{{if .webAuthnEnabled}}
+<p><button type="button" data-webauthn="login" disabled>Sign in with a passkey</button></p>
+{{end}}
+{{if .oauth2}}
+<p><a href="{{route "/oauth2/%s/redirect" .oauth2}}">Sign in with {{.oauth2Name}}</a></p>
+{{end}}
+{{end}}

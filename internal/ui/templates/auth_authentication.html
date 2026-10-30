@@ -1,0 +1,54 @@
+{{define "content"}}
+<h1>Authentication</h1>
+{{template "settings_nav" .}}
+{{if .localAuth}}
+<form method="post" action="{{route "/authentication"}}">
+  <fieldset>
+    <legend>Account</legend>
+    <label>Username <input name="username" value="{{.username}}" autocomplete="username" required></label>
+  </fieldset>
+  <fieldset>
+    <legend>Change password</legend>
+    {{if .hasPassword}}<label>Current password <input type="password" name="current_password" autocomplete="current-password"></label>{{end}}
+    <label>New password <input type="password" name="password" autocomplete="new-password" minlength="6"></label>
+    <label>Confirmation <input type="password" name="confirmation" autocomplete="new-password"></label>
+  </fieldset>
+  <button>Save</button>
+</form>
+{{end}}
+{{if .oauth2}}
+<section>
+  <h2>{{.oauth2Name}}</h2>
+  {{if .oauth2Linked}}
+    {{if .localAuth}}<form method="post" action="{{route "/oauth2/%s/unlink" .oauth2}}"><button>Unlink my {{.oauth2Name}} account</button></form>{{end}}
+  {{else}}
+    <p><a href="{{route "/oauth2/%s/redirect" .oauth2}}">Link my {{.oauth2Name}} account</a></p>
+  {{end}}
+</section>
+{{end}}
+{{if .webAuthnEnabled}}
+<section>
+  <h2>Passkeys</h2>
+  {{if .credentials}}
+  <table>
+    <thead><tr><th scope="col">Name</th><th scope="col">Added</th><th scope="col">Last used</th><th scope="col">Actions</th></tr></thead>
+    <tbody>
+    {{range .credentials}}
+      <tr>
+        <td>{{.Name}}</td>
+        <td>{{with .AddedOn}}<time datetime="{{.Format "2006-01-02T15:04:05Z07:00"}}">{{.Format "2006-01-02 15:04"}}</time>{{end}}</td>
+        <td>{{with .LastSeenOn}}<time datetime="{{.Format "2006-01-02T15:04:05Z07:00"}}">{{.Format "2006-01-02 15:04"}}</time>{{end}}</td>
+        <td><a href="{{route "/webauthn/%s/rename" .HandleEncoded}}">Rename</a>
+          <details><summary>Remove</summary><form method="post" action="{{route "/webauthn/%s/delete" .HandleEncoded}}"><button>Confirm removal</button></form></details></td>
+      </tr>
+    {{end}}
+    </tbody>
+  </table>
+  <details><summary>Remove all passkeys</summary><form method="post" action="{{route "/webauthn/deleteall"}}"><button>Confirm removal</button></form></details>
+  {{else}}
+  <p>No passkeys registered.</p>
+  {{end}}
+  <p><button type="button" data-webauthn="register" disabled>Register a passkey</button></p>
+</section>
+{{end}}
+{{end}}

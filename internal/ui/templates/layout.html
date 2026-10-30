@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.title}} - sss</title>
+<meta name="color-scheme" content="{{.colorScheme}}">
+<link rel="manifest" href="{{route "/manifest.json"}}">
+<link rel="icon" href="{{route "/favicon.ico"}}">
+{{range .stylesheets}}<link rel="stylesheet" href="{{.Href}}"{{with .Media}} media="{{.}}"{{end}}>
+{{end}}{{range .scripts}}<script src="{{.}}" defer></script>
+{{end}}</head>
+<body{{with .user}}{{if .EntrySwipe}} data-entry-swipe{{end}}{{if and .GestureNav (ne .GestureNav "none")}} data-gesture-nav="{{.GestureNav}}"{{end}}{{end}}>
+{{if .user}}<header>
+<nav aria-label="Main"><ul>
+<li><a href="{{route "/unread"}}"{{if eq .menu "unread"}} aria-current="page"{{end}}>Unread <data value="{{.countUnread}}">({{.countUnread}})</data></a></li>
+<li><a href="{{route "/starred"}}"{{if eq .menu "starred"}} aria-current="page"{{end}}>Starred</a></li>
+<li><a href="{{route "/history"}}"{{if eq .menu "history"}} aria-current="page"{{end}}>History</a></li>
+<li><a href="{{route "/feeds"}}"{{if eq .menu "feeds"}} aria-current="page"{{end}}>Feeds{{if .countErrorFeeds}} <data value="{{.countErrorFeeds}}">({{plural .countErrorFeeds "error" "errors"}})</data>{{end}}</a></li>
+<li><a href="{{route "/categories"}}"{{if eq .menu "categories"}} aria-current="page"{{end}}>Categories</a></li>
+<li><a href="{{route "/settings"}}"{{if eq .menu "settings"}} aria-current="page"{{end}}>Settings</a></li>
+<li><form method="post" action="{{route "/logout"}}"><button>Logout</button></form></li>
+</ul></nav>
+<form role="search" action="{{route "/search"}}"><label>Search <input type="search" name="q" value="{{.searchQuery}}" required></label></form>
+</header>
+{{end}}<main>
+{{with .successMessage}}<p role="status">{{.}}</p>
+{{end}}{{with .errorMessage}}<p role="alert">{{.}}</p>
+{{end}}{{template "content" .}}
+</main>
+</body>
+</html>

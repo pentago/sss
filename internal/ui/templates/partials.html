@@ -1,0 +1,86 @@
+{{define "entry_status_form"}}<form method="post" action="{{route "/entry/status"}}"><input type="hidden" name="id" value="{{.ID}}">{{if eq .Status "unread"}}<input type="hidden" name="status" value="read"><button>Mark as read</button>{{else}}<input type="hidden" name="status" value="unread"><button>Mark as unread</button>{{end}}</form>{{end}}
+
+{{define "entry_star_form"}}<form method="post" action="{{route "/entry/star/%d" .ID}}"><button aria-pressed="{{.Starred}}">{{if .Starred}}Unstar{{else}}Star{{end}}</button></form>{{end}}
+
+{{define "entry_meta"}}{{$tz := .user.Timezone}}{{with .entry}}<a href="{{route "/feed/%d/entries" .Feed.ID}}">{{with iconURL .Feed.Icon}}<img src="{{.}}" alt="" width="16" height="16" loading="lazy"> {{end}}{{.Feed.Title}}</a>
+{{with .Feed.Category}}<a href="{{route "/category/%d/entries" .ID}}">{{.Title}}</a>{{end}}
+<time datetime="{{isodate .Date}}" title="{{date $tz .Date}}">{{elapsed $tz .Date}}</time>
+{{if and $.user.ShowReadingTime .ReadingTime}}<small>{{plural .ReadingTime "minute" "minutes"}} read</small>{{end}}{{end}}{{end}}
+
+{{define "entries"}}{{range .entries}}
+<article data-id="{{.ID}}" data-status="{{.Status}}" data-starred="{{.Starred}}">
+<header>
+<h2><a href="{{route $.entryPath .ID}}{{$.entryQuery}}">{{or .Title .URL}}</a></h2>
+<p>{{template "entry_meta" (dict "user" $.user "entry" .)}}</p>
+</header>
+<footer><ul>
+<li>{{template "entry_status_form" .}}</li>
+<li>{{template "entry_star_form" .}}</li>
+<li><a href="{{untrustedURL .URL}}" rel="noopener noreferrer" referrerpolicy="no-referrer" {{newTab $.user}}>Original</a></li>
+{{with .CommentsURL}}<li><a href="{{untrustedURL .}}" rel="noopener noreferrer" referrerpolicy="no-referrer" {{newTab $.user}}>Comments</a></li>{{end}}
+</ul></footer>
+</article>
+{{else}}
+<p role="status">There are no entries.</p>
+{{end}}{{end}}
+
+{{define "pagination"}}{{if or .prevURL .nextURL}}<nav aria-label="Pagination">{{with .prevURL}}<a rel="prev" href="{{.}}">Previous</a>{{end}} {{with .nextURL}}<a rel="next" href="{{.}}">Next</a>{{end}}</nav>{{end}}{{end}}
+
+{{define "feeds"}}{{range .feeds}}
+<article data-id="{{.ID}}" data-unread="{{.UnreadCount}}" data-errors="{{.ParsingErrorCount}}">
+<header>
+<h2><a href="{{route "/feed/%d/entries" .ID}}">{{with iconURL .Icon}}<img src="{{.}}" alt="" width="16" height="16" loading="lazy"> {{end}}{{.Title}}</a> <data value="{{.UnreadCount}}">({{.UnreadCount}}/{{add .UnreadCount .ReadCount}})</data></h2>
+<p><a href="{{untrustedURL .SiteURL}}" rel="noopener noreferrer" referrerpolicy="no-referrer" {{newTab $.user}}>{{domain .SiteURL}}</a>
+{{with .Category}}<a href="{{route "/category/%d/entries" .ID}}">{{.Title}}</a>{{end}}
+Checked <time datetime="{{isodate .CheckedAt}}" title="{{date $.user.Timezone .CheckedAt}}">{{elapsed $.user.Timezone .CheckedAt}}</time>
+{{if .Disabled}}<strong>Disabled</strong>{{end}}</p>
+{{if .ParsingErrorCount}}<p role="alert">{{plural .ParsingErrorCount "error" "errors"}}: {{.ParsingErrorMsg}}</p>{{end}}
+</header>
+<footer><ul>
+<li><a href="{{route "/feed/%d/edit" .ID}}">Edit</a></li>
+<li><form method="post" action="{{route "/feed/%d/refresh" .ID}}"><button>Refresh</button></form></li>
+{{if .UnreadCount}}<li><form method="post" action="{{if $.category}}{{route "/category/%d/feed/%d/mark-all-as-read" $.category.ID .ID}}{{else}}{{route "/feed/%d/mark-all-as-read" .ID}}{{end}}"><button>Mark all as read</button></form></li>{{end}}
+<li><details><summary>Remove</summary><form method="post" action="{{if $.category}}{{route "/category/%d/feed/%d/remove" $.category.ID .ID}}{{else}}{{route "/feed/%d/remove" .ID}}{{end}}"><button>Confirm removal</button></form></details></li>
+</ul></footer>
+</article>
+{{else}}
+<p role="status">There are no feeds.</p>
+{{end}}{{end}}
+
+{{define "entry_footer"}}{{$proxy := .proxy}}{{with .entry}}{{if or .Enclosures .Tags}}<footer>
+{{with .Enclosures}}<details><summary>Attachments</summary>
+<ul>{{range .}}{{if .URL}}<li>{{if and .IsAudio (not $.entry.Feed.NoMediaPlayer)}}<audio controls preload="metadata" src="{{if $proxy}}{{mediaURL .URL "audio"}}{{else}}{{untrustedURL .URL}}{{end}}"></audio>
+{{else if and .IsVideo (not $.entry.Feed.NoMediaPlayer)}}<video controls preload="metadata" src="{{if $proxy}}{{mediaURL .URL "video"}}{{else}}{{untrustedURL .URL}}{{end}}"></video>
+{{else if .IsImage}}<img src="{{if $proxy}}{{mediaURL .URL "image"}}{{else}}{{untrustedURL .URL}}{{end}}" alt="" loading="lazy">
+{{end}}<a href="{{untrustedURL .URL}}" rel="noopener noreferrer" referrerpolicy="no-referrer" {{newTab $.user}}>{{.URL}}</a>{{if .MimeType}} <small>{{.MimeType}}{{if gt .Size 0}}, {{fileSize .Size}}{{end}}</small>{{end}}</li>
+{{end}}{{end}}</ul></details>
+{{end}}{{with .Tags}}<h2>Tags</h2>
+<ul>{{range .}}<li>{{if $.user}}<a href="{{route "/tags/%s/entries/all" (pathEscape .)}}">{{.}}</a>{{else}}{{.}}{{end}}</li>{{end}}</ul>
+{{end}}</footer>{{end}}{{end}}{{end}}
+
+{{define "entry_navigation"}}{{if or .prevURL .nextURL}}<nav aria-label="Entry navigation">{{with .prevURL}}<a rel="prev" href="{{.}}">Previous</a>{{end}} {{with .nextURL}}<a rel="next" href="{{.}}">Next</a>{{end}}</nav>{{end}}{{end}}
+
+{{define "category_select"}}<label>Category <select name="category_id" required>{{$selected := .selected}}{{range .categories}}<option value="{{.ID}}"{{if eq .ID $selected}} selected{{end}}>{{.Title}}</option>{{end}}</select></label>{{end}}
+
+{{define "feed_fetch_fields"}}{{$f := .form}}<details><summary>Fetching</summary><fieldset><legend>Fetching</legend>
+<label>Feed username <input name="feed_username" value="{{$f.Username}}" autocomplete="off" spellcheck="false"></label>
+<label>Feed password <input type="password" name="feed_password" value="{{$f.Password}}" autocomplete="new-password"></label>
+<label>User agent <input name="user_agent" value="{{$f.UserAgent}}" placeholder="{{.defaultUserAgent}}" spellcheck="false"></label>
+<label>Cookies <input name="cookie" value="{{$f.Cookie}}" spellcheck="false"></label>
+<label>Proxy URL <input name="proxy_url" value="{{$f.ProxyURL}}" spellcheck="false"></label>
+<label><input type="checkbox" name="crawler" value="1"{{if $f.Crawler}} checked{{end}}> Fetch original content</label>
+<label><input type="checkbox" name="ignore_entry_updates" value="1"{{if $f.IgnoreEntryUpdates}} checked{{end}}> Ignore entry updates</label>
+<label><input type="checkbox" name="allow_self_signed_certificates" value="1"{{if $f.AllowSelfSignedCertificates}} checked{{end}}> Allow self-signed or invalid certificates</label>
+<label><input type="checkbox" name="disable_http2" value="1"{{if $f.DisableHTTP2}} checked{{end}}> Disable HTTP/2</label>
+{{if .hasProxyConfigured}}<label><input type="checkbox" name="fetch_via_proxy" value="1"{{if $f.FetchViaProxy}} checked{{end}}> Fetch via proxy</label>{{end}}
+</fieldset></details>
+<details><summary>Rules</summary><fieldset><legend>Rules</legend>
+<p>See the <a href="https://miniflux.app/docs/rules.html" rel="noopener noreferrer">rules documentation</a>.</p>
+<label>Scraper rules <textarea name="scraper_rules" rows="2" spellcheck="false" autocapitalize="off">{{$f.ScraperRules}}</textarea></label>
+<label>Rewrite rules <textarea name="rewrite_rules" rows="2" spellcheck="false" autocapitalize="off">{{$f.RewriteRules}}</textarea></label>
+<label>URL rewrite rules <textarea name="urlrewrite_rules" rows="2" spellcheck="false" autocapitalize="off">{{$f.UrlRewriteRules}}</textarea></label>
+<label>Blocklist rules (regex) <textarea name="blocklist_rules" rows="2" spellcheck="false" autocapitalize="off">{{$f.BlocklistRules}}</textarea></label>
+<label>Keeplist rules (regex) <textarea name="keeplist_rules" rows="2" spellcheck="false" autocapitalize="off">{{$f.KeeplistRules}}</textarea></label>
+<label>Entry blocking rules <textarea name="block_filter_entry_rules" rows="3" spellcheck="false" autocapitalize="off">{{$f.BlockFilterEntryRules}}</textarea></label>
+<label>Entry allow rules <textarea name="keep_filter_entry_rules" rows="3" spellcheck="false" autocapitalize="off">{{$f.KeepFilterEntryRules}}</textarea></label>
+</fieldset></details>{{end}}
