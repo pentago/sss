@@ -110,7 +110,7 @@ func (h *handler) showSearchPage(w http.ResponseWriter, r *http.Request) {
 	data := map[string]any{"title": "Search", "menu": "search", "page": "search", "entryPath": "/search/entry/%d",
 		"searchQuery": q, "unreadOnly": unreadOnly, "entryQuery": searchEntryQuery(q, unreadOnly)}
 	if q == "" {
-		data["entries"] = model.Entries{}
+		data["entries"], data["total"] = model.Entries{}, 0
 		h.render(w, r, "entries", data)
 		return
 	}
