@@ -62,7 +62,23 @@ func QueryStringParamList(r *http.Request, param string) []string {
 
 // QueryIntParam returns the named query parameter parsed as int, or defaultValue when missing, invalid, or negative.
 func QueryIntParam(r *http.Request, param string, defaultValue int) int {
-	return int(QueryInt64Param(r, param, int64(defaultValue)))
+	value := r.URL.Query().Get(param)
+	if value == "" {
+		return defaultValue
+	}
+
+	// A bit size of 0 parses in the platform's native int range, so the cast
+	// below cannot overflow on any build target.
+	val, err := strconv.ParseInt(value, 10, 0)
+	if err != nil {
+		return defaultValue
+	}
+
+	if val < 0 {
+		return defaultValue
+	}
+
+	return int(val)
 }
 
 // QueryInt64Param returns the named query parameter parsed as int64, or defaultValue when missing, invalid, or negative.
