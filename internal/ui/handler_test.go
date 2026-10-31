@@ -142,6 +142,32 @@ func TestUpdateEntriesStatus(t *testing.T) {
 	}
 }
 
+// Marking a feed or category as read lands on the fresh list, not back on the
+// now-empty entries page, whose stale twin a "back" would restore from cache.
+func TestMarkAllAsReadRedirectsToList(t *testing.T) {
+	h, store := newAccountTestServer(t)
+	cookie := login(t, h)
+	seedEntries(t, store)
+	category, err := store.FirstCategory(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct{ path, referer, want string }{
+		{"/feed/1/mark-all-as-read", "http://example.com/feed/1/entries", "/feeds"},
+		{"/category/" + itoa(category.ID) + "/mark-all-as-read", "http://example.com/category/" + itoa(category.ID) + "/entries", "/categories"},
+	}
+	for _, tt := range tests {
+		r := httptest.NewRequest(http.MethodPost, tt.path, nil)
+		r.Header.Set("Referer", tt.referer)
+		r.AddCookie(cookie)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		if w.Code != http.StatusSeeOther || w.Header().Get("Location") != tt.want {
+			t.Errorf("%s: got %d %q, want 303 %q", tt.path, w.Code, w.Header().Get("Location"), tt.want)
+		}
+	}
+}
+
 func TestCrossOriginPostRejected(t *testing.T) {
 	h, store := newAccountTestServer(t)
 	cookie := login(t, h)

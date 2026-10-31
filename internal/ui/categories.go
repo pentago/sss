@@ -102,7 +102,7 @@ func (h *handler) markCategoryAsRead(w http.ResponseWriter, r *http.Request) {
 		response.HTMLServerError(w, r, err)
 		return
 	}
-	h.redirectBack(w, r, "/categories")
+	response.HTMLRedirect(w, r, route("/categories"))
 }
 
 func (h *handler) showCategoryFeedsPage(w http.ResponseWriter, r *http.Request) {
