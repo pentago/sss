@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
@@ -95,6 +96,11 @@ func main() {
 	if flagHealthCheck != "" {
 		healthCheck(flagHealthCheck)
 		return
+	}
+	if flagConfigFile != "" {
+		if _, err := os.Stat(flagConfigFile); errors.Is(err, fs.ErrNotExist) {
+			slog.Warn("Config file not found, using environment variables only", slog.String("path", flagConfigFile))
+		}
 	}
 
 	db, err := database.Open(cfg.DatabasePath)

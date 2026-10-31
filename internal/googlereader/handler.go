@@ -26,7 +26,6 @@ import (
 )
 
 var (
-	errEmptyFeedTitle   = errors.New("googlereader: empty feed title")
 	errFeedNotFound     = errors.New("googlereader: feed not found")
 	errCategoryNotFound = errors.New("googlereader: category not found")
 	errSimultaneously   = fmt.Errorf("googlereader: %s and %s should not be supplied simultaneously", keptUnreadStreamSuffix, readStreamSuffix)

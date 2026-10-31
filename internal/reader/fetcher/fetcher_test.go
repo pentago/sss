@@ -37,7 +37,9 @@ func proxyServer(t *testing.T, got chan<- string) *httptest.Server {
 func TestCookieOnlySentToSameSite(t *testing.T) {
 	got := make(chan string, 1)
 	p, _ := url.Parse(proxyServer(t, got).URL)
-	b := NewRequestBuilder().WithCustomApplicationProxyURL(p).UseCustomApplicationProxyURL(true).
+	setAllowPrivate(t, "1")
+	config.Opts.HTTPClientProxy = p
+	b := NewRequestBuilder().UseCustomApplicationProxyURL(true).
 		WithCookie("s=1", "https://feeds.example.org/rss.xml")
 	for u, want := range map[string]string{
 		"http://feeds.example.org/rss.xml":             "s=1",
@@ -94,7 +96,8 @@ func TestPrivateNetworks(t *testing.T) {
 	got := make(chan string, 1)
 	ps := proxyServer(t, got)
 	p, _ := url.Parse(ps.URL)
-	resp, err := NewRequestBuilder().WithCustomApplicationProxyURL(p).UseCustomApplicationProxyURL(true).ExecuteRequest("http://feed.invalid/")
+	config.Opts.HTTPClientProxy = p
+	resp, err := NewRequestBuilder().UseCustomApplicationProxyURL(true).ExecuteRequest("http://feed.invalid/")
 	if err != nil {
 		t.Fatal(err)
 	}

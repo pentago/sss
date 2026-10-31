@@ -41,7 +41,6 @@ type RequestBuilder struct {
 	headers            http.Header
 	cookie             string
 	cookieSiteHost     string
-	clientProxyURL     *url.URL
 	clientTimeout      time.Duration
 	useClientProxy     bool
 	withoutRedirects   bool
@@ -120,12 +119,6 @@ func (r *RequestBuilder) WithUsernameAndPassword(username, password string) *Req
 	return r
 }
 
-// WithCustomApplicationProxyURL sets the application proxy (HTTP_CLIENT_PROXY).
-func (r *RequestBuilder) WithCustomApplicationProxyURL(proxyURL *url.URL) *RequestBuilder {
-	r.clientProxyURL = proxyURL
-	return r
-}
-
 // UseCustomApplicationProxyURL enables the application proxy.
 func (r *RequestBuilder) UseCustomApplicationProxyURL(value bool) *RequestBuilder {
 	r.useClientProxy = value
@@ -177,11 +170,8 @@ func (r *RequestBuilder) ExecuteRequest(requestURL string) (*http.Response, erro
 		if proxyURL, err = url.Parse(r.feedProxyURL); err != nil {
 			return nil, fmt.Errorf("fetcher: invalid feed proxy URL %q: %w", r.feedProxyURL, err)
 		}
-	case r.useClientProxy:
-		proxyURL = r.clientProxyURL
-		if proxyURL == nil && config.Opts != nil {
-			proxyURL = config.Opts.HTTPClientProxy
-		}
+	case r.useClientProxy && config.Opts != nil:
+		proxyURL = config.Opts.HTTPClientProxy
 	}
 
 	dialer := &net.Dialer{Timeout: 10 * time.Second, KeepAlive: 15 * time.Second}

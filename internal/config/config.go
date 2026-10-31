@@ -112,7 +112,8 @@ type Options struct {
 
 // Load parses the config file and the process environment into Opts. Environment
 // variables override file values. An empty path means
-// $XDG_CONFIG_HOME/sss/sss.conf, which is skipped when it does not exist.
+// $XDG_CONFIG_HOME/sss/sss.conf. A missing file is skipped, so a container can be
+// configured with environment variables only.
 func Load(path string) error {
 	environ := os.Environ()
 	explicit := path != ""
@@ -121,10 +122,14 @@ func Load(path string) error {
 	}
 	if path != "" {
 		lines, err := readConfigFile(path)
-		if err != nil && (explicit || !errors.Is(err, fs.ErrNotExist)) {
+		switch {
+		case errors.Is(err, fs.ErrNotExist):
+			// sss: upstream exits on a missing -c file; main logs a warning instead.
+		case err != nil:
 			return err
+		default:
+			environ = append(lines, environ...)
 		}
-		environ = append(lines, environ...)
 	}
 	opts, err := Parse(environ)
 	if err != nil {
