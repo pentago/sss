@@ -10,4 +10,8 @@
   <dt>Database size</dt><dd>{{.dbSize}}</dd>
 </dl>
 <p>sss is free software (Apache-2.0).</p>
+{{if .user.IsAdmin}}
+<h2>Global configuration options</h2>
+<pre><code>{{.config}}</code></pre>
+{{end}}
 {{end}}

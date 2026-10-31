@@ -139,6 +139,7 @@ func (h *handler) showAbout(w http.ResponseWriter, r *http.Request) {
 		"dbVersion": h.store.DatabaseVersion(),
 		"dbSize":    dbSize,
 		"goVersion": runtime.Version(),
+		"config":    config.Opts.Dump(),
 	})
 }
 
