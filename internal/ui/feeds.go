@@ -65,7 +65,7 @@ func (h *handler) refreshFeeds(w http.ResponseWriter, r *http.Request, categoryI
 
 func (h *handler) refreshFeed(w http.ResponseWriter, r *http.Request) {
 	feedID := request.RouteInt64Param(r, "feedID")
-	if err := feedHandler.RefreshFeed(h.store, request.UserID(r), feedID, false); err != nil {
+	if err := feedHandler.RefreshFeed(r.Context(), h.store, request.UserID(r), feedID, false); err != nil {
 		slog.Warn("Unable to refresh feed", slog.Int64("user_id", request.UserID(r)), slog.Int64("feed_id", feedID), slog.Any("error", err))
 		request.WebSession(r).SetErrorMessage(err.Error())
 	}

@@ -104,6 +104,12 @@ func TestDefaults(t *testing.T) {
 	if o.HTTPClientProxy != nil || o.TrustedReverseProxyNetworks != nil {
 		t.Errorf("unset values: %v %v", o.HTTPClientProxy, o.TrustedReverseProxyNetworks)
 	}
+	if o.PprofListenAddr != "" {
+		t.Errorf("pprof must be off by default: %q", o.PprofListenAddr)
+	}
+	if o.MetricsCollector || o.MetricsRefreshInterval != time.Minute {
+		t.Errorf("metrics must be off with a 60s refresh: %v %v", o.MetricsCollector, o.MetricsRefreshInterval)
+	}
 }
 
 func TestParseValues(t *testing.T) {

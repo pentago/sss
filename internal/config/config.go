@@ -79,6 +79,11 @@ type Options struct {
 	MediaProxyMode                     string
 	MediaProxyPrivateKey               []byte // Random when unset.
 	MediaProxyResourceTypes            []string
+	MetricsAllowedNetworks             []string
+	MetricsCollector                   bool
+	MetricsPassword                    string
+	MetricsRefreshInterval             time.Duration
+	MetricsUsername                    string
 	OAuth2AdditionalScopes             []string
 	OAuth2AdminGroup                   string
 	OAuth2ClientID                     string
@@ -93,6 +98,7 @@ type Options struct {
 	PollingLimitPerHost                int
 	PollingParsingErrorLimit           int
 	PollingScheduler                   string
+	PprofListenAddr                    string // "" disables the pprof listener.
 	RunMigrations                      bool
 	SchedulerEntryFrequencyFactor      int
 	SchedulerEntryFrequencyMaxInterval time.Duration
@@ -227,6 +233,11 @@ func Parse(environ []string) (*Options, error) {
 		MediaProxyMode:                     p.str("MEDIA_PROXY_MODE", "http-only", "none", "http-only", "all"),
 		MediaProxyPrivateKey:               []byte(p.raw("MEDIA_PROXY_PRIVATE_KEY", "", true)),
 		MediaProxyResourceTypes:            p.list("MEDIA_PROXY_RESOURCE_TYPES", "image"),
+		MetricsAllowedNetworks:             p.list("METRICS_ALLOWED_NETWORKS", "127.0.0.1/8"),
+		MetricsCollector:                   p.boolean("METRICS_COLLECTOR", false),
+		MetricsPassword:                    p.secret("METRICS_PASSWORD", ""),
+		MetricsRefreshInterval:             p.duration("METRICS_REFRESH_INTERVAL", "60", time.Second, 1),
+		MetricsUsername:                    p.fileValue("METRICS_USERNAME", "", false),
 		OAuth2AdditionalScopes:             p.list("OAUTH2_ADDITIONAL_SCOPES", ""),
 		OAuth2AdminGroup:                   p.str("OAUTH2_ADMIN_GROUP", ""),
 		OAuth2ClientID:                     p.secret("OAUTH2_CLIENT_ID", ""),
@@ -241,6 +252,7 @@ func Parse(environ []string) (*Options, error) {
 		PollingLimitPerHost:                p.integer("POLLING_LIMIT_PER_HOST", "0", 0),
 		PollingParsingErrorLimit:           p.integer("POLLING_PARSING_ERROR_LIMIT", "3", 0),
 		PollingScheduler:                   p.str("POLLING_SCHEDULER", "round_robin", "round_robin", "entry_frequency"),
+		PprofListenAddr:                    p.str("PPROF_LISTEN_ADDR", ""),
 		RunMigrations:                      p.boolean("RUN_MIGRATIONS", false),
 		SchedulerEntryFrequencyFactor:      p.integer("SCHEDULER_ENTRY_FREQUENCY_FACTOR", "1", 1),
 		SchedulerEntryFrequencyMaxInterval: p.duration("SCHEDULER_ENTRY_FREQUENCY_MAX_INTERVAL", "1440", time.Minute, 1),

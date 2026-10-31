@@ -101,7 +101,8 @@ These differ from Miniflux:
 |---|---|
 | `DATABASE_PATH` | Replaces `DATABASE_URL`. Path to the SQLite file or a `file:` URI. Default `$XDG_DATA_HOME/sss/sss.db`, where `XDG_DATA_HOME` defaults to `~/.local/share`. When there is no home directory, the default is `sss.db` in the working directory. |
 | `DATABASE_MAX_CONNS`, `DATABASE_MIN_CONNS`, `DATABASE_CONNECTION_LIFETIME` | Removed (SQLite) |
-| `METRICS_*` | Removed (no Prometheus) |
+| `METRICS_*` | Same as Miniflux, but metric names start with `sss_` instead of `miniflux_`. |
+| `PPROF_LISTEN_ADDR` | New. Serves Go's `/debug/pprof/` profiles and execution traces on this address (e.g. `127.0.0.1:6060`). Default off. Unauthenticated, so keep it on localhost. See [docs/instrumentation.md](docs/instrumentation.md). |
 | `HTTP_CLIENT_PROXIES`, `FETCHER_ALLOW_PRIVATE_FEED_PROXY` | Removed |
 | `FETCH_NEBULA_WATCH_TIME`, `FETCH_ODYSEE_WATCH_TIME`, `FETCH_BILIBILI_WATCH_TIME` | Removed (only YouTube watch time is supported) |
 

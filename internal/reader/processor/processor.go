@@ -8,8 +8,10 @@ import (
 	"log/slog"
 	"net/url"
 	"slices"
+	"time"
 
 	"sss/internal/config"
+	"sss/internal/metric"
 	"sss/internal/model"
 	"sss/internal/reader/fetcher"
 	"sss/internal/reader/filter"
@@ -57,7 +59,9 @@ func ProcessFeedEntries(store EntryStore, feed *model.Feed, user *model.User, fo
 		entryIsNew := store.IsNewEntry(feed.ID, entry.Hash)
 		contentExtractedSuccessfully := false
 		if (feed.Crawler || user.GlobalCrawler) && (forceRefresh || entryIsNew) {
+			start := time.Now()
 			scrapedPageBaseURL, extractedContent, scraperErr := scraper.ScrapeWebsite(requestBuilder, entry.URL, feed.ScraperRules)
+			metric.ObserveSince(metric.ScraperRequestDuration, start, scraperErr)
 			if scrapedPageBaseURL != "" {
 				webpageBaseURL = scrapedPageBaseURL
 			}
@@ -106,7 +110,9 @@ func ProcessFeedEntries(store EntryStore, feed *model.Feed, user *model.User, fo
 func ProcessEntryWebPage(feed *model.Feed, entry *model.Entry, user *model.User) error {
 	entry.URL = rewrite.RewriteEntryURL(feed, entry)
 
+	start := time.Now()
 	webpageBaseURL, extractedContent, scraperErr := scraper.ScrapeWebsite(newRequestBuilder(feed, user), entry.URL, feed.ScraperRules)
+	metric.ObserveSince(metric.ScraperRequestDuration, start, scraperErr)
 	if scraperErr != nil {
 		return scraperErr
 	}
