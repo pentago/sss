@@ -120,7 +120,7 @@ Custom CSS and Custom JS are user settings. The markup is stable and uses only s
 
 | What | Selector |
 |---|---|
-| Main navigation | `body > header nav[aria-label="Main"]` (current item: `[aria-current="page"]`) |
+| Main navigation | `body > header nav[aria-label="Main"]`: the Unread link (`> a`), then the other links in a menu (`> details > ul`, toggle `> details > summary`, shown only on narrow screens). Current item: `[aria-current="page"]` |
 | Entry, feed and category list items | `main > article` |
 | Read / unread entry | `article[data-status="read"]`, `article[data-status="unread"]` |
 | Starred entry | `article[data-starred="true"]` |
