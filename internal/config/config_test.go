@@ -56,9 +56,12 @@ func TestLoadConfigFile(t *testing.T) {
 		t.Errorf("BaseURL = %q, want the environment value", Opts.BaseURL)
 	}
 
-	// An explicit file must exist.
-	if err := Load(filepath.Join(dir, "missing.conf")); err == nil {
-		t.Error("Load with a missing explicit file succeeded")
+	// A missing explicit file is skipped (env-only containers): no file values, env still applies.
+	if err := Load(filepath.Join(dir, "missing.conf")); err != nil {
+		t.Fatalf("Load with a missing explicit file: %v", err)
+	}
+	if Opts.BaseURL != "https://env.example.org" || slices.Equal(Opts.ListenAddr, []string{"127.0.0.1:9000"}) {
+		t.Errorf("missing file: BaseURL = %q, ListenAddr = %v; want the env value and no file values", Opts.BaseURL, Opts.ListenAddr)
 	}
 
 	// An existing but unreadable default file is an error, not silently ignored.

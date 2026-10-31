@@ -72,7 +72,7 @@ The image is built from `scratch` and runs as an unprivileged user. Its layout:
 - `/sss` is the binary.
 - `/config` is the volume. It holds the config file `/config/sss.conf` and the database `/config/sss.db`.
 
-The image ships a default `sss.conf` with `LISTEN_ADDR=0.0.0.0:8080`, `DATABASE_PATH=/config/sss.db` and `RUN_MIGRATIONS=1`. A named volume picks that file up automatically. If you bind-mount your own directory, it must contain an `sss.conf` with those lines. Environment variables override the file.
+The image ships a default `sss.conf` with `LISTEN_ADDR=0.0.0.0:8080`, `DATABASE_PATH=/config/sss.db` and `RUN_MIGRATIONS=1`. A named volume picks that file up automatically. A bind-mounted directory needs either an `sss.conf` with those lines or the same settings as environment variables; without a file, sss logs a warning and uses the environment only. Environment variables override the file.
 
 `examples/compose.yaml` runs the `:dev` image with `examples/config` (a ready `sss.conf`; the database is created there) bind-mounted to `/config`.
 
@@ -90,7 +90,7 @@ Release artifacts, release images and `main` images get signed build provenance 
 
 Settings use [Miniflux's configuration names](https://miniflux.app/docs/configuration.html), including the `_FILE` variants for secrets. They can come from two places:
 
-- **A config file:** `-c`/`-config-file <path>`, or `$XDG_CONFIG_HOME/sss/sss.conf` when it exists. It holds one `KEY=VALUE` per line, and lines starting with `#` are comments.
+- **A config file:** `-c`/`-config-file <path>`, or `$XDG_CONFIG_HOME/sss/sss.conf` when it exists. It holds one `KEY=VALUE` per line, and lines starting with `#` are comments. Unlike Miniflux, a missing `-c` file is not an error: sss logs a warning and uses the environment only.
 - **Environment variables**, which override the file.
 
 These differ from Miniflux:
