@@ -71,6 +71,9 @@ func TestUsers(t *testing.T) {
 		user.ThemeDarkHour != 19 || user.EntriesPerPage != 100 || !user.MarkReadOnView || user.LastLoginAt != nil {
 		t.Fatalf("unexpected defaults: %+v", user)
 	}
+	if !user.IsAdmin {
+		t.Fatal("the first user must be an admin so a password-less install can be administered")
+	}
 	if !s.UserExists("ALICE") || s.AnotherUserExists(user.ID, "alice") {
 		t.Fatal("UserExists/AnotherUserExists mismatch")
 	}
@@ -118,6 +121,9 @@ func TestUsers(t *testing.T) {
 	oidc, err := s.CreateUser(&model.UserCreationRequest{Username: "bob", OpenIDConnectID: "sub-1"})
 	if err != nil {
 		t.Fatal(err)
+	}
+	if oidc.IsAdmin {
+		t.Fatal("only the first user is an admin by default")
 	}
 	if ok, _ := s.HasPassword(oidc.ID); ok {
 		t.Fatal("OIDC user has a password")

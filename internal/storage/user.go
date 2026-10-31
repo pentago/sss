@@ -61,6 +61,7 @@ func (s *Storage) AnotherUserExists(userID int64, username string) bool {
 }
 
 // CreateUser creates a new user with its default category and integration row.
+// The first user is always an admin, so a fresh install needs no CREATE_ADMIN password.
 func (s *Storage) CreateUser(request *model.UserCreationRequest) (*model.User, error) {
 	var hashedPassword string
 	if request.Password != "" {
@@ -76,9 +77,11 @@ func (s *Storage) CreateUser(request *model.UserCreationRequest) (*model.User, e
 	}
 
 	var user model.User
+	// sss: upstream only sets is_admin when requested. The check runs inside the
+	// write-locked transaction, so two concurrent first sign-ins can't both become admin.
 	err = tx.QueryRow(`
 		INSERT INTO users (username, password, is_admin, google_id, openid_connect_id)
-		VALUES (lower($1), $2, $3, $4, $5)
+		VALUES (lower($1), $2, $3 OR NOT EXISTS (SELECT 1 FROM users), $4, $5)
 		RETURNING `+userColumns,
 		request.Username, hashedPassword, request.IsAdmin, request.GoogleID, request.OpenIDConnectID,
 	).Scan(userDest(&user)...)
