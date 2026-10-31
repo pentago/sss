@@ -18,18 +18,6 @@ func enclosureDest(e *model.Enclosure) []any {
 	return []any{&e.ID, &e.UserID, &e.EntryID, &e.URL, &e.Size, &e.MimeType, &e.MediaProgression}
 }
 
-// EnclosuresByEntryID returns all enclosures for the given entry.
-func (s *Storage) EnclosuresByEntryID(entryID int64) (model.EnclosureList, error) {
-	enclosures, err := s.EnclosuresByEntryIDs([]int64{entryID})
-	if err != nil {
-		return nil, err
-	}
-	if enclosures[entryID] == nil {
-		return make(model.EnclosureList, 0), nil
-	}
-	return enclosures[entryID], nil
-}
-
 // EnclosuresByEntryIDs returns enclosures for the given entries, grouped by entry ID.
 func (s *Storage) EnclosuresByEntryIDs(entryIDs []int64) (map[int64]model.EnclosureList, error) {
 	rows, err := s.db.Query(`SELECT `+enclosureColumns+` FROM enclosures WHERE entry_id IN (SELECT value FROM json_each($1)) ORDER BY id ASC`, jsonArray(entryIDs))

@@ -34,15 +34,7 @@ const maxIconDimension = 4096
 // FindIcon looks for the icon of feed: the feed's own icon URL, then <link> icons
 // of the site (and its root), then /favicon.ico. It returns nil, nil when none is found.
 func FindIcon(feed *model.Feed, defaultUserAgent string) (*model.Icon, error) {
-	requestBuilder := fetcher.NewRequestBuilder().
-		WithUserAgent(feed.UserAgent, defaultUserAgent).
-		WithCookie(feed.Cookie, feed.FeedURL).
-		WithTimeout(config.Opts.HTTPClientTimeout).
-		WithCustomFeedProxyURL(feed.ProxyURL).
-		WithCustomApplicationProxyURL(config.Opts.HTTPClientProxy).
-		UseCustomApplicationProxyURL(feed.FetchViaProxy).
-		IgnoreTLSErrors(feed.AllowSelfSignedCertificates).
-		DisableHTTP2(feed.DisableHTTP2)
+	requestBuilder := fetcher.ForFeed(feed, defaultUserAgent)
 	return (&finder{requestBuilder}).find(feed.SiteURL, feed.IconURL)
 }
 

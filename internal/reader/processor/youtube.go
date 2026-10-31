@@ -66,9 +66,7 @@ func updateEntryReadingTime(store EntryStore, feed *model.Feed, entry *model.Ent
 
 func newWatchTimeRequestBuilder() *fetcher.RequestBuilder {
 	return fetcher.NewRequestBuilder().
-		WithUserAgent("", config.Opts.HTTPClientUserAgent).
-		WithTimeout(config.Opts.HTTPClientTimeout).
-		WithCustomApplicationProxyURL(config.Opts.HTTPClientProxy)
+		WithUserAgent("", config.Opts.HTTPClientUserAgent)
 }
 
 // fetchYouTubeWatchTime scrapes the video page and returns its duration in minutes.

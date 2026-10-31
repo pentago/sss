@@ -4,20 +4,14 @@
 package matrixbot
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
-	"time"
 
-	"sss/internal/config"
 	"sss/internal/crypto"
 	"sss/internal/http/client"
-	"sss/internal/version"
 )
-
-const defaultClientTimeout = 10 * time.Second
 
 // Client is a Matrix API client.
 type Client struct {
@@ -36,16 +30,9 @@ func (c *Client) DiscoverEndpoints() (*DiscoveryEndpointResponse, error) {
 		return nil, fmt.Errorf("matrix: unable to join base URL and path: %w", err)
 	}
 
-	request, err := http.NewRequest(http.MethodGet, endpointURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("matrix: unable to create request: %v", err)
-	}
-
-	request.Header.Set("Accept", "application/json")
-	request.Header.Set("User-Agent", "sss/"+version.Version)
-
-	httpClient := client.NewClientWithOptions(client.Options{Timeout: defaultClientTimeout, BlockPrivateNetworks: !config.Opts.IntegrationAllowPrivateNetworks})
-	response, err := httpClient.Do(request)
+	response, err := client.NewRequestBuilder(endpointURL).
+		WithHeader("Accept", "application/json").
+		Do()
 	if err != nil {
 		return nil, fmt.Errorf("matrix: unable to send request: %v", err)
 	}
@@ -79,22 +66,11 @@ func (c *Client) Login(homeServerURL, matrixUsername, matrixPassword string) (*L
 		Password: matrixPassword,
 	}
 
-	requestBody, err := json.Marshal(loginRequest)
-	if err != nil {
-		return nil, fmt.Errorf("matrix: unable to encode request body: %v", err)
-	}
-
-	request, err := http.NewRequest(http.MethodPost, endpointURL, bytes.NewReader(requestBody))
-	if err != nil {
-		return nil, fmt.Errorf("matrix: unable to create request: %v", err)
-	}
-
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	request.Header.Set("User-Agent", "sss/"+version.Version)
-
-	httpClient := client.NewClientWithOptions(client.Options{Timeout: defaultClientTimeout, BlockPrivateNetworks: !config.Opts.IntegrationAllowPrivateNetworks})
-	response, err := httpClient.Do(request)
+	response, err := client.NewRequestBuilder(endpointURL).
+		WithMethod(http.MethodPost).
+		WithHeader("Accept", "application/json").
+		WithJSON(loginRequest).
+		Do()
 	if err != nil {
 		return nil, fmt.Errorf("matrix: unable to send request: %v", err)
 	}
@@ -113,11 +89,11 @@ func (c *Client) Login(homeServerURL, matrixUsername, matrixPassword string) (*L
 }
 
 // Specs https://spec.matrix.org/v1.8/client-server-api/#put_matrixclientv3roomsroomidsendeventtypetxnid
-func (c *Client) SendFormattedTextMessage(homeServerURL, accessToken, roomID, textMessage, formattedMessage string) (*RoomEventResponse, error) {
+func (c *Client) SendFormattedTextMessage(homeServerURL, accessToken, roomID, textMessage, formattedMessage string) error {
 	txnID := crypto.GenerateRandomStringHex(10)
 	endpointURL, err := url.JoinPath(homeServerURL, "/_matrix/client/v3/rooms/", roomID, "/send/m.room.message/", txnID)
 	if err != nil {
-		return nil, fmt.Errorf("matrix: unable to join base URL and path: %w", err)
+		return fmt.Errorf("matrix: unable to join base URL and path: %w", err)
 	}
 
 	messageEvent := TextMessageEventRequest{
@@ -127,38 +103,22 @@ func (c *Client) SendFormattedTextMessage(homeServerURL, accessToken, roomID, te
 		FormattedBody: formattedMessage,
 	}
 
-	requestBody, err := json.Marshal(messageEvent)
+	response, err := client.NewRequestBuilder(endpointURL).
+		WithMethod(http.MethodPut).
+		WithHeader("Accept", "application/json").
+		WithHeader("Authorization", "Bearer "+accessToken).
+		WithJSON(messageEvent).
+		Do()
 	if err != nil {
-		return nil, fmt.Errorf("matrix: unable to encode request body: %v", err)
-	}
-
-	request, err := http.NewRequest(http.MethodPut, endpointURL, bytes.NewReader(requestBody))
-	if err != nil {
-		return nil, fmt.Errorf("matrix: unable to create request: %v", err)
-	}
-
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	request.Header.Set("User-Agent", "sss/"+version.Version)
-	request.Header.Set("Authorization", "Bearer "+accessToken)
-
-	httpClient := client.NewClientWithOptions(client.Options{Timeout: defaultClientTimeout, BlockPrivateNetworks: !config.Opts.IntegrationAllowPrivateNetworks})
-	response, err := httpClient.Do(request)
-	if err != nil {
-		return nil, fmt.Errorf("matrix: unable to send request: %v", err)
+		return fmt.Errorf("matrix: unable to send request: %v", err)
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode >= 400 {
-		return nil, fmt.Errorf("matrix: unexpected response from %s status code is %d", endpointURL, response.StatusCode)
+		return fmt.Errorf("matrix: unexpected response from %s status code is %d", endpointURL, response.StatusCode)
 	}
 
-	var eventResponse RoomEventResponse
-	if err := json.NewDecoder(response.Body).Decode(&eventResponse); err != nil {
-		return nil, fmt.Errorf("matrix: unable to decode event response: %w", err)
-	}
-
-	return &eventResponse, nil
+	return nil
 }
 
 // HomeServerInformation is the m.homeserver discovery entry.
@@ -166,15 +126,9 @@ type HomeServerInformation struct {
 	BaseURL string `json:"base_url"`
 }
 
-// IdentityServerInformation is the m.identity_server discovery entry.
-type IdentityServerInformation struct {
-	BaseURL string `json:"base_url"`
-}
-
 // DiscoveryEndpointResponse is the .well-known/matrix/client response.
 type DiscoveryEndpointResponse struct {
-	HomeServerInformation     HomeServerInformation     `json:"m.homeserver"`
-	IdentityServerInformation IdentityServerInformation `json:"m.identity_server"`
+	HomeServerInformation HomeServerInformation `json:"m.homeserver"`
 }
 
 // UserIdentifier identifies the user in a login request.
@@ -192,10 +146,7 @@ type LoginRequest struct {
 
 // LoginResponse is the login response holding the access token.
 type LoginResponse struct {
-	UserID      string `json:"user_id"`
 	AccessToken string `json:"access_token"`
-	DeviceID    string `json:"device_id"`
-	HomeServer  string `json:"home_server"`
 }
 
 // TextMessageEventRequest is an m.room.message event body.
@@ -204,9 +155,4 @@ type TextMessageEventRequest struct {
 	Body          string `json:"body"`
 	Format        string `json:"format"`
 	FormattedBody string `json:"formatted_body"`
-}
-
-// RoomEventResponse is the response to sending a room event.
-type RoomEventResponse struct {
-	EventID string `json:"event_id"`
 }

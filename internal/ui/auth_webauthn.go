@@ -142,19 +142,12 @@ func (h *handler) webAuthnLoginFinish(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return nil, err
 		}
-		if cred == nil {
-			return nil, fmt.Errorf("no user found for handle %x", handle)
-		}
 		u, err := h.store.UserByID(userID)
 		if err != nil {
 			return nil, err
 		}
 		if u == nil {
 			return nil, fmt.Errorf("no user found for handle %x", handle)
-		}
-		// Credentials stored before backup_eligible was tracked trust the assertion once.
-		if !cred.BackupEligibleKnown {
-			cred.Credential.Flags.BackupEligible = parsed.Response.AuthenticatorData.Flags.HasBackupEligible()
 		}
 		user, credential = u, cred
 		return webAuthnUser{user: u, handle: handle, credentials: []model.WebAuthnCredential{*cred}}, nil
@@ -214,7 +207,7 @@ func (h *handler) webAuthnSave(w http.ResponseWriter, r *http.Request) {
 		h.renderAccount(w, r, "auth_webauthn_rename", map[string]any{"title": "Rename passkey", "menu": "settings", "credential": credential, "errorMessage": "The name is required."})
 		return
 	}
-	if _, err := h.store.WebAuthnUpdateName(request.UserID(r), handle, name); err != nil {
+	if err := h.store.WebAuthnUpdateName(request.UserID(r), handle, name); err != nil {
 		response.HTMLServerError(w, r, err)
 		return
 	}

@@ -4,25 +4,18 @@
 package pushover
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
-	"time"
 
-	"sss/internal/config"
 	"sss/internal/http/client"
 	"sss/internal/model"
-	"sss/internal/version"
 )
 
-const (
-	defaultClientTimeout = 10 * time.Second
-	defaultPushoverURL   = "https://api.pushover.net"
-)
+const defaultPushoverURL = "https://api.pushover.net"
 
 // Client is a Pushover API client.
 type Client struct {
@@ -43,16 +36,12 @@ type message struct {
 	Message  string `json:"message"`
 	Priority int    `json:"priority"`
 
-	URL      string `json:"url"`
-	URLTitle string `json:"url_title"`
-	Device   string `json:"device,omitempty"`
+	URL    string `json:"url"`
+	Device string `json:"device,omitempty"`
 }
 
 type errorResponse struct {
-	User    string   `json:"user"`
-	Errors  []string `json:"errors"`
-	Status  int      `json:"status"`
-	Request string   `json:"request"`
+	Errors []string `json:"errors"`
 }
 
 // NewClient returns a Pushover client.
@@ -108,21 +97,11 @@ func (c *Client) SendMessages(feed *model.Feed, entries model.Entries) error {
 }
 
 func (c *Client) makeRequest(payload *message) error {
-	jsonData, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("pushover: unable to encode request body: %w", err)
-	}
 	url := c.prefix + "/1/messages.json"
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return fmt.Errorf("pushover: unable to create request: %w", err)
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "sss/"+version.Version)
-
-	httpClient := client.NewClientWithOptions(client.Options{Timeout: defaultClientTimeout, BlockPrivateNetworks: !config.Opts.IntegrationAllowPrivateNetworks})
-	resp, err := httpClient.Do(req)
+	resp, err := client.NewRequestBuilder(url).
+		WithMethod(http.MethodPost).
+		WithJSON(payload).
+		Do()
 	if err != nil {
 		return fmt.Errorf("pushover: unable to send request: %w", err)
 	}

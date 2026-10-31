@@ -23,14 +23,6 @@ type EnclosureUpdateRequest struct {
 	MediaProgression int64 `json:"media_progression"`
 }
 
-// Html5MimeType will modify the actual MimeType to allow direct playback from HTML5 player for some kind of MimeType
-func (e *Enclosure) Html5MimeType() string {
-	if e.MimeType == "video/m4v" {
-		return "video/x-m4v"
-	}
-	return e.MimeType
-}
-
 // IsAudio reports whether the enclosure is an audio file.
 func (e *Enclosure) IsAudio() bool {
 	return strings.HasPrefix(strings.ToLower(e.MimeType), "audio/")
@@ -53,26 +45,3 @@ func (e *Enclosure) IsImage() bool {
 
 // EnclosureList represents a list of attachments.
 type EnclosureList []*Enclosure
-
-// FindMediaPlayerEnclosure returns the first enclosure that can be played by a media player.
-func (el EnclosureList) FindMediaPlayerEnclosure() *Enclosure {
-	for _, enclosure := range el {
-		if enclosure.URL != "" {
-			if enclosure.IsAudio() || enclosure.IsVideo() {
-				return enclosure
-			}
-		}
-	}
-
-	return nil
-}
-
-// ContainsAudioOrVideo reports whether any enclosure is audio or video.
-func (el EnclosureList) ContainsAudioOrVideo() bool {
-	for _, enclosure := range el {
-		if enclosure.IsAudio() || enclosure.IsVideo() {
-			return true
-		}
-	}
-	return false
-}

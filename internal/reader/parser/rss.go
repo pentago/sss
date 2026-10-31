@@ -4,6 +4,7 @@
 package parser
 
 import (
+	"cmp"
 	"html"
 	"path"
 	"slices"
@@ -123,9 +124,7 @@ func buildRSS(baseURL string, src *gofeed.Feed, ch *rss.Feed) *model.Feed {
 		}
 
 		if item.ITunesExt != nil && item.ITunesExt.Duration != "" {
-			if minutes, ok := durationInMinutes(item.ITunesExt.Duration); ok {
-				entry.ReadingTime = minutes
-			}
+			entry.ReadingTime = durationInMinutes(item.ITunesExt.Duration)
 		}
 
 		var labels []string
@@ -159,18 +158,9 @@ func rssFeedAuthor(ch *rss.Feed) string {
 		author = firstValue(googlePlay(ch.Extensions, "author"))
 	}
 	if author == "" && ch.ITunesExt != nil && ch.ITunesExt.Owner != nil {
-		author = strings.TrimSpace(ch.ITunesExt.Owner.Name)
-		if author == "" {
-			author = strings.TrimSpace(ch.ITunesExt.Owner.Email)
-		}
+		author = cmp.Or(strings.TrimSpace(ch.ITunesExt.Owner.Name), strings.TrimSpace(ch.ITunesExt.Owner.Email))
 	}
-	if author == "" {
-		author = ch.ManagingEditor
-	}
-	if author == "" {
-		author = ch.WebMaster
-	}
-	return sanitizer.StripTags(author)
+	return sanitizer.StripTags(cmp.Or(author, ch.ManagingEditor, ch.WebMaster))
 }
 
 func rssFeedTags(ch *rss.Feed) []string {
@@ -203,23 +193,15 @@ func rssEntryDate(item *rss.Item, it *gofeed.Item) time.Time {
 }
 
 func rssEntryContent(item *rss.Item) string {
-	values := []string{item.Content, item.Description, firstValue(googlePlay(item.Extensions, "description"))}
+	content := cmp.Or(item.Content, item.Description, firstValue(googlePlay(item.Extensions, "description")))
 	if item.ITunesExt != nil {
-		values = append(values, item.ITunesExt.Summary, item.ITunesExt.Subtitle)
+		content = cmp.Or(content, item.ITunesExt.Summary, item.ITunesExt.Subtitle)
 	}
-	for _, v := range values {
-		if v != "" {
-			return v
-		}
-	}
-	return ""
+	return content
 }
 
 func rssEntryURL(item *rss.Item) string {
-	if l := firstExtValue(item.Extensions, "feedburner", "origLink"); l != "" {
-		return l
-	}
-	if l := strings.TrimSpace(item.Link); l != "" {
+	if l := cmp.Or(firstExtValue(item.Extensions, "feedburner", "origLink"), strings.TrimSpace(item.Link)); l != "" {
 		return l
 	}
 	for _, l := range item.Extensions["atom"]["link"] {
@@ -243,10 +225,7 @@ func rssEntryAuthor(item *rss.Item) string {
 		author = item.DublinCoreExt.Creator[0]
 	}
 	if author == "" {
-		author = atomPersonName(item.Extensions)
-	}
-	if author == "" {
-		author = item.Author
+		author = cmp.Or(atomPersonName(item.Extensions), item.Author)
 	}
 	return sanitizer.StripTags(author)
 }
@@ -282,20 +261,21 @@ func rssEntryEnclosures(item *rss.Item, siteURL string) model.EnclosureList {
 }
 
 // durationInMinutes parses an iTunes duration ("SS", "MM:SS" or "HH:MM:SS").
-func durationInMinutes(raw string) (int, bool) {
+// It returns 0 when raw is not a valid duration.
+func durationInMinutes(raw string) int {
 	parts := strings.Split(raw, ":")
 	if len(parts) > 3 {
-		return 0, false
+		return 0
 	}
 	seconds := 0
 	for _, p := range parts {
 		v, err := strconv.Atoi(p)
 		if err != nil {
-			return 0, false
+			return 0
 		}
 		seconds = seconds*60 + v
 	}
-	return seconds / 60, true
+	return seconds / 60
 }
 
 func buildRDF(baseURL string, src *gofeed.Feed, ch *rss.Feed) *model.Feed {

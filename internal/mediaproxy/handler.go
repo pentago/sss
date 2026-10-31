@@ -19,11 +19,10 @@ import (
 
 	"sss/internal/config"
 	"sss/internal/crypto"
+	"sss/internal/http/response"
 	"sss/internal/reader/fetcher"
 	"sss/internal/reader/rewrite"
 )
-
-const untrustedContentCSP = `default-src 'none'; form-action 'none'; sandbox;`
 
 // Serve verifies the signed media URL from the /proxy/{encodedDigest}/{encodedURL} route and streams the remote resource.
 func Serve(w http.ResponseWriter, r *http.Request, encodedDigest, encodedURL string) {
@@ -105,7 +104,7 @@ func Serve(w http.ResponseWriter, r *http.Request, encodedDigest, encodedURL str
 	h.Set("ETag", `"`+crypto.HashFromBytes(decodedURL)+`"`)
 	h.Set("Cache-Control", "public, max-age="+strconv.Itoa(int(cacheDuration.Seconds()))+", immutable")
 	h.Set("Expires", time.Now().Add(cacheDuration).UTC().Format(http.TimeFormat))
-	h.Set("Content-Security-Policy", untrustedContentCSP)
+	h.Set("Content-Security-Policy", response.ContentSecurityPolicyForUntrustedContent)
 	h.Set("X-Content-Type-Options", "nosniff")
 	if filename := path.Base(parsedMediaURL.Path); filename != "" && filename != "." && filename != "/" {
 		if disposition := mime.FormatMediaType("inline", map[string]string{"filename": filename}); disposition != "" {

@@ -17,120 +17,52 @@ func newRequestWithWebSession(session *model.WebSession) *http.Request {
 	return r.WithContext(ctx)
 }
 
-func TestContextStringValue(t *testing.T) {
-	r, _ := http.NewRequest("GET", "http://example.org", nil)
-	ctx := r.Context()
-	ctx = context.WithValue(ctx, ClientIPContextKey, "IP")
-	r = r.WithContext(ctx)
-
-	result := getContextStringValue(r, ClientIPContextKey)
-	expected := "IP"
-
-	if result != expected {
-		t.Errorf(`Unexpected context value, got %q instead of %q`, result, expected)
+func TestCtxValue(t *testing.T) {
+	newRequest := func(value any) *http.Request {
+		r, _ := http.NewRequest("GET", "http://example.org", nil)
+		if value != nil {
+			r = r.WithContext(context.WithValue(r.Context(), ClientIPContextKey, value))
+		}
+		return r
 	}
-}
 
-func TestContextStringValueWithInvalidType(t *testing.T) {
-	r, _ := http.NewRequest("GET", "http://example.org", nil)
-	ctx := r.Context()
-	ctx = context.WithValue(ctx, ClientIPContextKey, 0)
-	r = r.WithContext(ctx)
-
-	result := getContextStringValue(r, ClientIPContextKey)
-	expected := ""
-
-	if result != expected {
-		t.Errorf(`Unexpected context value, got %q instead of %q`, result, expected)
+	scenarios := []struct {
+		name     string
+		value    any
+		expected any
+	}{
+		{"string value", "IP", "IP"},
+		{"string with invalid type", 0, ""},
+		{"string when unset", nil, ""},
+		{"bool value", true, true},
+		{"bool with invalid type", "invalid", false},
+		{"bool when unset", nil, false},
+		{"int64 value", int64(1234), int64(1234)},
+		{"int64 with invalid type", "invalid", int64(0)},
+		{"int64 when unset", nil, int64(0)},
 	}
-}
 
-func TestContextStringValueWhenUnset(t *testing.T) {
-	r, _ := http.NewRequest("GET", "http://example.org", nil)
-
-	result := getContextStringValue(r, ClientIPContextKey)
-	expected := ""
-
-	if result != expected {
-		t.Errorf(`Unexpected context value, got %q instead of %q`, result, expected)
-	}
-}
-
-func TestContextBoolValue(t *testing.T) {
-	r, _ := http.NewRequest("GET", "http://example.org", nil)
-	ctx := r.Context()
-	ctx = context.WithValue(ctx, IsAdminUserContextKey, true)
-	r = r.WithContext(ctx)
-
-	result := getContextBoolValue(r, IsAdminUserContextKey)
-	expected := true
-
-	if result != expected {
-		t.Errorf(`Unexpected context value, got %v instead of %v`, result, expected)
-	}
-}
-
-func TestContextBoolValueWithInvalidType(t *testing.T) {
-	r, _ := http.NewRequest("GET", "http://example.org", nil)
-	ctx := r.Context()
-	ctx = context.WithValue(ctx, IsAdminUserContextKey, "invalid")
-	r = r.WithContext(ctx)
-
-	result := getContextBoolValue(r, IsAdminUserContextKey)
-	expected := false
-
-	if result != expected {
-		t.Errorf(`Unexpected context value, got %v instead of %v`, result, expected)
-	}
-}
-
-func TestContextBoolValueWhenUnset(t *testing.T) {
-	r, _ := http.NewRequest("GET", "http://example.org", nil)
-
-	result := getContextBoolValue(r, IsAdminUserContextKey)
-	expected := false
-
-	if result != expected {
-		t.Errorf(`Unexpected context value, got %v instead of %v`, result, expected)
-	}
-}
-
-func TestContextInt64Value(t *testing.T) {
-	r, _ := http.NewRequest("GET", "http://example.org", nil)
-	ctx := r.Context()
-	ctx = context.WithValue(ctx, UserIDContextKey, int64(1234))
-	r = r.WithContext(ctx)
-
-	result := getContextInt64Value(r, UserIDContextKey)
-	expected := int64(1234)
-
-	if result != expected {
-		t.Errorf(`Unexpected context value, got %d instead of %d`, result, expected)
-	}
-}
-
-func TestContextInt64ValueWithInvalidType(t *testing.T) {
-	r, _ := http.NewRequest("GET", "http://example.org", nil)
-	ctx := r.Context()
-	ctx = context.WithValue(ctx, UserIDContextKey, "invalid")
-	r = r.WithContext(ctx)
-
-	result := getContextInt64Value(r, UserIDContextKey)
-	expected := int64(0)
-
-	if result != expected {
-		t.Errorf(`Unexpected context value, got %d instead of %d`, result, expected)
-	}
-}
-
-func TestContextInt64ValueWhenUnset(t *testing.T) {
-	r, _ := http.NewRequest("GET", "http://example.org", nil)
-
-	result := getContextInt64Value(r, UserIDContextKey)
-	expected := int64(0)
-
-	if result != expected {
-		t.Errorf(`Unexpected context value, got %d instead of %d`, result, expected)
+	for _, scenario := range scenarios {
+		t.Run(scenario.name, func(t *testing.T) {
+			var result any
+			switch expected := scenario.expected.(type) {
+			case bool:
+				result = ctxValue[bool](newRequest(scenario.value), ClientIPContextKey)
+				if result != expected {
+					t.Errorf(`Unexpected context value, got %v instead of %v`, result, expected)
+				}
+			case int64:
+				result = ctxValue[int64](newRequest(scenario.value), ClientIPContextKey)
+				if result != expected {
+					t.Errorf(`Unexpected context value, got %d instead of %d`, result, expected)
+				}
+			default:
+				result = ctxValue[string](newRequest(scenario.value), ClientIPContextKey)
+				if result != expected {
+					t.Errorf(`Unexpected context value, got %q instead of %q`, result, expected)
+				}
+			}
+		})
 	}
 }
 

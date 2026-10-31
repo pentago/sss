@@ -38,7 +38,7 @@ func ScrapeWebsite(requestBuilder *fetcher.RequestBuilder, pageURL, rules string
 	pageURL = responseHandler.EffectiveURL()
 
 	if rules == "" {
-		rules = getPredefinedScraperRules(pageURL)
+		rules = predefinedRules[urllib.DomainWithoutWWW(pageURL)]
 	}
 
 	htmlDocumentReader, err := encoding.NewCharsetReader(
@@ -88,15 +88,6 @@ func findContentUsingCustomRules(page io.Reader, rules string) (baseURL string, 
 	})
 
 	return baseURL, buf.String(), nil
-}
-
-func getPredefinedScraperRules(websiteURL string) string {
-	urlDomain := urllib.DomainWithoutWWW(websiteURL)
-
-	if rules, ok := predefinedRules[urlDomain]; ok {
-		return rules
-	}
-	return ""
 }
 
 func isAllowedContentType(contentType string) bool {

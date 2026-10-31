@@ -5,9 +5,7 @@ package ui
 
 import (
 	"context"
-	"crypto/sha256"
 	"crypto/subtle"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -64,8 +62,6 @@ func newOAuth2Provider(ctx context.Context, name string) (*oauth2Provider, error
 		p.oidc = provider
 		p.config.Scopes = slices.Concat([]string{oidc.ScopeOpenID, "profile", "email"}, config.Opts.OAuth2AdditionalScopes)
 		p.config.Endpoint = provider.Endpoint()
-	default:
-		return nil, fmt.Errorf("ui: unsupported oauth2 provider %q", name)
 	}
 	return p, nil
 }
@@ -88,18 +84,14 @@ func (p *oauth2Provider) userField(u *model.User) *string {
 
 // authCodeURL returns the authorization URL plus the state and PKCE verifier to remember.
 func (p *oauth2Provider) authCodeURL() (url, state, verifier string) {
-	verifier = crypto.GenerateRandomStringHex(32)
+	verifier = oauth2.GenerateVerifier()
 	state = crypto.GenerateRandomStringHex(24)
-	sum := sha256.Sum256([]byte(verifier))
-	url = p.config.AuthCodeURL(state,
-		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
-		oauth2.SetAuthURLParam("code_challenge", base64.RawURLEncoding.EncodeToString(sum[:])),
-	)
+	url = p.config.AuthCodeURL(state, oauth2.S256ChallengeOption(verifier))
 	return url, state, verifier
 }
 
 func (p *oauth2Provider) profile(ctx context.Context, code, verifier string) (*oauth2Profile, error) {
-	token, err := p.config.Exchange(ctx, code, oauth2.SetAuthURLParam("code_verifier", verifier))
+	token, err := p.config.Exchange(ctx, code, oauth2.VerifierOption(verifier))
 	if err != nil {
 		return nil, fmt.Errorf("ui: oauth2 token exchange: %w", err)
 	}

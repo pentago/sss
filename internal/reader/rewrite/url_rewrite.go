@@ -42,21 +42,17 @@ func RewriteEntryURL(feed *model.Feed, entry *model.Entry) string {
 		return entry.URL
 	}
 
-	var rewrittenURL = entry.URL
 	parts := customReplaceRuleRegex.FindStringSubmatch(feed.UrlRewriteRules)
-
-	if len(parts) == 3 {
-		re, err := regexp.Compile(parts[1])
-		if err != nil {
-			slog.Error("Failed on regexp compilation",
-				slog.String("url_rewrite_rules", feed.UrlRewriteRules),
-				slog.Any("error", err),
-			)
-			return rewrittenURL
-		}
-		rewrittenURL = re.ReplaceAllString(entry.URL, parts[2])
-	} else {
+	if len(parts) != 3 {
+		return entry.URL
 	}
-
-	return rewrittenURL
+	re, err := regexp.Compile(parts[1])
+	if err != nil {
+		slog.Error("Failed on regexp compilation",
+			slog.String("url_rewrite_rules", feed.UrlRewriteRules),
+			slog.Any("error", err),
+		)
+		return entry.URL
+	}
+	return re.ReplaceAllString(entry.URL, parts[2])
 }

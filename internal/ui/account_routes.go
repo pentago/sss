@@ -72,11 +72,11 @@ func (h *handler) showAPIKeys(w http.ResponseWriter, r *http.Request) {
 		response.HTMLServerError(w, r, err)
 		return
 	}
-	h.renderAccount(w, r, "account_api_keys", map[string]any{"title": "API keys", "menu": "settings", "keys": keys, "apiEndpoint": config.Opts.BaseURL + "/v1/"})
+	h.renderAccount(w, r, "account_api_keys", map[string]any{"title": "API keys", "keys": keys, "apiEndpoint": config.Opts.BaseURL + "/v1/"})
 }
 
 func (h *handler) showCreateAPIKey(w http.ResponseWriter, r *http.Request) {
-	h.renderAccount(w, r, "account_api_key_create", map[string]any{"title": "New API key", "menu": "settings"})
+	h.renderAccount(w, r, "account_api_key_create", map[string]any{"title": "New API key"})
 }
 
 // saveAPIKey creates the key and shows its token once.
@@ -84,7 +84,7 @@ func (h *handler) saveAPIKey(w http.ResponseWriter, r *http.Request) {
 	userID := request.UserID(r)
 	req := &model.APIKeyCreationRequest{Description: r.FormValue("description")}
 	if err := validator.ValidateAPIKeyCreation(h.store, userID, req); err != nil {
-		h.renderAccount(w, r, "account_api_key_create", map[string]any{"title": "New API key", "menu": "settings", "description": req.Description, "errorMessage": err.Error()})
+		h.renderAccount(w, r, "account_api_key_create", map[string]any{"title": "New API key", "description": req.Description, "errorMessage": err.Error()})
 		return
 	}
 	key, err := h.store.CreateAPIKey(userID, req.Description)
@@ -92,7 +92,7 @@ func (h *handler) saveAPIKey(w http.ResponseWriter, r *http.Request) {
 		response.HTMLServerError(w, r, err)
 		return
 	}
-	h.renderAccount(w, r, "account_api_key_created", map[string]any{"title": "API key created", "menu": "settings", "key": key, "apiEndpoint": config.Opts.BaseURL + "/v1/"})
+	h.renderAccount(w, r, "account_api_key_created", map[string]any{"title": "API key created", "key": key, "apiEndpoint": config.Opts.BaseURL + "/v1/"})
 }
 
 func (h *handler) deleteAPIKey(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +114,7 @@ func (h *handler) showSessions(w http.ResponseWriter, r *http.Request) {
 	for i := range sessions {
 		sessions[i].UseTimezone(user.Timezone)
 	}
-	h.renderAccount(w, r, "account_sessions", map[string]any{"title": "Sessions", "menu": "settings", "sessions": sessions, "currentSessionID": request.WebSession(r).ID})
+	h.renderAccount(w, r, "account_sessions", map[string]any{"title": "Sessions", "sessions": sessions, "currentSessionID": request.WebSession(r).ID})
 }
 
 func (h *handler) removeSession(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +132,6 @@ func (h *handler) showAbout(w http.ResponseWriter, r *http.Request) {
 	}
 	h.renderAccount(w, r, "account_about", map[string]any{
 		"title":     "About",
-		"menu":      "settings",
 		"version":   version.Version,
 		"commit":    version.Commit,
 		"buildDate": version.BuildDate,
@@ -145,6 +144,7 @@ func (h *handler) showAbout(w http.ResponseWriter, r *http.Request) {
 
 // renderAccount renders an account page with the config flags the account templates need.
 func (h *handler) renderAccount(w http.ResponseWriter, r *http.Request, name string, data map[string]any) {
+	data["menu"] = "settings"
 	data["apiEnabled"] = !config.Opts.DisableAPI
 	data["webAuthnEnabled"] = config.Opts.WebAuthn
 	data["localAuth"] = !config.Opts.DisableLocalAuth

@@ -10,7 +10,7 @@
     <label><input type="checkbox" name="fever_enabled"{{if .FeverEnabled}} checked{{end}}> Enable Fever</label>
     <label>Username <input type="text" name="fever_username" value="{{.FeverUsername}}"></label>
     <label>Password (leave empty to keep the current one) <input type="password" name="fever_password" autocomplete="new-password"></label>
-    {{if not $.disableAPI}}<p>Fever API endpoint: <code>{{$.rootURL}}/fever/</code></p>{{end}}
+    {{if not $.apiEnabled}}<p>Fever API endpoint: <code>{{$.rootURL}}/fever/</code></p>{{end}}
   </fieldset>
 </details>
 <details{{if .GoogleReaderEnabled}} open{{end}}>

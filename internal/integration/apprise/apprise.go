@@ -4,22 +4,15 @@
 package apprise
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
-	"time"
 
-	"sss/internal/config"
 	"sss/internal/http/client"
 	"sss/internal/model"
 	"sss/internal/urllib"
-	"sss/internal/version"
 )
-
-const defaultClientTimeout = 10 * time.Second
 
 // Client is a Apprise API client.
 type Client struct {
@@ -45,23 +38,6 @@ func (c *Client) SendNotification(feed *model.Feed, entries model.Entries) error
 			return fmt.Errorf(`apprise: invalid API endpoint: %v`, err)
 		}
 
-		requestBody, err := json.Marshal(map[string]any{
-			"urls":  c.servicesURL,
-			"body":  message,
-			"title": feed.Title,
-		})
-		if err != nil {
-			return fmt.Errorf("apprise: unable to encode request body: %v", err)
-		}
-
-		request, err := http.NewRequest(http.MethodPost, apiEndpoint, bytes.NewReader(requestBody))
-		if err != nil {
-			return fmt.Errorf("apprise: unable to create request: %v", err)
-		}
-
-		request.Header.Set("Content-Type", "application/json")
-		request.Header.Set("User-Agent", "sss/"+version.Version)
-
 		slog.Debug("Sending Apprise notification",
 			slog.String("apprise_url", c.baseURL),
 			slog.String("services_url", c.servicesURL),
@@ -70,8 +46,14 @@ func (c *Client) SendNotification(feed *model.Feed, entries model.Entries) error
 			slog.String("entry_url", entry.URL),
 		)
 
-		httpClient := client.NewClientWithOptions(client.Options{Timeout: defaultClientTimeout, BlockPrivateNetworks: !config.Opts.IntegrationAllowPrivateNetworks})
-		response, err := httpClient.Do(request)
+		response, err := client.NewRequestBuilder(apiEndpoint).
+			WithMethod(http.MethodPost).
+			WithJSON(map[string]any{
+				"urls":  c.servicesURL,
+				"body":  message,
+				"title": feed.Title,
+			}).
+			Do()
 		if err != nil {
 			return fmt.Errorf("apprise: unable to send request: %v", err)
 		}

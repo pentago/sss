@@ -5,7 +5,6 @@ package response
 
 import (
 	"bytes"
-	"compress/flate"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -20,23 +19,14 @@ import (
 
 const compressionThreshold = 1024
 
-// Compression writers are pooled so each request reuses their internal
-// state (flate dictionary, etc.)
-// instead of allocating it from scratch. Reset(dst) rebinds the
-// destination without re-allocating the buffers.
-var (
-	gzipWriterPool = sync.Pool{
-		New: func() any {
-			return gzip.NewWriter(io.Discard)
-		},
-	}
-	flateWriterPool = sync.Pool{
-		New: func() any {
-			w, _ := flate.NewWriter(io.Discard, flate.DefaultCompression)
-			return w
-		},
-	}
-)
+// Compression writers are pooled so each request reuses their internal state
+// instead of allocating it from scratch. Reset(dst) rebinds the destination
+// without re-allocating the buffers.
+var gzipWriterPool = sync.Pool{
+	New: func() any {
+		return gzip.NewWriter(io.Discard)
+	},
+}
 
 type writeResetCloser interface {
 	io.WriteCloser
@@ -95,21 +85,9 @@ func (b *Builder) WithBodyAsString(body string) *Builder {
 	return b
 }
 
-// WithBodyAsReader uses the given reader to build the response.
-func (b *Builder) WithBodyAsReader(body io.Reader) *Builder {
-	b.body = body
-	return b
-}
-
 // WithAttachment forces the document to be downloaded by the web browser.
 func (b *Builder) WithAttachment(filename string) *Builder {
 	b.headers.Set("Content-Disposition", formatContentDisposition("attachment", filename))
-	return b
-}
-
-// WithInline suggests an inline filename for the current response.
-func (b *Builder) WithInline(filename string) *Builder {
-	b.headers.Set("Content-Disposition", formatContentDisposition("inline", filename))
 	return b
 }
 
@@ -121,7 +99,7 @@ func (b *Builder) WithoutCompression() *Builder {
 
 // WithCaching adds caching headers to the response.
 func (b *Builder) WithCaching(etag string, duration time.Duration, callback func(*Builder)) {
-	etag = normalizeETag(etag)
+	etag = `"` + etag + `"`
 	b.headers.Set("ETag", etag)
 	// max-age is required for the "immutable" directive to take effect: without
 	// it, browsers still revalidate content-hashed assets on every reload.
@@ -166,25 +144,9 @@ func (b *Builder) Write() {
 	var wc io.WriteCloser
 
 	switch b.acceptEncoding() {
-	case "":
-		// A hack to avoid infinite loop as [HTMLNotAcceptable] also calls [NewBuilder] from request.
-		cloned := b.r.Clone(b.r.Context())
-		cloned.Header.Del("Content-Encoding")
-
-		// [Builder.acceptEncoding] returns "" as per [HTTP Semantics]:
-		// 	As long as the identity;q=0 or *;q=0 directives do not explicitly forbid
-		// 	the identity value that means no encoding, the server must never return
-		// 	a 406 Not Acceptable error.
-		//
-		// [HTTP Semantics]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Accept-Encoding.
-		HTMLNotAcceptable(b.w, cloned)
-		return
 	case gzipEncoding:
 		b.headers.Set("Content-Encoding", gzipEncoding)
 		wc, cancel = pooledWriter(&gzipWriterPool, b.w)
-	case deflateEncoding:
-		b.headers.Set("Content-Encoding", deflateEncoding)
-		wc, cancel = pooledWriter(&flateWriterPool, b.w)
 	default:
 		// Fallback writer with no compression.
 
@@ -222,13 +184,7 @@ func (b *Builder) writeHeaders() {
 
 const (
 	gzipEncoding     = "gzip"
-	deflateEncoding  = "deflate"
 	identityEncoding = "identity"
-)
-
-var acceptEncoding = AcceptEncoding(
-	gzipEncoding,
-	deflateEncoding,
 )
 
 // acceptEncoding returns appropriate encoding for the response.
@@ -242,9 +198,8 @@ func (b *Builder) acceptEncoding() string {
 		Size() int64
 	}
 
-	encoding := acceptEncoding.Parse(b.r.Header.Get("Accept-Encoding"))
-	if encoding == "" || encoding == identityEncoding {
-		return encoding
+	if !gzipOK(b.r.Header.Get("Accept-Encoding")) {
+		return identityEncoding
 	}
 
 	if !b.enableCompression {
@@ -255,18 +210,7 @@ func (b *Builder) acceptEncoding() string {
 		return identityEncoding
 	}
 
-	return encoding
-}
-
-func normalizeETag(etag string) string {
-	etag = strings.TrimSpace(etag)
-	if etag == "" {
-		return ""
-	}
-	if strings.HasPrefix(etag, `"`) || strings.HasPrefix(etag, `W/"`) {
-		return etag
-	}
-	return `"` + etag + `"`
+	return gzipEncoding
 }
 
 func ifNoneMatch(headerValue, etag string) bool {

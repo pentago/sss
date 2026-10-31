@@ -4,6 +4,7 @@
 package parser
 
 import (
+	"cmp"
 	"html"
 	"strconv"
 	"strings"
@@ -81,10 +82,7 @@ func buildAtom(baseURL string, af *atom.Feed) *model.Feed {
 		// entity-decode a title, so titles are always decoded once more.
 		entry.Title = html.UnescapeString(strings.TrimSpace(ae.Title))
 		if entry.Title == "" {
-			entry.Title = sanitizer.TruncateHTML(entry.Content, 100)
-		}
-		if entry.Title == "" {
-			entry.Title = entry.URL
+			entry.Title = cmp.Or(sanitizer.TruncateHTML(entry.Content, 100), entry.URL)
 		}
 
 		// sss: gofeed does not expose an entry's own xml:lang, so entries inherit the feed language.
@@ -167,10 +165,7 @@ func firstAtomLink(links []*atom.Link, rel string) string {
 func atomPersonNames(persons []*atom.Person) []string {
 	names := make([]string, 0, len(persons))
 	for _, p := range persons {
-		name := strings.TrimSpace(p.Name)
-		if name == "" {
-			name = p.Email
-		}
+		name := cmp.Or(strings.TrimSpace(p.Name), p.Email)
 		names = append(names, name)
 	}
 	return sortedUnique(names...)
@@ -179,10 +174,7 @@ func atomPersonNames(persons []*atom.Person) []string {
 func atomCategoryNames(categories []*atom.Category) []string {
 	names := make([]string, 0, len(categories))
 	for _, c := range categories {
-		name := strings.TrimSpace(c.Label)
-		if name == "" {
-			name = c.Term
-		}
+		name := cmp.Or(strings.TrimSpace(c.Label), c.Term)
 		names = append(names, name)
 	}
 	return sortedUnique(names...)

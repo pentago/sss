@@ -14,6 +14,7 @@ import (
 
 	"sss/internal/crypto"
 	"sss/internal/http/request"
+	"sss/internal/http/response"
 	"sss/internal/storage"
 )
 
@@ -51,9 +52,6 @@ func withAuth(store *storage.Storage, next http.HandlerFunc) http.Handler {
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, request.UserIDContextKey, user.ID)
 		ctx = context.WithValue(ctx, request.UserNameContextKey, user.Username)
-		ctx = context.WithValue(ctx, request.UserTimezoneContextKey, user.Timezone)
-		ctx = context.WithValue(ctx, request.IsAdminUserContextKey, user.IsAdmin)
-		ctx = context.WithValue(ctx, request.IsAuthenticatedContextKey, true)
 		ctx = context.WithValue(ctx, request.GoogleReaderTokenKey, token)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -89,7 +87,12 @@ func unauthorized(w http.ResponseWriter, r *http.Request, reason string, err err
 		slog.String("user_agent", r.UserAgent()),
 		slog.Any("error", err),
 	)
-	sendUnauthorizedResponse(w, r)
+	response.NewBuilder(w, r).
+		WithStatus(http.StatusUnauthorized).
+		WithHeader("X-Reader-Google-Bad-Token", "true").
+		WithHeader("Content-Type", "text/plain; charset=utf-8").
+		WithBodyAsString("Unauthorized").
+		Write()
 }
 
 func getAuthToken(username, password string) string {

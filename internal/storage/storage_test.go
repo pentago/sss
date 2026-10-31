@@ -424,11 +424,6 @@ func TestMarkAsRead(t *testing.T) {
 	if got := unread(); !slices.Equal(got, []int64{a2.ID, h1.ID}) {
 		t.Fatal("MarkFeedAsRead", got)
 	}
-
-	visible, err := s.SetEntriesStatusAndCountVisible(user.ID, []int64{a2.ID, h1.ID}, model.EntryStatusRead)
-	if err != nil || visible != 1 {
-		t.Fatal("SetEntriesStatusAndCountVisible", visible, err)
-	}
 	s.SetEntriesStatus(user.ID, []int64{a1.ID, a2.ID, h1.ID}, model.EntryStatusUnread)
 
 	if err := s.MarkGloballyVisibleFeedsAsRead(user.ID); err != nil {
@@ -705,7 +700,7 @@ func TestWebAuthnCredentials(t *testing.T) {
 
 	userID, got, err := s.WebAuthnCredentialByHandle([]byte("handle"))
 	if err != nil || userID != user.ID || string(got.Credential.ID) != "cred" || got.Credential.Authenticator.SignCount != 3 ||
-		!got.BackupEligibleKnown || !got.Credential.Flags.BackupEligible || got.AddedOn == nil {
+		!got.Credential.Flags.BackupEligible || got.AddedOn == nil {
 		t.Fatalf("WebAuthnCredentialByHandle: %+v %v", got, err)
 	}
 
@@ -713,14 +708,17 @@ func TestWebAuthnCredentials(t *testing.T) {
 	if err := s.WebAuthnSaveLogin([]byte("handle"), credential); err != nil {
 		t.Fatal(err)
 	}
-	if n, err := s.WebAuthnUpdateName(user.ID, []byte("handle"), "laptop"); err != nil || n != 1 {
-		t.Fatal("WebAuthnUpdateName", n, err)
+	if err := s.WebAuthnUpdateName(user.ID, []byte("handle"), "laptop"); err != nil {
+		t.Fatal("WebAuthnUpdateName", err)
 	}
 	creds, err := s.WebAuthnCredentialsByUserID(user.ID)
 	if err != nil || len(creds) != 1 || creds[0].Name != "laptop" || creds[0].Credential.Authenticator.SignCount != 4 {
 		t.Fatal("WebAuthnCredentialsByUserID", creds, err)
 	}
-	if err := s.DeleteCredentialByHandle(user.ID, []byte("handle")); err != nil || s.CountWebAuthnCredentialsByUserID(user.ID) != 0 {
+	if err := s.DeleteCredentialByHandle(user.ID, []byte("handle")); err != nil {
+		t.Fatal("DeleteCredentialByHandle", err)
+	}
+	if creds, err = s.WebAuthnCredentialsByUserID(user.ID); err != nil || len(creds) != 0 {
 		t.Fatal("DeleteCredentialByHandle", err)
 	}
 }

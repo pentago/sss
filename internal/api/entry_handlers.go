@@ -496,9 +496,7 @@ func (h *handler) fetchContentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	feed, err := h.store.NewFeedQueryBuilder(loggedUserID).
-		WithFeedID(entry.FeedID).
-		GetFeed()
+	feed, err := h.store.FeedByID(loggedUserID, entry.FeedID)
 	if err != nil {
 		response.JSONServerError(w, r, err)
 		return

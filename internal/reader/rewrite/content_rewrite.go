@@ -123,26 +123,20 @@ var knownRules = map[string]ruleSpec{
 }
 
 // applyRule applies a single rewrite rule to the entry. Unknown names and rules
-// with too few arguments are skipped: malformed rules are rejected at save time,
-// but this path also runs predefined and previously-stored rules, which are
-// warn-only for backward compatibility.
+// with too few arguments are skipped: malformed rules are rejected at save time.
 func (rule rule) applyRule(entryURL string, entry *model.Entry) {
 	spec, ok := knownRules[rule.name]
 	if !ok {
 		return
 	}
 	if len(rule.args) < spec.minArgs {
-		slog.Warn("Not enough arguments for rewrite rule",
-			slog.Any("rule", rule),
-			slog.String("entry_url", entryURL),
-		)
 		return
 	}
 	spec.apply(entryURL, entry, rule.args)
 }
 
 func ApplyContentRewriteRules(entry *model.Entry, customRewriteRules string) {
-	rulesList := getPredefinedRewriteRules(entry.URL)
+	rulesList := predefinedRules[urllib.DomainWithoutWWW(entry.URL)]
 	if customRewriteRules != "" {
 		rulesList = customRewriteRules
 	}
@@ -202,13 +196,4 @@ func parseRules(rulesText string) (rules []rule, errs []RuleError) {
 			return rules, errs
 		}
 	}
-}
-
-func getPredefinedRewriteRules(entryURL string) string {
-	urlDomain := urllib.DomainWithoutWWW(entryURL)
-	if rules, ok := predefinedRules[urlDomain]; ok {
-		return rules
-	}
-
-	return ""
 }

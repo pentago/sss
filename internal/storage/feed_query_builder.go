@@ -18,9 +18,7 @@ type FeedQueryBuilder struct {
 	db                *sql.DB
 	args              []any
 	conditions        []string
-	sortExpressions   []string
 	limit             int
-	offset            int
 	withCounters      bool
 	counterJoinFeeds  bool
 	counterArgs       []any
@@ -65,41 +63,12 @@ func (f *FeedQueryBuilder) WithCounters() *FeedQueryBuilder {
 	return f
 }
 
-// WithSorting add a sort expression on a feeds column.
-func (f *FeedQueryBuilder) WithSorting(column, direction string) *FeedQueryBuilder {
-	if dir := sortDirection(direction); dir != "" {
-		f.sortExpressions = append(f.sortExpressions, "f."+quoteIdent(column)+" "+dir)
-	}
-	return f
-}
-
-// WithLimit set the limit.
-func (f *FeedQueryBuilder) WithLimit(limit int) *FeedQueryBuilder {
-	f.limit = limit
-	return f
-}
-
-// WithOffset set the offset.
-func (f *FeedQueryBuilder) WithOffset(offset int) *FeedQueryBuilder {
-	f.offset = offset
-	return f
-}
-
 func (f *FeedQueryBuilder) buildSorting() string {
-	var parts string
-	if len(f.sortExpressions) > 0 {
-		parts += " ORDER BY " + strings.Join(f.sortExpressions, ", ") + ", lower(f.title) ASC"
-	}
+	sorting := " ORDER BY f.parsing_error_count DESC, lower(f.title) ASC"
 	if f.limit > 0 {
-		parts += " LIMIT " + strconv.Itoa(f.limit)
+		sorting += " LIMIT " + strconv.Itoa(f.limit)
 	}
-	if f.offset > 0 {
-		if f.limit <= 0 {
-			parts += " LIMIT -1"
-		}
-		parts += " OFFSET " + strconv.Itoa(f.offset)
-	}
-	return parts
+	return sorting
 }
 
 // GetFeed returns a single feed that match the condition.
@@ -253,7 +222,6 @@ func (f *FeedQueryBuilder) GetFeeds() (model.Feeds, error) {
 
 		feed.ReadCount = readCounters[feed.ID]
 		feed.UnreadCount = unreadCounters[feed.ID]
-		feed.NumberOfVisibleEntries = feed.ReadCount + feed.UnreadCount
 		feed.CheckedAt = timezone.Convert(tz, feed.CheckedAt)
 		feed.NextCheckAt = timezone.Convert(tz, feed.NextCheckAt)
 		feed.Category.UserID = feed.UserID

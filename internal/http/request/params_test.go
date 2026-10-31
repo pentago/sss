@@ -40,33 +40,6 @@ func TestFormInt64Value(t *testing.T) {
 	}
 }
 
-func TestRouteStringParamWithServerMux(t *testing.T) {
-	router := http.NewServeMux()
-	router.HandleFunc("GET /route/{variable}/index", func(w http.ResponseWriter, r *http.Request) {
-		result := RouteStringParam(r, "variable")
-		expected := "value"
-
-		if result != expected {
-			t.Errorf(`Unexpected result, got %q instead of %q`, result, expected)
-		}
-
-		result = RouteStringParam(r, "missing variable")
-		expected = ""
-
-		if result != expected {
-			t.Errorf(`Unexpected result, got %q instead of %q`, result, expected)
-		}
-	})
-
-	r, err := http.NewRequest(http.MethodGet, "/route/value/index", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, r)
-}
-
 func TestRouteInt64ParamWithServerMux(t *testing.T) {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /a/{variable1}/b/{variable2}/c/{variable3}", func(w http.ResponseWriter, r *http.Request) {

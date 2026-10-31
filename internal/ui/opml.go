@@ -56,7 +56,7 @@ func (h *handler) fetchOPML(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	slog.Info("Fetching OPML file remotely", slog.Int64("user_id", request.UserID(r)), slog.String("opml_file_url", opmlURL))
-	rh := fetcher.NewResponseHandler(fetcher.NewRequestBuilder().WithTimeout(config.Opts.HTTPClientTimeout).ExecuteRequest(opmlURL))
+	rh := fetcher.NewResponseHandler(fetcher.NewRequestBuilder().ExecuteRequest(opmlURL))
 	defer rh.Close()
 	err := rh.LocalizedError()
 	if err == nil {

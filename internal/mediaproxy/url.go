@@ -56,12 +56,14 @@ func ProxifyAbsoluteURL(mediaURL string) string {
 }
 
 func proxifyURLWithCustomProxy(mediaURL string, customProxyURL *url.URL) string {
-	if customProxyURL == nil {
-		return mediaURL
-	}
-
 	absoluteURL := customProxyURL.JoinPath(base64.URLEncoding.EncodeToString([]byte(mediaURL)))
 	return absoluteURL.String()
+}
+
+// ShouldProxify reports whether the media URL should be proxified based on
+// the configured media proxy mode and the URL scheme.
+func ShouldProxify(mediaURL string) bool {
+	return shouldProxifyURL(mediaURL, config.Opts.MediaProxyMode)
 }
 
 // ProxifyEnclosureURLs rewrites enclosure URLs to the absolute proxy URL when the media proxy settings require it.

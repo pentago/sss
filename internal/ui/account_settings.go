@@ -73,7 +73,6 @@ func settingsRequest(r *http.Request) *model.UserModificationRequest {
 func (h *handler) renderSettings(w http.ResponseWriter, r *http.Request, form *model.User, errorMessage string) {
 	data := map[string]any{
 		"title":             "Settings",
-		"menu":              "settings",
 		"form":              form,
 		"themes":            model.Themes(),
 		"timezones":         slices.Collect(timezone.AvailableTimezones()),

@@ -4,7 +4,6 @@
 package model
 
 import (
-	"fmt"
 	"io"
 	"time"
 
@@ -15,9 +14,6 @@ import (
 const (
 	SchedulerRoundRobin     = "round_robin"
 	SchedulerEntryFrequency = "entry_frequency"
-	// Default settings for the feed query builder
-	DefaultFeedSorting          = "parsing_error_count"
-	DefaultFeedSortingDirection = "desc"
 )
 
 // Feed represents a feed in the application.
@@ -70,29 +66,16 @@ type Feed struct {
 	Entries  Entries   `json:"entries,omitempty"`
 
 	// Internal attributes (not exposed in the API and not persisted in the database)
-	TTL                    time.Duration `json:"-"`
-	IconURL                string        `json:"-"`
-	UnreadCount            int           `json:"-"`
-	ReadCount              int           `json:"-"`
-	NumberOfVisibleEntries int           `json:"-"`
+	TTL         time.Duration `json:"-"`
+	IconURL     string        `json:"-"`
+	UnreadCount int           `json:"-"`
+	ReadCount   int           `json:"-"`
 }
 
 // FeedCounters holds read and unread counts per feed ID.
 type FeedCounters struct {
 	ReadCounters   map[int64]int `json:"reads"`
 	UnreadCounters map[int64]int `json:"unreads"`
-}
-
-// String returns a debug representation of the feed.
-func (f *Feed) String() string {
-	return fmt.Sprintf("ID=%d, UserID=%d, FeedURL=%s, SiteURL=%s, Title=%s, Category={%s}",
-		f.ID,
-		f.UserID,
-		f.FeedURL,
-		f.SiteURL,
-		f.Title,
-		f.Category,
-	)
 }
 
 // WithCategoryID initializes the category attribute of the feed.

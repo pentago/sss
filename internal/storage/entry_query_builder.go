@@ -252,6 +252,7 @@ func (e *EntryQueryBuilder) CountEntries() (count int, err error) {
 // GetEntry returns a single entry that match the condition.
 func (e *EntryQueryBuilder) GetEntry() (*model.Entry, error) {
 	e.limit = 1
+	e.fetchEnclosures = true
 	entries, err := e.GetEntries()
 	if err != nil {
 		return nil, err
@@ -259,44 +260,29 @@ func (e *EntryQueryBuilder) GetEntry() (*model.Entry, error) {
 	if len(entries) != 1 {
 		return nil, nil
 	}
-
-	entries[0].Enclosures, err = e.store.EnclosuresByEntryID(entries[0].ID)
-	if err != nil {
-		return nil, err
-	}
 	return entries[0], nil
 }
 
 // GetEntries returns a list of entries that match the condition.
 func (e *EntryQueryBuilder) GetEntries() (model.Entries, error) {
-	entries, _, err := e.fetchEntries(false)
-	return entries, err
+	return e.fetchEntries()
 }
 
 // GetEntriesWithCount returns a list of entries and the total count of matching
 // rows, ignoring limit and offset.
 func (e *EntryQueryBuilder) GetEntriesWithCount() (model.Entries, int, error) {
-	// FTS5 bm25() (search ranking) cannot be combined with a window function.
-	withWindowCount := !e.search
-	entries, total, err := e.fetchEntries(withWindowCount)
+	total, err := e.CountEntries()
 	if err != nil {
 		return nil, 0, err
 	}
-
-	// The window count is unavailable when the offset is past the last row.
-	if !withWindowCount || (len(entries) == 0 && e.offset > 0) {
-		if total, err = e.CountEntries(); err != nil {
-			return nil, 0, err
-		}
+	entries, err := e.fetchEntries()
+	if err != nil {
+		return nil, 0, err
 	}
 	return entries, total, nil
 }
 
-func (e *EntryQueryBuilder) fetchEntries(withCount bool) (model.Entries, int, error) {
-	countColumn := ""
-	if withCount {
-		countColumn = "count(*) OVER(),"
-	}
+func (e *EntryQueryBuilder) fetchEntries() (model.Entries, error) {
 	contentColumn := "e.content"
 	if e.excludeContent {
 		contentColumn = "''"
@@ -304,7 +290,6 @@ func (e *EntryQueryBuilder) fetchEntries(withCount bool) (model.Entries, int, er
 
 	query := `
 		SELECT
-			` + countColumn + `
 			e.id,
 			e.user_id,
 			e.feed_id,
@@ -351,13 +336,12 @@ func (e *EntryQueryBuilder) fetchEntries(withCount bool) (model.Entries, int, er
 
 	rows, err := e.store.db.Query(query, e.args...)
 	if err != nil {
-		return nil, 0, fmt.Errorf("storage: unable to get entries: %w", err)
+		return nil, fmt.Errorf("storage: unable to get entries: %w", err)
 	}
 	defer rows.Close()
 
 	entries := make(model.Entries, 0, max(e.limit, 0))
 	entryMap := make(map[int64]*model.Entry, max(e.limit, 0))
-	var totalCount int
 
 	for rows.Next() {
 		var iconID sql.NullInt64
@@ -405,12 +389,9 @@ func (e *EntryQueryBuilder) fetchEntries(withCount bool) (model.Entries, int, er
 			&externalIconID,
 			&tz,
 		}
-		if withCount {
-			dest = append([]any{&totalCount}, dest...)
-		}
 
 		if err := rows.Scan(dest...); err != nil {
-			return nil, 0, fmt.Errorf("storage: unable to fetch entry row: %w", err)
+			return nil, fmt.Errorf("storage: unable to fetch entry row: %w", err)
 		}
 
 		if iconID.Valid && externalIconID.String != "" {
@@ -433,7 +414,7 @@ func (e *EntryQueryBuilder) fetchEntries(withCount bool) (model.Entries, int, er
 		entryMap[entry.ID] = entry
 	}
 	if err := rows.Err(); err != nil {
-		return nil, 0, fmt.Errorf("storage: unable to get entries: %w", err)
+		return nil, fmt.Errorf("storage: unable to get entries: %w", err)
 	}
 
 	if e.fetchEnclosures && len(entries) > 0 {
@@ -443,14 +424,14 @@ func (e *EntryQueryBuilder) fetchEntries(withCount bool) (model.Entries, int, er
 		}
 		enclosures, err := e.store.EnclosuresByEntryIDs(entryIDs)
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 		for entryID, list := range enclosures {
 			entryMap[entryID].Enclosures = list
 		}
 	}
 
-	return entries, totalCount, nil
+	return entries, nil
 }
 
 // GetEntryIDs returns a list of entry IDs that match the condition.

@@ -31,13 +31,11 @@ func PushEntries(feed *model.Feed, entries model.Entries, matrixBaseURL, matrixU
 		formattedTextMessages = append(formattedTextMessages, fmt.Sprintf(`<li><strong>%s</strong>: <a href=%q>%s</a></li>`, feed.Title, entry.URL, entry.Title))
 	}
 
-	_, err = client.SendFormattedTextMessage(
+	return client.SendFormattedTextMessage(
 		discovery.HomeServerInformation.BaseURL,
 		loginResponse.AccessToken,
 		matrixRoomID,
 		strings.Join(textMessages, "\n"),
 		"<ul>"+strings.Join(formattedTextMessages, "\n")+"</ul>",
 	)
-
-	return err
 }

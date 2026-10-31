@@ -268,35 +268,6 @@ func (s *Storage) SetEntriesStatus(userID int64, entryIDs []int64, status string
 	return nil
 }
 
-// SetEntriesStatusAndCountVisible updates the status of the given entries and returns how many are visible in global views.
-func (s *Storage) SetEntriesStatusAndCountVisible(userID int64, entryIDs []int64, status string) (int, error) {
-	ids := jsonArray(entryIDs)
-	tx, err := s.db.Begin()
-	if err != nil {
-		return 0, fmt.Errorf("storage: unable to start transaction: %w", err)
-	}
-
-	_, err = tx.Exec(`UPDATE entries SET status=$1, changed_at=unixepoch() WHERE user_id=$2 AND id IN (SELECT value FROM json_each($3))`,
-		status, userID, ids)
-	if err != nil {
-		return 0, rollback(tx, fmt.Errorf("storage: unable to update entries status %v: %w", entryIDs, err))
-	}
-
-	var visible int
-	err = tx.QueryRow(`
-		SELECT count(*)
-		FROM entries e
-		JOIN feeds f ON f.id = e.feed_id
-		JOIN categories c ON c.id = f.category_id
-		WHERE e.user_id=$1 AND e.id IN (SELECT value FROM json_each($2)) AND f.hide_globally=0 AND c.hide_globally=0`,
-		userID, ids,
-	).Scan(&visible)
-	if err != nil {
-		return 0, rollback(tx, fmt.Errorf("storage: unable to count visible entries: %w", err))
-	}
-	return visible, tx.Commit()
-}
-
 // SetEntriesStarredState updates the starred state for the given list of entries.
 func (s *Storage) SetEntriesStarredState(userID int64, entryIDs []int64, starred bool) error {
 	_, err := s.db.Exec(`UPDATE entries SET starred=$1, changed_at=unixepoch() WHERE user_id=$2 AND id IN (SELECT value FROM json_each($3))`,

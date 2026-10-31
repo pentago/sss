@@ -102,10 +102,8 @@ func (h *handler) showIntegrations(w http.ResponseWriter, r *http.Request) {
 	}
 	h.renderAccount(w, r, "account_integrations", map[string]any{
 		"title":       "Integrations",
-		"menu":        "settings",
 		"integration": integration,
 		"rootURL":     config.Opts.BaseURL,
-		"disableAPI":  config.Opts.DisableAPI,
 	})
 }
 

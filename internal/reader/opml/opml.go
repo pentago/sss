@@ -7,6 +7,7 @@ package opml
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -142,13 +143,13 @@ func feedsFromOutlines(outlines []outline, category string) []*model.Feed {
 	for _, o := range outlines {
 		if strings.TrimSpace(o.FeedURL) == "" {
 			// Nested categories are flattened into the nearest named parent.
-			feeds = append(feeds, feedsFromOutlines(o.Outlines, cmpOr(o.Title, o.Text, o.SiteURL))...)
+			feeds = append(feeds, feedsFromOutlines(o.Outlines, cmp.Or(o.Title, o.Text, o.SiteURL))...)
 			continue
 		}
 		feeds = append(feeds, &model.Feed{
-			Title:                       cmpOr(o.Title, o.Text, o.SiteURL, o.FeedURL),
+			Title:                       cmp.Or(o.Title, o.Text, o.SiteURL, o.FeedURL),
 			FeedURL:                     o.FeedURL,
-			SiteURL:                     cmpOr(o.SiteURL, o.FeedURL),
+			SiteURL:                     cmp.Or(o.SiteURL, o.FeedURL),
 			Description:                 o.Description,
 			Category:                    &model.Category{Title: category},
 			ScraperRules:                o.ScraperRules,
@@ -171,15 +172,6 @@ func feedsFromOutlines(outlines []outline, category string) []*model.Feed {
 		})
 	}
 	return feeds
-}
-
-func cmpOr(values ...string) string {
-	for _, v := range values {
-		if v != "" {
-			return v
-		}
-	}
-	return ""
 }
 
 // Serialize returns an OPML 2.0 document with feeds grouped by category title (sorted).

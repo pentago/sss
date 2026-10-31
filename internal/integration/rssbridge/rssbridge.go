@@ -12,9 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"sss/internal/config"
 	"sss/internal/http/client"
-	"sss/internal/version"
 )
 
 const defaultClientTimeout = 30 * time.Second
@@ -45,14 +43,9 @@ func DetectBridges(rssBridgeURL, rssBridgeToken, websiteURL string) ([]*Bridge, 
 	values.Add("url", websiteURL)
 	endpointURL.RawQuery = values.Encode()
 
-	request, err := http.NewRequest(http.MethodGet, endpointURL.String(), nil)
-	if err != nil {
-		return nil, fmt.Errorf("rssbridge: unable to create request: %w", err)
-	}
-	request.Header.Set("User-Agent", "sss/"+version.Version)
-
-	httpClient := client.NewClientWithOptions(client.Options{Timeout: defaultClientTimeout, BlockPrivateNetworks: !config.Opts.IntegrationAllowPrivateNetworks})
-	response, err := httpClient.Do(request)
+	response, err := client.NewRequestBuilder(endpointURL.String()).
+		WithTimeout(defaultClientTimeout).
+		Do()
 	if err != nil {
 		return nil, fmt.Errorf("rssbridge: unable to execute request: %w", err)
 	}

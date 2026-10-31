@@ -125,13 +125,5 @@ func ProcessEntryWebPage(feed *model.Feed, entry *model.Entry, user *model.User)
 }
 
 func newRequestBuilder(feed *model.Feed, user *model.User) *fetcher.RequestBuilder {
-	return fetcher.NewRequestBuilder().
-		WithUserAgent(feed.UserAgent, user.DefaultUserAgent()).
-		WithCookie(feed.Cookie, feed.FeedURL).
-		WithTimeout(config.Opts.HTTPClientTimeout).
-		WithCustomFeedProxyURL(feed.ProxyURL).
-		WithCustomApplicationProxyURL(config.Opts.HTTPClientProxy).
-		UseCustomApplicationProxyURL(feed.FetchViaProxy).
-		IgnoreTLSErrors(feed.AllowSelfSignedCertificates).
-		DisableHTTP2(feed.DisableHTTP2)
+	return fetcher.ForFeed(feed, user.DefaultUserAgent())
 }

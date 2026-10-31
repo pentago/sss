@@ -28,13 +28,15 @@ import (
 	"sss/internal/reader/sanitizer"
 	"sss/internal/storage"
 	"sss/internal/timezone"
-	"sss/internal/ui/static"
 	"sss/internal/urllib"
 	"sss/internal/worker"
 )
 
 //go:embed templates/*.html
 var templateFS embed.FS
+
+//go:embed static
+var staticFS embed.FS
 
 // handler holds the dependencies shared by every UI route.
 type handler struct {
@@ -49,20 +51,21 @@ type asset struct {
 	checksum string
 }
 
-// assets maps "css/base.css", "js/shortcuts.js", "service-worker.js" to their content.
+// assets maps "css/base.css", "js/shortcuts.js", "service-worker.js" and
+// "icons/<name>" to their content.
 var assets = loadAssets()
 
 func loadAssets() map[string]asset {
 	m := make(map[string]asset)
-	err := fs.WalkDir(static.FS, ".", func(name string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(staticFS, "static", func(name string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
 		}
-		data, err := static.FS.ReadFile(name)
+		data, err := staticFS.ReadFile(name)
 		if err != nil {
 			return err
 		}
-		m[name] = asset{data: data, checksum: checksum(data)}
+		m[strings.TrimPrefix(name, "static/")] = asset{data: data, checksum: checksum(data)}
 		return nil
 	})
 	if err != nil {
@@ -102,20 +105,10 @@ func parseTemplates() map[string]*template.Template {
 
 var templateFuncs = template.FuncMap{
 	"route": route,
-	"proxyURL": func(link string) string {
-		mode := config.Opts.MediaProxyMode
-		if mode == "all" || (mode != "none" && !urllib.IsHTTPS(link)) {
-			return mediaproxy.ProxifyRelativeURL(link)
-		}
-		return link
-	},
 	// mediaURL returns the URL to use for an enclosure of the given media kind (image, audio, video).
 	"mediaURL": func(link, kind string) template.URL {
-		if slices.Contains(config.Opts.MediaProxyResourceTypes, kind) {
-			mode := config.Opts.MediaProxyMode
-			if mode == "all" || (mode != "none" && !urllib.IsHTTPS(link)) {
-				return template.URL(mediaproxy.ProxifyRelativeURL(link))
-			}
+		if slices.Contains(config.Opts.MediaProxyResourceTypes, kind) && mediaproxy.ShouldProxify(link) {
+			return template.URL(mediaproxy.ProxifyRelativeURL(link))
 		}
 		return untrustedURL(link)
 	},
@@ -147,7 +140,6 @@ var templateFuncs = template.FuncMap{
 		return timezone.Convert(tz, t).Format("Monday, January 2, 2006 15:04 MST")
 	},
 	"elapsed":  elapsed,
-	"truncate": truncate,
 	"plural":   plural,
 	"domain":   urllib.Domain,
 	"fileSize": fileSize,
@@ -191,17 +183,6 @@ func untrustedURL(rawURL string) template.URL {
 		return "#"
 	}
 	return template.URL(rawURL)
-}
-
-func truncate(s string, max int) string {
-	n := 0
-	for i := range s {
-		if n == max {
-			return s[:i] + "…"
-		}
-		n++
-	}
-	return s
 }
 
 // plural returns "1 entry" / "3 entries" style text.

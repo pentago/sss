@@ -35,38 +35,12 @@ func NewClient(webhookURL, webhookSecret string) *Client {
 
 // SendSaveEntryWebhookEvent posts a signed save_entry event for the entry.
 func (c *Client) SendSaveEntryWebhookEvent(entry *model.Entry) error {
+	webhookEntry := toWebhookEntry(entry)
+	webhookEntry.Feed = toWebhookFeed(entry.Feed)
+
 	return c.makeRequest(SaveEntryEventType, &WebhookSaveEntryEvent{
 		EventType: SaveEntryEventType,
-		Entry: &WebhookEntry{
-			ID:          entry.ID,
-			UserID:      entry.UserID,
-			FeedID:      entry.FeedID,
-			Status:      entry.Status,
-			Hash:        entry.Hash,
-			Title:       entry.Title,
-			URL:         entry.URL,
-			CommentsURL: entry.CommentsURL,
-			Date:        entry.Date,
-			CreatedAt:   entry.CreatedAt,
-			ChangedAt:   entry.ChangedAt,
-			Content:     entry.Content,
-			Author:      entry.Author,
-			ShareCode:   entry.ShareCode,
-			Starred:     entry.Starred,
-			ReadingTime: entry.ReadingTime,
-			Enclosures:  entry.Enclosures,
-			Tags:        entry.Tags,
-			Feed: &WebhookFeed{
-				ID:         entry.Feed.ID,
-				UserID:     entry.Feed.UserID,
-				CategoryID: entry.Feed.Category.ID,
-				Category:   &WebhookCategory{ID: entry.Feed.Category.ID, Title: entry.Feed.Category.Title},
-				FeedURL:    entry.Feed.FeedURL,
-				SiteURL:    entry.Feed.SiteURL,
-				Title:      entry.Feed.Title,
-				CheckedAt:  entry.Feed.CheckedAt,
-			},
-		},
+		Entry:     webhookEntry,
 	})
 }
 
@@ -78,41 +52,49 @@ func (c *Client) SendNewEntriesWebhookEvent(feed *model.Feed, entries model.Entr
 
 	webhookEntries := make([]*WebhookEntry, 0, len(entries))
 	for _, entry := range entries {
-		webhookEntries = append(webhookEntries, &WebhookEntry{
-			ID:          entry.ID,
-			UserID:      entry.UserID,
-			FeedID:      entry.FeedID,
-			Status:      entry.Status,
-			Hash:        entry.Hash,
-			Title:       entry.Title,
-			URL:         entry.URL,
-			CommentsURL: entry.CommentsURL,
-			Date:        entry.Date,
-			CreatedAt:   entry.CreatedAt,
-			ChangedAt:   entry.ChangedAt,
-			Content:     entry.Content,
-			Author:      entry.Author,
-			ShareCode:   entry.ShareCode,
-			Starred:     entry.Starred,
-			ReadingTime: entry.ReadingTime,
-			Enclosures:  entry.Enclosures,
-			Tags:        entry.Tags,
-		})
+		webhookEntries = append(webhookEntries, toWebhookEntry(entry))
 	}
 	return c.makeRequest(NewEntriesEventType, &WebhookNewEntriesEvent{
 		EventType: NewEntriesEventType,
-		Feed: &WebhookFeed{
-			ID:         feed.ID,
-			UserID:     feed.UserID,
-			CategoryID: feed.Category.ID,
-			Category:   &WebhookCategory{ID: feed.Category.ID, Title: feed.Category.Title},
-			FeedURL:    feed.FeedURL,
-			SiteURL:    feed.SiteURL,
-			Title:      feed.Title,
-			CheckedAt:  feed.CheckedAt,
-		},
-		Entries: webhookEntries,
+		Feed:      toWebhookFeed(feed),
+		Entries:   webhookEntries,
 	})
+}
+
+func toWebhookEntry(entry *model.Entry) *WebhookEntry {
+	return &WebhookEntry{
+		ID:          entry.ID,
+		UserID:      entry.UserID,
+		FeedID:      entry.FeedID,
+		Status:      entry.Status,
+		Hash:        entry.Hash,
+		Title:       entry.Title,
+		URL:         entry.URL,
+		CommentsURL: entry.CommentsURL,
+		Date:        entry.Date,
+		CreatedAt:   entry.CreatedAt,
+		ChangedAt:   entry.ChangedAt,
+		Content:     entry.Content,
+		Author:      entry.Author,
+		ShareCode:   entry.ShareCode,
+		Starred:     entry.Starred,
+		ReadingTime: entry.ReadingTime,
+		Enclosures:  entry.Enclosures,
+		Tags:        entry.Tags,
+	}
+}
+
+func toWebhookFeed(feed *model.Feed) *WebhookFeed {
+	return &WebhookFeed{
+		ID:         feed.ID,
+		UserID:     feed.UserID,
+		CategoryID: feed.Category.ID,
+		Category:   &WebhookCategory{ID: feed.Category.ID, Title: feed.Category.Title},
+		FeedURL:    feed.FeedURL,
+		SiteURL:    feed.SiteURL,
+		Title:      feed.Title,
+		CheckedAt:  feed.CheckedAt,
+	}
 }
 
 func (c *Client) makeRequest(eventType string, payload any) error {

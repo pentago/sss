@@ -83,9 +83,6 @@ func (h *handler) submitSubscription(w http.ResponseWriter, r *http.Request) {
 		rssBridgeURL, rssBridgeToken = intg.RSSBridgeURL, intg.RSSBridgeToken
 	}
 	finder := subscription.NewSubscriptionFinder(fetcher.NewRequestBuilder().
-		WithTimeout(config.Opts.HTTPClientTimeout).
-		WithCustomFeedProxyURL(form.ProxyURL).
-		WithCustomApplicationProxyURL(config.Opts.HTTPClientProxy).
 		UseCustomApplicationProxyURL(form.FetchViaProxy).
 		WithUserAgent(form.UserAgent, currentUser(r).DefaultUserAgent()).
 		WithCookie(form.Cookie, form.FeedURL).
