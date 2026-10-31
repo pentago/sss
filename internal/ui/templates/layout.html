@@ -12,8 +12,9 @@
 {{end}}</head>
 <body{{with .user}}{{if .EntrySwipe}} data-entry-swipe{{end}}{{if and .GestureNav (ne .GestureNav "none")}} data-gesture-nav="{{.GestureNav}}"{{end}}{{end}}>
 {{if .user}}<header>
-<nav aria-label="Main"><ul>
-<li><a href="{{route "/unread"}}"{{if eq .menu "unread"}} aria-current="page"{{end}}>Unread <data value="{{.countUnread}}">({{.countUnread}})</data></a></li>
+<nav aria-label="Main">
+<a href="{{route "/unread"}}"{{if eq .menu "unread"}} aria-current="page"{{end}}>Unread <data value="{{.countUnread}}">({{.countUnread}})</data></a>
+<details><summary aria-label="Menu">☰</summary><ul>
 <li><a href="{{route "/starred"}}"{{if eq .menu "starred"}} aria-current="page"{{end}}>Starred</a></li>
 <li><a href="{{route "/history"}}"{{if eq .menu "history"}} aria-current="page"{{end}}>History</a></li>
 <li><a href="{{route "/feeds"}}"{{if eq .menu "feeds"}} aria-current="page"{{end}}>Feeds{{if .countErrorFeeds}} <data value="{{.countErrorFeeds}}">({{plural .countErrorFeeds "error" "errors"}})</data>{{end}}</a></li>
@@ -21,7 +22,8 @@
 <li><a href="{{route "/search"}}"{{if eq .menu "search"}} aria-current="page"{{end}}>Search</a></li>
 <li><a href="{{route "/settings"}}"{{if eq .menu "settings"}} aria-current="page"{{end}}>Settings</a></li>
 <li><form method="post" action="{{route "/logout"}}"><button>Logout</button></form></li>
-</ul></nav>
+</ul></details>
+</nav>
 </header>
 {{end}}<main>
 {{with .successMessage}}<p role="status">{{.}}</p>

@@ -91,6 +91,90 @@ nav[aria-label="Main"] [aria-current="page"] {
     font-weight: 600;
 }
 
+/* Unread stays visible; the other links sit in a details menu. Wide screens
+ * keep the menu open with its ☰ toggle hidden, so all links form one row.
+ * Narrow screens center Unread and drop the menu down from the ☰ on the right. */
+nav[aria-label="Main"] {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 1rem;
+}
+
+nav[aria-label="Main"] > details {
+    position: relative;
+    display: block;
+    margin: 0;
+}
+
+nav[aria-label="Main"] > details > summary {
+    list-style: none;
+    padding: 0 0.25rem;
+    color: var(--fg);
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+nav[aria-label="Main"] > details > summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Outranks the "nav details[open]" confirmation styling below for the Logout form. */
+nav[aria-label="Main"] > details > ul form {
+    margin: 0;
+}
+
+nav[aria-label="Main"] > details > ul button {
+    color: var(--fg);
+}
+
+@media (min-width: 40.0625rem) {
+    /* Browsers without ::details-content keep the ☰ toggle instead. */
+    @supports selector(::details-content) {
+        nav[aria-label="Main"] > details::details-content {
+            content-visibility: visible;
+        }
+
+        nav[aria-label="Main"] > details > summary {
+            display: none;
+        }
+    }
+}
+
+@media (max-width: 40rem) {
+    nav[aria-label="Main"] {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+    }
+
+    nav[aria-label="Main"] > a {
+        grid-column: 2;
+    }
+
+    nav[aria-label="Main"] > details {
+        grid-column: 3;
+        justify-self: end;
+    }
+
+    nav[aria-label="Main"] > details > ul {
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        right: 0;
+        z-index: 1;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 1rem;
+        min-width: max-content;
+        padding: 1rem 1.25rem;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg);
+        font-size: 1.1rem;
+    }
+}
+
 /* ---------- Inline action lists ----------
  * Main nav, page actions, entry actions and list item footers are rendered as
  * a single wrapping row. Buttons inside them look like links.
