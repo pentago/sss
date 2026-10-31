@@ -178,7 +178,7 @@ func Parse(environ []string) (*Options, error) {
 
 	o := &Options{
 		AdminPassword:                      p.secret("ADMIN_PASSWORD", ""),
-		AdminUsername:                      p.secret("ADMIN_USERNAME", ""),
+		AdminUsername:                      p.fileValue("ADMIN_USERNAME", "", false),
 		AuthProxyHeader:                    p.str("AUTH_PROXY_HEADER", ""),
 		AuthProxyUserCreation:              p.boolean("AUTH_PROXY_USER_CREATION", false),
 		BaseURL:                            p.str("BASE_URL", "http://localhost"),
@@ -370,11 +370,16 @@ func (p *parser) str(name, def string, choices ...string) string {
 	return v
 }
 
-// secret returns a secret value, read from the NAME_FILE file when that is set.
+// secret returns a redacted value, read from the NAME_FILE file when that is set.
 func (p *parser) secret(name, def string) string {
+	return p.fileValue(name, def, true)
+}
+
+// fileValue returns a value read from the NAME_FILE file when that is set, else from NAME.
+func (p *parser) fileValue(name, def string, redact bool) string {
 	file := p.env[name+"_FILE"]
 	if file == "" {
-		return p.raw(name, def, true)
+		return p.raw(name, def, redact)
 	}
 	p.dump[name+"_FILE"] = file
 	data, err := os.ReadFile(file)
@@ -386,7 +391,10 @@ func (p *parser) secret(name, def string) string {
 	if v == "" {
 		p.fail(name+"_FILE", errors.New("secret file is empty"))
 	}
-	p.dump[name] = "<redacted>"
+	p.dump[name] = v
+	if redact {
+		p.dump[name] = "<redacted>"
+	}
 	return v
 }
 

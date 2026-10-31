@@ -157,6 +157,34 @@ func TestAuthProxy(t *testing.T) {
 	}
 }
 
+// The config dump may reveal deployment details, so only admins see it.
+func TestAboutConfigAdminOnly(t *testing.T) {
+	h, store := newAccountTestServer(t, "OAUTH2_CLIENT_SECRET=hunter2")
+	c := login(t, h)
+	about := func() string {
+		r := httptest.NewRequest(http.MethodGet, "/about", nil)
+		r.AddCookie(c)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		return w.Body.String()
+	}
+	if body := about(); strings.Contains(body, "Global configuration options") {
+		t.Fatal("non-admin sees the config")
+	}
+	user, err := store.UserByUsername("alice")
+	if err != nil {
+		t.Fatal(err)
+	}
+	user.IsAdmin = true
+	if err := store.UpdateUser(user); err != nil {
+		t.Fatal(err)
+	}
+	body := about()
+	if !strings.Contains(body, "OAUTH2_CLIENT_SECRET=&lt;redacted&gt;") || strings.Contains(body, "hunter2") {
+		t.Fatal("admin config missing or secret leaked")
+	}
+}
+
 func TestFeverToken(t *testing.T) {
 	if got := feverToken("user", "pass"); got != "21a39285884a268d6458e3fdeb08beac" {
 		t.Fatalf("feverToken = %q", got)

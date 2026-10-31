@@ -148,15 +148,20 @@ func TestSecretFile(t *testing.T) {
 	if err := os.WriteFile(path, []byte("  hunter2\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	o, err := Parse([]string{"ADMIN_PASSWORD=ignored", "ADMIN_PASSWORD_FILE=" + path})
+	// The admin username is not a secret: like upstream, the dump shows it even when read from a file.
+	userPath := filepath.Join(t.TempDir(), "user")
+	if err := os.WriteFile(userPath, []byte("bob\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	o, err := Parse([]string{"ADMIN_PASSWORD=ignored", "ADMIN_PASSWORD_FILE=" + path, "ADMIN_USERNAME_FILE=" + userPath})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if o.AdminPassword != "hunter2" {
-		t.Errorf("got %q", o.AdminPassword)
+	if o.AdminPassword != "hunter2" || o.AdminUsername != "bob" {
+		t.Errorf("got %q, %q", o.AdminPassword, o.AdminUsername)
 	}
 	dump := o.Dump()
-	if strings.Contains(dump, "hunter2") || !strings.Contains(dump, "ADMIN_PASSWORD=<redacted>\n") || !strings.Contains(dump, "ADMIN_PASSWORD_FILE="+path+"\n") {
+	if strings.Contains(dump, "hunter2") || !strings.Contains(dump, "ADMIN_PASSWORD=<redacted>\n") || !strings.Contains(dump, "ADMIN_PASSWORD_FILE="+path+"\n") || !strings.Contains(dump, "ADMIN_USERNAME=bob\n") {
 		t.Errorf("dump:\n%s", dump)
 	}
 
