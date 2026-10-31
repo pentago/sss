@@ -40,7 +40,7 @@ func (h *handler) renderAddSubscription(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	h.render(w, r, "subscribe", map[string]any{"title": "New subscription", "menu": "feeds", "form": form, "categories": categories,
-		"errorMessage": errorMessage, "defaultUserAgent": config.Opts.HTTPClientUserAgent, "hasProxyConfigured": config.Opts.HTTPClientProxy != nil})
+		"errorMessage": errorMessage, "defaultUserAgent": currentUser(r).DefaultUserAgent(), "hasProxyConfigured": config.Opts.HTTPClientProxy != nil})
 }
 
 // subscriptionForm reads the subscription form fields.
@@ -87,7 +87,7 @@ func (h *handler) submitSubscription(w http.ResponseWriter, r *http.Request) {
 		WithCustomFeedProxyURL(form.ProxyURL).
 		WithCustomApplicationProxyURL(config.Opts.HTTPClientProxy).
 		UseCustomApplicationProxyURL(form.FetchViaProxy).
-		WithUserAgent(form.UserAgent, config.Opts.HTTPClientUserAgent).
+		WithUserAgent(form.UserAgent, currentUser(r).DefaultUserAgent()).
 		WithCookie(form.Cookie, form.FeedURL).
 		WithUsernameAndPassword(form.Username, form.Password).
 		IgnoreTLSErrors(form.AllowSelfSignedCertificates).

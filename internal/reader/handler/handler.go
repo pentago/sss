@@ -39,11 +39,12 @@ func parseError(err error) error {
 	return fmt.Errorf("Unable to parse this feed: %w.", err)
 }
 
-// requestBuilder returns a fetcher configured with the feed's HTTP settings.
-func requestBuilder(feed *model.Feed) *fetcher.RequestBuilder {
+// requestBuilder returns a fetcher configured with the feed's HTTP settings,
+// falling back to the user's global user agent.
+func requestBuilder(feed *model.Feed, user *model.User) *fetcher.RequestBuilder {
 	return fetcher.NewRequestBuilder().
 		WithUsernameAndPassword(feed.Username, feed.Password).
-		WithUserAgent(feed.UserAgent, config.Opts.HTTPClientUserAgent).
+		WithUserAgent(feed.UserAgent, user.DefaultUserAgent()).
 		WithCookie(feed.Cookie, feed.FeedURL).
 		WithTimeout(config.Opts.HTTPClientTimeout).
 		WithCustomFeedProxyURL(feed.ProxyURL).
@@ -100,7 +101,11 @@ func CreateFeedFromSubscriptionDiscovery(store *storage.Storage, userID int64, r
 	if store.FeedURLExists(userID, req.FeedURL) {
 		return nil, ErrDuplicatedFeed
 	}
-	return createFeed(store, userID, &req.FeedCreationRequest, req.FeedURL, req.Content, req.ETag, req.LastModified)
+	user, err := store.UserByID(userID)
+	if err != nil {
+		return nil, databaseError(err)
+	}
+	return createFeed(store, user, &req.FeedCreationRequest, req.FeedURL, req.Content, req.ETag, req.LastModified)
 }
 
 // CreateFeed downloads, parses and stores a new feed.
@@ -108,10 +113,14 @@ func CreateFeed(store *storage.Storage, userID int64, req *model.FeedCreationReq
 	if err := checkCategory(store, userID, req.CategoryID); err != nil {
 		return nil, err
 	}
+	user, err := store.UserByID(userID)
+	if err != nil {
+		return nil, databaseError(err)
+	}
 
 	settings := &model.Feed{FeedURL: req.FeedURL}
 	applyRequest(settings, userID, req)
-	rh := fetcher.NewResponseHandler(requestBuilder(settings).ExecuteRequest(req.FeedURL))
+	rh := fetcher.NewResponseHandler(requestBuilder(settings, user).ExecuteRequest(req.FeedURL))
 	defer rh.Close()
 	if err := rh.LocalizedError(); err != nil {
 		slog.Warn("Unable to fetch feed", slog.String("feed_url", req.FeedURL), slog.Any("error", err))
@@ -125,21 +134,16 @@ func CreateFeed(store *storage.Storage, userID int64, req *model.FeedCreationReq
 	if store.FeedURLExists(userID, rh.EffectiveURL()) {
 		return nil, ErrDuplicatedFeed
 	}
-	return createFeed(store, userID, req, rh.EffectiveURL(), bytes.NewReader(body), rh.ETag(), rh.LastModified())
+	return createFeed(store, user, req, rh.EffectiveURL(), bytes.NewReader(body), rh.ETag(), rh.LastModified())
 }
 
 // createFeed parses content as the feed at feedURL, applies req and stores it.
-func createFeed(store *storage.Storage, userID int64, req *model.FeedCreationRequest, feedURL string, content io.ReadSeeker, etag, lastModified string) (*model.Feed, error) {
-	user, err := store.UserByID(userID)
-	if err != nil {
-		return nil, databaseError(err)
-	}
-
+func createFeed(store *storage.Storage, user *model.User, req *model.FeedCreationRequest, feedURL string, content io.ReadSeeker, etag, lastModified string) (*model.Feed, error) {
 	feed, err := parser.ParseFeed(feedURL, content)
 	if err != nil {
 		return nil, parseError(err)
 	}
-	applyRequest(feed, userID, req)
+	applyRequest(feed, user.ID, req)
 	feed.FeedURL = feedURL
 	feed.EtagHeader = etag
 	feed.LastModifiedHeader = lastModified
@@ -150,9 +154,9 @@ func createFeed(store *storage.Storage, userID int64, req *model.FeedCreationReq
 	if err := store.CreateFeed(feed); err != nil {
 		return nil, databaseError(err)
 	}
-	slog.Debug("Created feed", slog.Int64("user_id", userID), slog.Int64("feed_id", feed.ID), slog.String("feed_url", feed.FeedURL))
+	slog.Debug("Created feed", slog.Int64("user_id", user.ID), slog.Int64("feed_id", feed.ID), slog.String("feed_url", feed.FeedURL))
 
-	updateIcon(store, feed)
+	updateIcon(store, feed, user)
 	return feed, nil
 }
 
@@ -182,7 +186,7 @@ func RefreshFeed(store *storage.Storage, userID, feedID int64, forceRefresh bool
 	feed.CheckedNow()
 	feed.ScheduleNextCheck(weeklyEntryCount, 0)
 
-	rb := requestBuilder(feed)
+	rb := requestBuilder(feed, user)
 	ignoreHTTPCache := feed.IgnoreHTTPCache || forceRefresh
 	if !ignoreHTTPCache {
 		rb = rb.WithETag(feed.EtagHeader).WithLastModified(feed.LastModifiedHeader)
@@ -226,7 +230,7 @@ func RefreshFeed(store *storage.Storage, userID, feedID int64, forceRefresh bool
 		processor.ProcessFeedEntries(store, feed, user, forceRefresh)
 
 		// Existing entries are not updated when crawling or ignoring entry updates, unless forced.
-		updateExisting := forceRefresh || (!feed.Crawler && !feed.IgnoreEntryUpdates)
+		updateExisting := forceRefresh || (!feed.Crawler && !user.GlobalCrawler && !feed.IgnoreEntryUpdates)
 		newEntries, err := store.RefreshFeedEntries(feed.UserID, feed.ID, feed.Entries, updateExisting)
 		if err != nil {
 			return recordError(store, feed, databaseError(err))
@@ -243,7 +247,7 @@ func RefreshFeed(store *storage.Storage, userID, feedID int64, forceRefresh bool
 		feed.Language = updated.Language
 		feed.IconURL = updated.IconURL
 		if forceRefresh || !store.HasFeedIcon(feed.ID) {
-			updateIcon(store, feed)
+			updateIcon(store, feed, user)
 		}
 	} else if rh.LastModified() != "" {
 		// Per RFC 9111 §4.3.4 a 304 may carry an updated Last-Modified.
@@ -267,8 +271,8 @@ func recordError(store *storage.Storage, feed *model.Feed, err error) error {
 }
 
 // updateIcon downloads the feed icon and stores it.
-func updateIcon(store *storage.Storage, feed *model.Feed) {
-	ic, err := icon.FindIcon(feed)
+func updateIcon(store *storage.Storage, feed *model.Feed, user *model.User) {
+	ic, err := icon.FindIcon(feed, user.DefaultUserAgent())
 	switch {
 	case err != nil:
 		slog.Debug("Unable to find feed icon", slog.Int64("feed_id", feed.ID), slog.String("website_url", feed.SiteURL), slog.Any("error", err))

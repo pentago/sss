@@ -4,8 +4,10 @@
 package model
 
 import (
+	"cmp"
 	"time"
 
+	"sss/internal/config"
 	"sss/internal/timezone"
 )
 
@@ -45,6 +47,8 @@ type User struct {
 	ServiceWorker             bool       `json:"service_worker"`
 	ThemeLightHour            int        `json:"theme_light_hour"`
 	ThemeDarkHour             int        `json:"theme_dark_hour"`
+	GlobalUserAgent           string     `json:"global_user_agent"` // sss: used by feeds without their own user agent.
+	GlobalCrawler             bool       `json:"global_crawler"`    // sss: fetches original content of every feed.
 }
 
 // UserCreationRequest represents the request to create a user.
@@ -87,6 +91,8 @@ type UserModificationRequest struct {
 	ServiceWorker             *bool   `json:"service_worker"`
 	ThemeLightHour            *int    `json:"theme_light_hour"`
 	ThemeDarkHour             *int    `json:"theme_dark_hour"`
+	GlobalUserAgent           *string `json:"global_user_agent"`
+	GlobalCrawler             *bool   `json:"global_crawler"`
 }
 
 // Patch updates the User object with the modification request.
@@ -206,6 +212,14 @@ func (u *UserModificationRequest) Patch(user *User) {
 	if u.ThemeDarkHour != nil {
 		user.ThemeDarkHour = *u.ThemeDarkHour
 	}
+
+	if u.GlobalUserAgent != nil {
+		user.GlobalUserAgent = *u.GlobalUserAgent
+	}
+
+	if u.GlobalCrawler != nil {
+		user.GlobalCrawler = *u.GlobalCrawler
+	}
 }
 
 // ThemeAt returns the color scheme to render at the given instant and whether
@@ -225,6 +239,12 @@ func (u *User) ThemeAt(now time.Time) (scheme string, serif bool) {
 		return SchemeLight, serif
 	}
 	return SchemeDark, serif
+}
+
+// DefaultUserAgent returns the User-Agent for feeds that don't set one: the
+// user's global user agent, else HTTP_CLIENT_USER_AGENT.
+func (u *User) DefaultUserAgent() string {
+	return cmp.Or(u.GlobalUserAgent, config.Opts.HTTPClientUserAgent)
 }
 
 // UseTimezone converts last login date to the given timezone.

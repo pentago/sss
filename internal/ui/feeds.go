@@ -126,7 +126,7 @@ func (h *handler) renderEditFeed(w http.ResponseWriter, r *http.Request, feed *m
 	}
 	h.render(w, r, "feed_edit", map[string]any{
 		"title": "Edit feed: " + feed.Title, "menu": "feeds", "feed": feed, "categories": categories,
-		"errorMessage": errorMessage, "defaultUserAgent": config.Opts.HTTPClientUserAgent,
+		"errorMessage": errorMessage, "defaultUserAgent": currentUser(r).DefaultUserAgent(),
 		"hasProxyConfigured": config.Opts.HTTPClientProxy != nil,
 	})
 }

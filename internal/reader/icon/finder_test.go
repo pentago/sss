@@ -54,7 +54,7 @@ func TestFindIcon(t *testing.T) {
 			if tc.feedURL != "" {
 				feed.IconURL = s.URL + tc.feedURL
 			}
-			icon, _ := FindIcon(feed)
+			icon, _ := FindIcon(feed, "")
 			got := ""
 			if icon != nil {
 				got = string(icon.Content)

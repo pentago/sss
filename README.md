@@ -8,6 +8,7 @@ A minimalist, self-hosted feed reader written in Go:
 - **XDG paths when run as a user:** the config file lives at `~/.config/sss/sss.conf` and the database at `~/.local/share/sss/sss.db`.
 - **Integrations:** Apprise, Discord, Gotify, Instapaper, Linkwarden, Matrix, Notion, Ntfy, Pushover, RSS-Bridge, Slack, Telegram and Webhook.
 - **API compatibility:** the Miniflux REST API (`/v1/`), the Fever API (`/fever/`) and the Google Reader API (`/reader/api/0/`), so existing Miniflux clients keep working. Webhooks send `X-Sss-Signature` and `X-Sss-Event-Type` headers. OPML per-feed settings use the `sss:` namespace (`https://github.com/pentago/sss/opml`), so a Miniflux OPML export imports its feeds and categories but not their per-feed settings.
+- **Global feed settings:** Settings → Global sets a user agent and "Fetch original content" for all of a user's feeds. A feed's own user agent takes precedence; fetching original content runs when either the global or the feed setting is on. The API exposes them as `global_user_agent` and `global_crawler` on the user.
 - **English only.**
 
 ## Install
@@ -81,7 +82,7 @@ The image ships a default `sss.conf` with `LISTEN_ADDR=0.0.0.0:8080`, `DATABASE_
 
 Push a `v*` tag. The release workflow publishes binaries, the four Linux package types, and multi-arch images to `ghcr.io/<owner>/sss` (tagged with the version and `latest`). The Homebrew cask goes to `<owner>/homebrew-tap`, but only when the repository secret `HOMEBREW_TAP_TOKEN` is set. That secret needs to be a token with write access to the tap repository.
 
-`.github/workflows/ci.yml` runs formatting, vet, race tests and a Docker build on every PR and push to `main`. After those pass on `main` (a merged PR), it publishes multi-arch images tagged `main` and `sha-<commit>`.
+`.github/workflows/ci.yml` runs formatting, vet, race tests and a Docker build on every PR and push to `main`. After those pass on `main` (a merged PR), it publishes multi-arch images tagged `dev` and `pr-<number>`.
 
 Release artifacts, release images and `main` images get signed build provenance attestations. Verify one with `gh attestation verify <file> --owner <owner>` or `gh attestation verify oci://ghcr.io/<owner>/sss:<tag> --owner <owner>`.
 

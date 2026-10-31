@@ -294,4 +294,8 @@ CREATE TABLE acme_cache (
 	updated_at INTEGER NOT NULL
 );
 `,
+	`
+ALTER TABLE users ADD COLUMN global_user_agent TEXT NOT NULL DEFAULT '';
+ALTER TABLE users ADD COLUMN global_crawler INTEGER NOT NULL DEFAULT 0;
+`,
 }

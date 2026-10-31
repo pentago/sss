@@ -49,6 +49,12 @@
     <label><input type="checkbox" name="mark_read_on_scroll"{{if .MarkReadOnScroll}} checked{{end}}> Mark entries as read when scrolled past</label>
     <label><input type="checkbox" name="service_worker"{{if .ServiceWorker}} checked{{end}}> Offline page (service worker)</label>
   </fieldset>
+  <fieldset>
+    <legend>Global</legend>
+    <p>Applies to every feed. A user agent set on a feed takes precedence.</p>
+    <label>User agent <input name="global_user_agent" value="{{.GlobalUserAgent}}" placeholder="{{$.defaultUserAgent}}" spellcheck="false"></label>
+    <label><input type="checkbox" name="global_crawler"{{if .GlobalCrawler}} checked{{end}}> Fetch original content</label>
+  </fieldset>
   <details>
     <summary>Advanced</summary>
     <fieldset>
