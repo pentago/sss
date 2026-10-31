@@ -68,7 +68,8 @@ func TestUsers(t *testing.T) {
 
 	if user.Username != "alice" || user.Theme != model.ThemeDefault || user.KeyboardShortcuts || user.EntrySwipe ||
 		user.GestureNav != "none" || user.MarkReadOnScroll || user.ServiceWorker || user.ThemeLightHour != 7 ||
-		user.ThemeDarkHour != 19 || user.EntriesPerPage != 100 || !user.MarkReadOnView || user.LastLoginAt != nil {
+		user.ThemeDarkHour != 19 || user.EntriesPerPage != 100 || !user.MarkReadOnView || user.LastLoginAt != nil ||
+		user.EntryDirection != "desc" {
 		t.Fatalf("unexpected defaults: %+v", user)
 	}
 	if !user.IsAdmin {

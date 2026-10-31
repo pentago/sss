@@ -79,9 +79,10 @@ func (s *Storage) CreateUser(request *model.UserCreationRequest) (*model.User, e
 	var user model.User
 	// sss: upstream only sets is_admin when requested. The check runs inside the
 	// write-locked transaction, so two concurrent first sign-ins can't both become admin.
+	// sss: new users list entries newest first (upstream and the column default use 'asc').
 	err = tx.QueryRow(`
-		INSERT INTO users (username, password, is_admin, google_id, openid_connect_id)
-		VALUES (lower($1), $2, $3 OR NOT EXISTS (SELECT 1 FROM users), $4, $5)
+		INSERT INTO users (username, password, is_admin, google_id, openid_connect_id, entry_direction)
+		VALUES (lower($1), $2, $3 OR NOT EXISTS (SELECT 1 FROM users), $4, $5, 'desc')
 		RETURNING `+userColumns,
 		request.Username, hashedPassword, request.IsAdmin, request.GoogleID, request.OpenIDConnectID,
 	).Scan(userDest(&user)...)
