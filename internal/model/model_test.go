@@ -104,7 +104,7 @@ func TestUserThemeAt(t *testing.T) {
 		want string
 	}{
 		{User{Theme: "dark_sans_serif"}, at(12), SchemeDark},
-		{User{Theme: "system_serif"}, at(12), SchemeSystem},
+		{User{Theme: "system_serif"}, at(12), "system"},
 		{User{Theme: ThemeNone}, at(12), ThemeNone},
 		{User{Theme: "time_sans_serif", Timezone: "UTC", ThemeLightHour: 7, ThemeDarkHour: 19}, at(7), SchemeLight},
 		{User{Theme: "time_sans_serif", Timezone: "UTC", ThemeLightHour: 7, ThemeDarkHour: 19}, at(18), SchemeLight},

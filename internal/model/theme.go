@@ -14,10 +14,9 @@ const (
 
 // Color schemes returned by SplitTheme and User.ThemeAt.
 const (
-	SchemeLight  = "light"
-	SchemeDark   = "dark"
-	SchemeSystem = "system" // Follows prefers-color-scheme.
-	SchemeTime   = "time"   // Light between ThemeLightHour and ThemeDarkHour, dark otherwise.
+	SchemeLight = "light"
+	SchemeDark  = "dark"
+	SchemeTime  = "time" // Light between ThemeLightHour and ThemeDarkHour, dark otherwise.
 )
 
 // Themes returns the available themes and their labels.

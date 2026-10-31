@@ -143,18 +143,6 @@ var templateFuncs = template.FuncMap{
 	"plural":   plural,
 	"domain":   urllib.Domain,
 	"fileSize": fileSize,
-	"query": func(pairs ...string) string {
-		values := url.Values{}
-		for i := 0; i+1 < len(pairs); i += 2 {
-			if pairs[i+1] != "" {
-				values.Set(pairs[i], pairs[i+1])
-			}
-		}
-		if len(values) == 0 {
-			return ""
-		}
-		return "?" + values.Encode()
-	},
 	"deref": func(i *int) int {
 		if i == nil {
 			return 0
