@@ -36,12 +36,18 @@ func (h *handler) discoverSubscriptionsHandler(w http.ResponseWriter, r *http.Re
 		rssbridgeToken = intg.RSSBridgeToken
 	}
 
+	user, err := h.store.UserByID(request.UserID(r))
+	if err != nil {
+		response.JSONServerError(w, r, err)
+		return
+	}
+
 	requestBuilder := fetcher.NewRequestBuilder().
 		WithTimeout(config.Opts.HTTPClientTimeout).
 		WithCustomFeedProxyURL(subscriptionDiscoveryRequest.ProxyURL).
 		WithCustomApplicationProxyURL(config.Opts.HTTPClientProxy).
 		UseCustomApplicationProxyURL(subscriptionDiscoveryRequest.FetchViaProxy).
-		WithUserAgent(subscriptionDiscoveryRequest.UserAgent, config.Opts.HTTPClientUserAgent).
+		WithUserAgent(subscriptionDiscoveryRequest.UserAgent, user.DefaultUserAgent()).
 		WithCookie(subscriptionDiscoveryRequest.Cookie, subscriptionDiscoveryRequest.URL).
 		WithUsernameAndPassword(subscriptionDiscoveryRequest.Username, subscriptionDiscoveryRequest.Password).
 		IgnoreTLSErrors(subscriptionDiscoveryRequest.AllowSelfSignedCertificates).

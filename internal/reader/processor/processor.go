@@ -39,7 +39,7 @@ func ProcessFeedEntries(store EntryStore, feed *model.Feed, user *model.User, fo
 	blockRules := filter.ParseRules(user.BlockFilterEntryRules, feed.BlockFilterEntryRules)
 	allowRules := filter.ParseRules(user.KeepFilterEntryRules, feed.KeepFilterEntryRules)
 
-	requestBuilder := newRequestBuilder(feed)
+	requestBuilder := newRequestBuilder(feed, user)
 
 	// Processing older entries first ensures that their creation timestamp is lower than newer entries.
 	for _, entry := range slices.Backward(feed.Entries) {
@@ -56,7 +56,7 @@ func ProcessFeedEntries(store EntryStore, feed *model.Feed, user *model.User, fo
 		entry.URL = rewrite.RewriteEntryURL(feed, entry)
 		entryIsNew := store.IsNewEntry(feed.ID, entry.Hash)
 		contentExtractedSuccessfully := false
-		if feed.Crawler && (forceRefresh || entryIsNew) {
+		if (feed.Crawler || user.GlobalCrawler) && (forceRefresh || entryIsNew) {
 			scrapedPageBaseURL, extractedContent, scraperErr := scraper.ScrapeWebsite(requestBuilder, entry.URL, feed.ScraperRules)
 			if scrapedPageBaseURL != "" {
 				webpageBaseURL = scrapedPageBaseURL
@@ -106,7 +106,7 @@ func ProcessFeedEntries(store EntryStore, feed *model.Feed, user *model.User, fo
 func ProcessEntryWebPage(feed *model.Feed, entry *model.Entry, user *model.User) error {
 	entry.URL = rewrite.RewriteEntryURL(feed, entry)
 
-	webpageBaseURL, extractedContent, scraperErr := scraper.ScrapeWebsite(newRequestBuilder(feed), entry.URL, feed.ScraperRules)
+	webpageBaseURL, extractedContent, scraperErr := scraper.ScrapeWebsite(newRequestBuilder(feed, user), entry.URL, feed.ScraperRules)
 	if scraperErr != nil {
 		return scraperErr
 	}
@@ -124,9 +124,9 @@ func ProcessEntryWebPage(feed *model.Feed, entry *model.Entry, user *model.User)
 	return nil
 }
 
-func newRequestBuilder(feed *model.Feed) *fetcher.RequestBuilder {
+func newRequestBuilder(feed *model.Feed, user *model.User) *fetcher.RequestBuilder {
 	return fetcher.NewRequestBuilder().
-		WithUserAgent(feed.UserAgent, config.Opts.HTTPClientUserAgent).
+		WithUserAgent(feed.UserAgent, user.DefaultUserAgent()).
 		WithCookie(feed.Cookie, feed.FeedURL).
 		WithTimeout(config.Opts.HTTPClientTimeout).
 		WithCustomFeedProxyURL(feed.ProxyURL).

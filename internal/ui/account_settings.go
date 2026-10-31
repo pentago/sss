@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"sss/internal/config"
 	"sss/internal/http/request"
 	"sss/internal/http/response"
 	"sss/internal/model"
@@ -64,6 +65,8 @@ func settingsRequest(r *http.Request) *model.UserModificationRequest {
 		GestureNav:                formString(r, "gesture_nav"),
 		MarkReadOnScroll:          formBool(r, "mark_read_on_scroll"),
 		ServiceWorker:             formBool(r, "service_worker"),
+		GlobalUserAgent:           formString(r, "global_user_agent"),
+		GlobalCrawler:             formBool(r, "global_crawler"),
 	}
 }
 
@@ -77,6 +80,7 @@ func (h *handler) renderSettings(w http.ResponseWriter, r *http.Request, form *m
 		"homePages":         model.HomePages(),
 		"categoriesSorting": model.CategoriesSortingOptions(),
 		"maxEntriesPerPage": model.MaxEntryLimit,
+		"defaultUserAgent":  config.Opts.HTTPClientUserAgent,
 	}
 	if errorMessage != "" {
 		data["errorMessage"] = errorMessage

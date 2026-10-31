@@ -205,9 +205,15 @@ func (h *handler) quickAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user, err := h.store.UserByID(userID)
+	if err != nil {
+		response.JSONServerError(w, r, err)
+		return
+	}
+
 	requestBuilder := fetcher.NewRequestBuilder().
 		WithTimeout(config.Opts.HTTPClientTimeout).
-		WithUserAgent("", config.Opts.HTTPClientUserAgent)
+		WithUserAgent("", user.DefaultUserAgent())
 
 	var rssBridgeURL, rssBridgeToken string
 	if intg, err := h.store.Integration(userID); err == nil && intg.RSSBridgeEnabled {

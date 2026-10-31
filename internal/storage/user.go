@@ -23,7 +23,7 @@ const userColumns = `id, username, is_admin, theme, timezone, entry_direction, e
 	default_home_page, categories_sorting_order, block_filter_entry_rules, keep_filter_entry_rules,
 	mark_read_on_view, always_open_external_links, open_external_links_in_new_tab,
 	keyboard_shortcuts, show_reading_time, entry_swipe, mark_read_on_scroll, service_worker,
-	theme_light_hour, theme_dark_hour, 'en_US'`
+	theme_light_hour, theme_dark_hour, global_user_agent, global_crawler, 'en_US'`
 
 // userDest returns the scan destinations matching userColumns.
 func userDest(u *model.User) []any {
@@ -34,7 +34,7 @@ func userDest(u *model.User) []any {
 		&u.DefaultHomePage, &u.CategoriesSortingOrder, &u.BlockFilterEntryRules, &u.KeepFilterEntryRules,
 		&u.MarkReadOnView, &u.AlwaysOpenExternalLinks, &u.OpenExternalLinksInNewTab,
 		&u.KeyboardShortcuts, &u.ShowReadingTime, &u.EntrySwipe, &u.MarkReadOnScroll, &u.ServiceWorker,
-		&u.ThemeLightHour, &u.ThemeDarkHour, &u.Language,
+		&u.ThemeLightHour, &u.ThemeDarkHour, &u.GlobalUserAgent, &u.GlobalCrawler, &u.Language,
 	}
 }
 
@@ -144,15 +144,17 @@ func (s *Storage) UpdateUser(user *model.User) error {
 			service_worker=$28,
 			theme_light_hour=$29,
 			theme_dark_hour=$30,
-			password=CASE WHEN $31 = '' THEN password ELSE $31 END
-		WHERE id=$32`,
+			global_user_agent=$31,
+			global_crawler=$32,
+			password=CASE WHEN $33 = '' THEN password ELSE $33 END
+		WHERE id=$34`,
 		user.Username, user.IsAdmin, user.Theme, user.Timezone, user.EntryDirection, user.EntryOrder,
 		user.Stylesheet, user.CustomJS, user.ExternalFontHosts, user.GoogleID, user.OpenIDConnectID,
 		user.EntriesPerPage, user.GestureNav, user.DisplayMode, user.DefaultReadingSpeed, user.CJKReadingSpeed,
 		user.DefaultHomePage, user.CategoriesSortingOrder, user.BlockFilterEntryRules, user.KeepFilterEntryRules,
 		user.MarkReadOnView, user.AlwaysOpenExternalLinks, user.OpenExternalLinksInNewTab,
 		user.KeyboardShortcuts, user.ShowReadingTime, user.EntrySwipe, user.MarkReadOnScroll, user.ServiceWorker,
-		user.ThemeLightHour, user.ThemeDarkHour, hashedPassword, user.ID,
+		user.ThemeLightHour, user.ThemeDarkHour, user.GlobalUserAgent, user.GlobalCrawler, hashedPassword, user.ID,
 	)
 	if err != nil {
 		return fmt.Errorf("storage: unable to update user: %w", err)
