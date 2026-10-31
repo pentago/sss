@@ -92,3 +92,15 @@ dockers_v2:
     images: ['ghcr.io/{{ envOrDefault "REGISTRY_OWNER" "sss" | tolower }}/sss']
     tags: ["{{ .Version }}", latest]
     platforms: [linux/amd64, linux/arm64, linux/arm/v7, linux/riscv64]
+    labels:
+      org.opencontainers.image.title: '{{ envOrDefault "REPO_NAME" "" }}'
+      org.opencontainers.image.description: '{{ envOrDefault "REPO_DESCRIPTION" "" }}'
+      org.opencontainers.image.created: "{{ .Date }}"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.ref.name: "{{ .Version }}"
+      org.opencontainers.image.vendor: '{{ envOrDefault "REGISTRY_OWNER" "" }}'
+      org.opencontainers.image.licenses: '{{ envOrDefault "REPO_LICENSE" "" }}'
+      org.opencontainers.image.url: '{{ envOrDefault "REPO_URL" "" }}'
+      org.opencontainers.image.source: '{{ envOrDefault "REPO_URL" "" }}'
+      org.opencontainers.image.documentation: '{{ with envOrDefault "REPO_URL" "" }}{{ . }}#readme{{ end }}'

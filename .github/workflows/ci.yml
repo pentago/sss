@@ -69,6 +69,18 @@ jobs:
           build-args: |
             COMMIT=${{ github.sha }}
             BUILD_DATE=${{ steps.meta.outputs.date }}
+          labels: |
+            org.opencontainers.image.title=${{ github.event.repository.name }}
+            org.opencontainers.image.description=${{ github.event.repository.description }}
+            org.opencontainers.image.created=${{ steps.meta.outputs.date }}
+            org.opencontainers.image.version=dev
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.ref.name=dev
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}
+            org.opencontainers.image.source=${{ github.event.repository.html_url }}
+            org.opencontainers.image.documentation=${{ github.event.repository.html_url }}#readme
           tags: ${{ steps.meta.outputs.tags }}
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
