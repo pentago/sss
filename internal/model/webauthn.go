@@ -17,9 +17,6 @@ type WebAuthnCredential struct {
 	AddedOn    *time.Time
 	LastSeenOn *time.Time
 	Handle     []byte
-
-	// False for rows predating the backup_eligible column; the login handler backfills from the assertion on first use.
-	BackupEligibleKnown bool
 }
 
 // HandleEncoded returns the hex-encoded user handle.

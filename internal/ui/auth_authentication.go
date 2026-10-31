@@ -28,7 +28,6 @@ func (h *handler) renderAuthentication(w http.ResponseWriter, r *http.Request, u
 	}
 	data := map[string]any{
 		"title":       "Authentication",
-		"menu":        "settings",
 		"username":    username,
 		"hasPassword": hasPassword,
 		"oauth2":      config.Opts.OAuth2Provider,

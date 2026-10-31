@@ -60,9 +60,7 @@ func (s *Storage) AnotherFeedURLExists(userID, feedID int64, feedURL string) boo
 
 // Feeds returns all feeds that belong to the given user.
 func (s *Storage) Feeds(userID int64) (model.Feeds, error) {
-	return s.NewFeedQueryBuilder(userID).
-		WithSorting(model.DefaultFeedSorting, model.DefaultFeedSortingDirection).
-		GetFeeds()
+	return s.NewFeedQueryBuilder(userID).GetFeeds()
 }
 
 // getFeedsSorted sorts disabled feeds last, then by error count, unread count and title.
@@ -89,9 +87,7 @@ func getFeedsSorted(builder *FeedQueryBuilder) (model.Feeds, error) {
 
 // FeedsWithCounters returns all feeds of the given user with read and unread entry counters.
 func (s *Storage) FeedsWithCounters(userID int64) (model.Feeds, error) {
-	return getFeedsSorted(s.NewFeedQueryBuilder(userID).
-		WithCounters().
-		WithSorting(model.DefaultFeedSorting, model.DefaultFeedSortingDirection))
+	return getFeedsSorted(s.NewFeedQueryBuilder(userID).WithCounters())
 }
 
 // FetchCounters returns the per-feed read and unread entry counts for the given user.
@@ -104,8 +100,7 @@ func (s *Storage) FetchCounters(userID int64) (model.FeedCounters, error) {
 func (s *Storage) FeedsByCategoryWithCounters(userID, categoryID int64) (model.Feeds, error) {
 	return getFeedsSorted(s.NewFeedQueryBuilder(userID).
 		WithCategoryID(categoryID).
-		WithCounters().
-		WithSorting(model.DefaultFeedSorting, model.DefaultFeedSortingDirection))
+		WithCounters())
 }
 
 // WeeklyFeedEntryCount returns a virtual weekly entry count for a feed based

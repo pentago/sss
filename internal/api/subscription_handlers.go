@@ -7,7 +7,6 @@ import (
 	json_parser "encoding/json"
 	"net/http"
 
-	"sss/internal/config"
 	"sss/internal/http/request"
 	"sss/internal/http/response"
 	"sss/internal/model"
@@ -43,9 +42,6 @@ func (h *handler) discoverSubscriptionsHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	requestBuilder := fetcher.NewRequestBuilder().
-		WithTimeout(config.Opts.HTTPClientTimeout).
-		WithCustomFeedProxyURL(subscriptionDiscoveryRequest.ProxyURL).
-		WithCustomApplicationProxyURL(config.Opts.HTTPClientProxy).
 		UseCustomApplicationProxyURL(subscriptionDiscoveryRequest.FetchViaProxy).
 		WithUserAgent(subscriptionDiscoveryRequest.UserAgent, user.DefaultUserAgent()).
 		WithCookie(subscriptionDiscoveryRequest.Cookie, subscriptionDiscoveryRequest.URL).

@@ -4,7 +4,6 @@
 package storage
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/go-webauthn/webauthn/webauthn"
@@ -35,7 +34,7 @@ func (s *Storage) AddWebAuthnCredential(userID int64, handle []byte, credential 
 // webAuthnDest returns scan destinations for: cred_id, public_key,
 // attestation_type, aaguid, sign_count, clone_warning, name, added_on,
 // last_seen_on, backup_eligible, backup_state.
-func webAuthnDest(c *model.WebAuthnCredential, backupEligible *sql.NullBool) []any {
+func webAuthnDest(c *model.WebAuthnCredential) []any {
 	return []any{
 		&c.Credential.ID,
 		&c.Credential.PublicKey,
@@ -46,7 +45,7 @@ func webAuthnDest(c *model.WebAuthnCredential, backupEligible *sql.NullBool) []a
 		&c.Name,
 		nullUnixTime{&c.AddedOn},
 		nullUnixTime{&c.LastSeenOn},
-		backupEligible,
+		&c.Credential.Flags.BackupEligible,
 		&c.Credential.Flags.BackupState,
 	}
 }
@@ -57,15 +56,12 @@ const webAuthnColumns = `cred_id, public_key, attestation_type, aaguid, sign_cou
 func (s *Storage) WebAuthnCredentialByHandle(handle []byte) (int64, *model.WebAuthnCredential, error) {
 	var credential model.WebAuthnCredential
 	var userID int64
-	var backupEligible sql.NullBool
 
-	dest := append([]any{&userID}, webAuthnDest(&credential, &backupEligible)...)
+	dest := append([]any{&userID}, webAuthnDest(&credential)...)
 	if err := s.db.QueryRow(`SELECT user_id, `+webAuthnColumns+` FROM webauthn_credentials WHERE handle=$1`, handle).Scan(dest...); err != nil {
 		return 0, nil, err
 	}
 
-	credential.Credential.Flags.BackupEligible = backupEligible.Bool
-	credential.BackupEligibleKnown = backupEligible.Valid
 	credential.Handle = handle
 	return userID, &credential, nil
 }
@@ -81,12 +77,9 @@ func (s *Storage) WebAuthnCredentialsByUserID(userID int64) ([]model.WebAuthnCre
 	var creds []model.WebAuthnCredential
 	for rows.Next() {
 		var cred model.WebAuthnCredential
-		var backupEligible sql.NullBool
-		if err := rows.Scan(append([]any{&cred.Handle}, webAuthnDest(&cred, &backupEligible)...)...); err != nil {
+		if err := rows.Scan(append([]any{&cred.Handle}, webAuthnDest(&cred)...)...); err != nil {
 			return nil, err
 		}
-		cred.Credential.Flags.BackupEligible = backupEligible.Bool
-		cred.BackupEligibleKnown = backupEligible.Valid
 		creds = append(creds, cred)
 	}
 	return creds, rows.Err()
@@ -110,20 +103,12 @@ func (s *Storage) WebAuthnSaveLogin(handle []byte, credential *webauthn.Credenti
 	return nil
 }
 
-// WebAuthnUpdateName renames a passkey of the user and returns the number of updated rows.
-func (s *Storage) WebAuthnUpdateName(userID int64, handle []byte, name string) (int64, error) {
-	result, err := s.db.Exec(`UPDATE webauthn_credentials SET name=$1 WHERE handle=$2 AND user_id=$3`, name, handle, userID)
-	if err != nil {
-		return 0, fmt.Errorf("storage: unable to update name for webauthn credential: %w", err)
+// WebAuthnUpdateName renames a passkey of the user.
+func (s *Storage) WebAuthnUpdateName(userID int64, handle []byte, name string) error {
+	if _, err := s.db.Exec(`UPDATE webauthn_credentials SET name=$1 WHERE handle=$2 AND user_id=$3`, name, handle, userID); err != nil {
+		return fmt.Errorf("storage: unable to update name for webauthn credential: %w", err)
 	}
-	return result.RowsAffected()
-}
-
-// CountWebAuthnCredentialsByUserID returns the number of passkeys of the user (0 on error).
-func (s *Storage) CountWebAuthnCredentialsByUserID(userID int64) int {
-	var count int
-	s.db.QueryRow(`SELECT count(*) FROM webauthn_credentials WHERE user_id=$1`, userID).Scan(&count)
-	return count
+	return nil
 }
 
 // DeleteCredentialByHandle removes a passkey of the user.

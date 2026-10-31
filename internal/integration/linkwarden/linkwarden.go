@@ -65,12 +65,12 @@ func (c *Client) CreateBookmark(entryURL, entryTitle string) error {
 	}
 	defer response.Body.Close()
 
-	responseBody, err := io.ReadAll(response.Body)
-	if err != nil {
-		return fmt.Errorf("linkwarden: unable to read response body: %v", err)
-	}
-
 	if response.StatusCode >= 400 {
+		responseBody, err := io.ReadAll(response.Body)
+		if err != nil {
+			return fmt.Errorf("linkwarden: unable to read response body: %v", err)
+		}
+
 		return fmt.Errorf("linkwarden: unable to create link: status=%d body=%s", response.StatusCode, string(responseBody))
 	}
 

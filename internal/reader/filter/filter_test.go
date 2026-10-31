@@ -412,7 +412,6 @@ func TestKeeplistRulesBehavior(t *testing.T) {
 // Tests for matchesEntryRegexRules function
 func TestMatchesEntryRegexRules(t *testing.T) {
 	entry := createTestEntry()
-	feed := createTestFeed()
 
 	tests := []struct {
 		name          string
@@ -488,7 +487,7 @@ func TestMatchesEntryRegexRules(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			match, valid := matchesEntryRegexRules(tt.regexPattern, feed, entry)
+			match, valid := matchesEntryRegexRules(tt.regexPattern, entry)
 			if match != tt.expectedMatch {
 				t.Errorf("matchesEntryRegexRules() match = %v, expected %v (%s)", match, tt.expectedMatch, tt.description)
 			}
@@ -502,7 +501,6 @@ func TestMatchesEntryRegexRules(t *testing.T) {
 // Tests for matchesEntryFilterRules function
 func TestMatchesEntryFilterRules(t *testing.T) {
 	entry := createTestEntry()
-	feed := createTestFeed()
 
 	tests := []struct {
 		name     string
@@ -540,7 +538,7 @@ func TestMatchesEntryFilterRules(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := matchesEntryFilterRules(tt.rules, feed, entry)
+			result := matchesEntryFilterRules(tt.rules, entry)
 			if result != tt.expected {
 				t.Errorf("matchesEntryFilterRules() = %v, expected %v", result, tt.expected)
 			}
@@ -770,62 +768,6 @@ func TestIsDateMatchingPattern(t *testing.T) {
 			result := isDateMatchingPattern(tt.pattern, tt.entryDate)
 			if result != tt.expected {
 				t.Errorf("isDateMatchingPattern() = %v, expected %v", result, tt.expected)
-			}
-		})
-	}
-}
-
-// Tests for containsRegexPattern function
-func TestContainsRegexPattern(t *testing.T) {
-	tests := []struct {
-		name     string
-		pattern  string
-		items    []string
-		expected bool
-	}{
-		{
-			name:     "match found",
-			pattern:  "go.*",
-			items:    []string{"golang", "python", "javascript"},
-			expected: true,
-		},
-		{
-			name:     "no match",
-			pattern:  "rust",
-			items:    []string{"golang", "python", "javascript"},
-			expected: false,
-		},
-		{
-			name:     "empty items",
-			pattern:  "test",
-			items:    []string{},
-			expected: false,
-		},
-		{
-			name:     "invalid regex",
-			pattern:  "[",
-			items:    []string{"test"},
-			expected: false,
-		},
-		{
-			name:     "case sensitive match",
-			pattern:  "Go",
-			items:    []string{"golang", "python"},
-			expected: false,
-		},
-		{
-			name:     "exact match",
-			pattern:  "^golang$",
-			items:    []string{"golang", "go"},
-			expected: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := containsRegexPattern(tt.pattern, tt.items)
-			if result != tt.expected {
-				t.Errorf("containsRegexPattern() = %v, expected %v", result, tt.expected)
 			}
 		})
 	}
@@ -1254,7 +1196,6 @@ func TestBoundaryConditionsForDates(t *testing.T) {
 
 func TestRegexErrorHandling(t *testing.T) {
 	entry := createTestEntry()
-	feed := createTestFeed()
 
 	// Test invalid regex in various contexts
 	tests := []struct {
@@ -1286,7 +1227,7 @@ func TestRegexErrorHandling(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, _ := matchesEntryRegexRules(tt.regexPattern, feed, entry)
+			result, _ := matchesEntryRegexRules(tt.regexPattern, entry)
 			if result != tt.expected {
 				t.Errorf("matchesEntryRegexRules() with invalid regex = %v, expected %v", result, tt.expected)
 			}
@@ -1395,11 +1336,10 @@ func BenchmarkIsBlockedEntry(b *testing.B) {
 
 func BenchmarkMatchesEntryRegexRules(b *testing.B) {
 	entry := createTestEntry()
-	feed := createTestFeed()
 	regexPattern := "Test.*Title|example\\.com|Test.*Author|golang"
 
 	for b.Loop() {
-		matchesEntryRegexRules(regexPattern, feed, entry)
+		matchesEntryRegexRules(regexPattern, entry)
 	}
 }
 

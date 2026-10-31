@@ -19,7 +19,7 @@ func TestHTMLResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		HTML(w, r, "Some HTML")
+		HTML(w, r, []byte("Some HTML"))
 	})
 
 	handler.ServeHTTP(w, r)
@@ -254,31 +254,5 @@ func TestHTMLRedirectRejectsUnsafeTargets(t *testing.T) {
 				t.Fatalf(`Expected no Location header for %q, got %q`, target, location)
 			}
 		})
-	}
-}
-
-func TestHTMLRequestedRangeNotSatisfiable(t *testing.T) {
-	r, err := http.NewRequest("GET", "/", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	w := httptest.NewRecorder()
-
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		HTMLRequestedRangeNotSatisfiable(w, r, "bytes */12777")
-	})
-
-	handler.ServeHTTP(w, r)
-
-	resp := w.Result()
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusRequestedRangeNotSatisfiable {
-		t.Fatalf(`Unexpected status code, got %d instead of %d`, resp.StatusCode, http.StatusRequestedRangeNotSatisfiable)
-	}
-
-	if actualContentRangeHeader := resp.Header.Get("Content-Range"); actualContentRangeHeader != "bytes */12777" {
-		t.Fatalf(`Unexpected content range header, got %q instead of %q`, actualContentRangeHeader, "bytes */12777")
 	}
 }

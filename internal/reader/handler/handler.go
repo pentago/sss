@@ -42,16 +42,8 @@ func parseError(err error) error {
 // requestBuilder returns a fetcher configured with the feed's HTTP settings,
 // falling back to the user's global user agent.
 func requestBuilder(feed *model.Feed, user *model.User) *fetcher.RequestBuilder {
-	return fetcher.NewRequestBuilder().
-		WithUsernameAndPassword(feed.Username, feed.Password).
-		WithUserAgent(feed.UserAgent, user.DefaultUserAgent()).
-		WithCookie(feed.Cookie, feed.FeedURL).
-		WithTimeout(config.Opts.HTTPClientTimeout).
-		WithCustomFeedProxyURL(feed.ProxyURL).
-		WithCustomApplicationProxyURL(config.Opts.HTTPClientProxy).
-		UseCustomApplicationProxyURL(feed.FetchViaProxy).
-		IgnoreTLSErrors(feed.AllowSelfSignedCertificates).
-		DisableHTTP2(feed.DisableHTTP2)
+	return fetcher.ForFeed(feed, user.DefaultUserAgent()).
+		WithUsernameAndPassword(feed.Username, feed.Password)
 }
 
 // applyRequest copies the user-provided settings of req into feed.

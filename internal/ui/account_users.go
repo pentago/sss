@@ -32,11 +32,11 @@ func (h *handler) showUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	users.UseTimezone(currentUser(r).Timezone)
-	h.renderAccount(w, r, "account_users", map[string]any{"title": "Users", "menu": "settings", "users": users})
+	h.renderAccount(w, r, "account_users", map[string]any{"title": "Users", "users": users})
 }
 
 func (h *handler) showCreateUser(w http.ResponseWriter, r *http.Request) {
-	h.renderAccount(w, r, "account_user_create", map[string]any{"title": "New user", "menu": "settings"})
+	h.renderAccount(w, r, "account_user_create", map[string]any{"title": "New user"})
 }
 
 func (h *handler) saveUser(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +50,7 @@ func (h *handler) saveUser(w http.ResponseWriter, r *http.Request) {
 		err = errors.New("Passwords are not the same.")
 	}
 	if err != nil {
-		h.renderAccount(w, r, "account_user_create", map[string]any{"title": "New user", "menu": "settings", "form": req, "errorMessage": err.Error()})
+		h.renderAccount(w, r, "account_user_create", map[string]any{"title": "New user", "form": req, "errorMessage": err.Error()})
 		return
 	}
 	if _, err := h.store.CreateUser(req); err != nil {
@@ -75,7 +75,7 @@ func (h *handler) selectedUser(w http.ResponseWriter, r *http.Request) *model.Us
 
 func (h *handler) showEditUser(w http.ResponseWriter, r *http.Request) {
 	if user := h.selectedUser(w, r); user != nil {
-		h.renderAccount(w, r, "account_user_edit", map[string]any{"title": "Edit user", "menu": "settings", "selected": user, "form": user})
+		h.renderAccount(w, r, "account_user_edit", map[string]any{"title": "Edit user", "selected": user, "form": user})
 	}
 }
 
@@ -97,7 +97,7 @@ func (h *handler) updateUser(w http.ResponseWriter, r *http.Request) {
 	updated := *selected
 	changes.Patch(&updated)
 	if err != nil {
-		h.renderAccount(w, r, "account_user_edit", map[string]any{"title": "Edit user", "menu": "settings", "selected": selected, "form": &updated, "errorMessage": err.Error()})
+		h.renderAccount(w, r, "account_user_edit", map[string]any{"title": "Edit user", "selected": selected, "form": &updated, "errorMessage": err.Error()})
 		return
 	}
 	if err := h.store.UpdateUser(&updated); err != nil {

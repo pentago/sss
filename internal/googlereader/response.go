@@ -3,12 +3,7 @@
 
 package googlereader
 
-import (
-	"fmt"
-	"net/http"
-
-	"sss/internal/http/response"
-)
+import "fmt"
 
 type loginResponse struct {
 	SID  string `json:"SID,omitempty"`
@@ -126,13 +121,4 @@ type contentItemOrigin struct {
 	StreamID string `json:"streamId"`
 	Title    string `json:"title"`
 	HTMLUrl  string `json:"htmlUrl"`
-}
-
-func sendUnauthorizedResponse(w http.ResponseWriter, r *http.Request) {
-	response.NewBuilder(w, r).
-		WithStatus(http.StatusUnauthorized).
-		WithHeader("X-Reader-Google-Bad-Token", "true").
-		WithHeader("Content-Type", "text/plain; charset=utf-8").
-		WithBodyAsString("Unauthorized").
-		Write()
 }

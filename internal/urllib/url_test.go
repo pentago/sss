@@ -189,21 +189,6 @@ func TestRootURL(t *testing.T) {
 	}
 }
 
-func TestIsHTTPS(t *testing.T) {
-	scenarios := map[string]bool{
-		"https://example.org/": true,
-		"http://example.org/":  false,
-		"https://example|org/": false,
-	}
-
-	for input, expected := range scenarios {
-		actual := IsHTTPS(input)
-		if actual != expected {
-			t.Errorf(`Unexpected result, got %v instead of %v`, actual, expected)
-		}
-	}
-}
-
 func TestDomain(t *testing.T) {
 	scenarios := map[string]string{
 		"https://static.example.org/": "static.example.org",

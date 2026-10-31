@@ -83,10 +83,8 @@ func sumMapOnSelection(s *goquery.Selection, f func(str string) int) int {
 		if n.Type == html.TextNode {
 			total += f(n.Data)
 		}
-		if n.FirstChild != nil {
-			for c := n.FirstChild; c != nil; c = c.NextSibling {
-				total += recursiveFunction(c)
-			}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			total += recursiveFunction(c)
 		}
 		return total
 	}
@@ -203,9 +201,7 @@ func getTopCandidate(document *goquery.Document, candidates candidateList) *cand
 	var best *candidate
 
 	for _, c := range candidates {
-		if best == nil {
-			best = c
-		} else if best.score < c.score {
+		if best == nil || best.score < c.score {
 			best = c
 		}
 	}

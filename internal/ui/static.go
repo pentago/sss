@@ -5,32 +5,16 @@ package ui
 
 import (
 	"cmp"
-	"embed"
 	"net/http"
 	"strings"
 	"time"
 
-	"sss/internal/http/request"
 	"sss/internal/http/response"
 	"sss/internal/mediaproxy"
 )
 
-//go:embed icons
-var appIcons embed.FS
-
-// appIconChecksums maps each icon file name to its content hash, used in /icon/ URLs.
-var appIconChecksums = func() map[string]string {
-	entries, _ := appIcons.ReadDir("icons")
-	sums := make(map[string]string, len(entries))
-	for _, e := range entries {
-		data, _ := appIcons.ReadFile("icons/" + e.Name())
-		sums[e.Name()] = checksum(data)
-	}
-	return sums
-}()
-
 func appIconURL(name string) string {
-	return route("/icon/%s/%s", appIconChecksums[name], name)
+	return route("/icon/%s/%s", assets["icons/"+name].checksum, name)
 }
 
 const assetCacheDuration = 365 * 24 * time.Hour
@@ -95,13 +79,13 @@ func serveUserContent(w http.ResponseWriter, r *http.Request, body, contentType 
 // showFavicon serves /favicon.ico and the /icon/{checksum}/{filename} app icons.
 func (h *handler) showFavicon(w http.ResponseWriter, r *http.Request) {
 	name := cmp.Or(r.PathValue("filename"), "favicon.ico")
-	data, err := appIcons.ReadFile("icons/" + name)
-	if err != nil {
+	a, ok := assets["icons/"+name]
+	if !ok {
 		response.HTMLNotFound(w, r)
 		return
 	}
-	response.NewBuilder(w, r).WithCaching(appIconChecksums[name], 7*24*time.Hour, func(b *response.Builder) {
-		b.WithHeader("Content-Type", http.DetectContentType(data)).WithBodyAsBytes(data).Write()
+	response.NewBuilder(w, r).WithCaching(a.checksum, 7*24*time.Hour, func(b *response.Builder) {
+		b.WithHeader("Content-Type", http.DetectContentType(a.data)).WithBodyAsBytes(a.data).Write()
 	})
 }
 
@@ -176,5 +160,5 @@ func (h *handler) showFeedIcon(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) mediaProxy(w http.ResponseWriter, r *http.Request) {
-	mediaproxy.Serve(w, r, request.RouteStringParam(r, "encodedDigest"), request.RouteStringParam(r, "encodedURL"))
+	mediaproxy.Serve(w, r, r.PathValue("encodedDigest"), r.PathValue("encodedURL"))
 }

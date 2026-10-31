@@ -180,13 +180,6 @@ func (s *WebSession) ConsumeMessages() (string, string) {
 	return successMessage, errorMessage
 }
 
-// SeedTheme sets the theme of a session that hasn't been persisted yet. It
-// doesn't mark the session dirty, since the value is saved when the session
-// is created.
-func (s *WebSession) SeedTheme(theme string) {
-	s.state.Theme = theme
-}
-
 // SetSuccessMessage stores a success message shown on the next page load.
 func (s *WebSession) SetSuccessMessage(message string) {
 	s.dirty = true

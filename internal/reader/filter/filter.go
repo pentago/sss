@@ -73,14 +73,11 @@ func cachedRegex(pattern string) *regexp.Regexp {
 
 func ParseRules(userRules, feedRules string) filterRules {
 	rules := make(filterRules, 0)
-	for line := range strings.SplitSeq(strings.TrimSpace(userRules), "\n") {
-		if valid, filterRule := parseRule(line); valid {
-			rules = append(rules, filterRule)
-		}
-	}
-	for line := range strings.SplitSeq(strings.TrimSpace(feedRules), "\n") {
-		if valid, filterRule := parseRule(line); valid {
-			rules = append(rules, filterRule)
+	for _, rulesText := range []string{userRules, feedRules} {
+		for line := range strings.SplitSeq(strings.TrimSpace(rulesText), "\n") {
+			if valid, filterRule := parseRule(line); valid {
+				rules = append(rules, filterRule)
+			}
 		}
 	}
 	return rules
@@ -99,17 +96,17 @@ func parseRule(userDefinedRule string) (bool, filterRule) {
 }
 
 func IsBlockedEntry(blockRules filterRules, allowRules filterRules, feed *model.Feed, entry *model.Entry) bool {
-	if matchesEntryFilterRules(blockRules, feed, entry) {
+	if matchesEntryFilterRules(blockRules, entry) {
 		return true
 	}
 
-	if matches, valid := matchesEntryRegexRules(feed.BlocklistRules, feed, entry); valid && matches {
+	if matches, valid := matchesEntryRegexRules(feed.BlocklistRules, entry); valid && matches {
 		return true
 	}
 
 	// If allow rules exist, only entries that match them should be retained
 	if len(allowRules) > 0 {
-		if !matchesEntryFilterRules(allowRules, feed, entry) {
+		if !matchesEntryFilterRules(allowRules, entry) {
 			return true // Block entry if it doesn't match any allow rules
 		}
 		return false // Allow entry if it matches allow rules
@@ -117,7 +114,7 @@ func IsBlockedEntry(blockRules filterRules, allowRules filterRules, feed *model.
 
 	// If keeplist rules exist, only entries that match them should be retained
 	if feed.KeeplistRules != "" {
-		if matches, valid := matchesEntryRegexRules(feed.KeeplistRules, feed, entry); valid && !matches {
+		if matches, valid := matchesEntryRegexRules(feed.KeeplistRules, entry); valid && !matches {
 			return true // Block entry if it doesn't match keeplist rules
 		}
 		return false // Allow entry if it matches keeplist rules or rule is invalid (ignored)
@@ -128,7 +125,7 @@ func IsBlockedEntry(blockRules filterRules, allowRules filterRules, feed *model.
 
 // matchesEntryRegexRules checks if the entry matches the regex rules defined in the feed or user settings.
 // It returns true if the entry matches the regex pattern, and a boolean indicating if the regex is valid.
-func matchesEntryRegexRules(regexPattern string, feed *model.Feed, entry *model.Entry) (bool, bool) {
+func matchesEntryRegexRules(regexPattern string, entry *model.Entry) (bool, bool) {
 	if regexPattern == "" {
 		return false, true // No pattern means rule is valid but doesn't match
 	}
@@ -152,7 +149,7 @@ func matchesEntryRegexRules(regexPattern string, feed *model.Feed, entry *model.
 	return false, true // Pattern is valid but doesn't match
 }
 
-func matchesEntryFilterRules(rules filterRules, feed *model.Feed, entry *model.Entry) bool {
+func matchesEntryFilterRules(rules filterRules, entry *model.Entry) bool {
 	for _, rule := range rules {
 		if matchesRule(rule, entry) {
 			return true
@@ -237,14 +234,6 @@ func isDateMatchingPattern(pattern string, entryDate time.Time) bool {
 		return entryDate.Before(cutoffDate)
 	}
 	return false
-}
-
-func containsRegexPattern(pattern string, items []string) bool {
-	re := cachedRegex(pattern)
-	if re == nil {
-		return false
-	}
-	return slices.ContainsFunc(items, re.MatchString)
 }
 
 func parseDuration(duration string) (time.Duration, error) {

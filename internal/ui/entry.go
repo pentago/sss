@@ -41,7 +41,7 @@ func (h *handler) showEntry(w http.ResponseWriter, r *http.Request, v entryView)
 		order, direction = v.order, "desc"
 	}
 	q, p := v.filter(
-		h.store.NewEntryQueryBuilder(user.ID).WithEntryIDs(entryID).WithEnclosures(),
+		h.store.NewEntryQueryBuilder(user.ID).WithEntryIDs(entryID),
 		h.store.NewEntryPaginationBuilder(user.ID, entryID, order, direction),
 	)
 	entry, err := q.GetEntry()
@@ -99,10 +99,6 @@ func (h *handler) showEntry(w http.ResponseWriter, r *http.Request, v entryView)
 func refererIsPage(r *http.Request) bool {
 	ref, err := url.Parse(r.Referer())
 	return err == nil && ref.Host == r.Host && ref.Path == config.Opts.BasePath+r.URL.Path
-}
-
-func noFilter(q *storage.EntryQueryBuilder, p *storage.EntryPaginationBuilder) (*storage.EntryQueryBuilder, *storage.EntryPaginationBuilder) {
-	return q, p
 }
 
 func (h *handler) showUnreadEntryPage(w http.ResponseWriter, r *http.Request) {
@@ -314,7 +310,7 @@ func (h *handler) unshareEntry(w http.ResponseWriter, r *http.Request) {
 
 // sharedEntry is the public page of a shared entry.
 func (h *handler) sharedEntry(w http.ResponseWriter, r *http.Request) {
-	entry, err := h.store.NewAnonymousQueryBuilder().WithShareCode(r.PathValue("shareCode")).WithEnclosures().GetEntry()
+	entry, err := h.store.NewAnonymousQueryBuilder().WithShareCode(r.PathValue("shareCode")).GetEntry()
 	if err != nil {
 		response.HTMLServerError(w, r, err)
 		return

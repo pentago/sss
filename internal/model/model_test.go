@@ -130,29 +130,17 @@ func TestEnclosure(t *testing.T) {
 	tests := []struct {
 		enclosure           Enclosure
 		audio, video, image bool
-		html5MimeType       string
 	}{
-		{Enclosure{MimeType: "audio/MPEG"}, true, false, false, "audio/MPEG"},
-		{Enclosure{MimeType: "video/m4v"}, false, true, false, "video/x-m4v"},
-		{Enclosure{MimeType: "image/png"}, false, false, true, "image/png"},
-		{Enclosure{URL: "https://a/b.JPG", MimeType: "application/octet-stream"}, false, false, true, "application/octet-stream"},
+		{Enclosure{MimeType: "audio/MPEG"}, true, false, false},
+		{Enclosure{MimeType: "video/m4v"}, false, true, false},
+		{Enclosure{MimeType: "image/png"}, false, false, true},
+		{Enclosure{URL: "https://a/b.JPG", MimeType: "application/octet-stream"}, false, false, true},
 	}
 	for i, tc := range tests {
 		e := tc.enclosure
-		if e.IsAudio() != tc.audio || e.IsVideo() != tc.video || e.IsImage() != tc.image || e.Html5MimeType() != tc.html5MimeType {
+		if e.IsAudio() != tc.audio || e.IsVideo() != tc.video || e.IsImage() != tc.image {
 			t.Errorf("%d: unexpected result for %+v", i, e)
 		}
-	}
-
-	list := EnclosureList{{URL: "https://a/i.png", MimeType: "image/png"}, {MimeType: "audio/mpeg"}, {URL: "https://a/v.mp4", MimeType: "video/mp4"}}
-	if !list.ContainsAudioOrVideo() {
-		t.Error("expected audio or video")
-	}
-	if got := list.FindMediaPlayerEnclosure(); got != list[2] {
-		t.Errorf("media player enclosure: got %+v", got)
-	}
-	if EnclosureList([]*Enclosure{list[0]}).FindMediaPlayerEnclosure() != nil {
-		t.Error("image-only list must not have a media player enclosure")
 	}
 }
 

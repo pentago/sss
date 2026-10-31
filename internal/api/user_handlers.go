@@ -179,7 +179,7 @@ func (h *handler) usersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) dispatchUserLookupHandler(w http.ResponseWriter, r *http.Request) {
-	identifier := request.RouteStringParam(r, "identifier")
+	identifier := r.PathValue("identifier")
 	userID := request.RouteInt64Param(r, "identifier")
 	if userID > 0 {
 		r.SetPathValue("userID", identifier)
@@ -224,7 +224,7 @@ func (h *handler) userByUsernameHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	username := request.RouteStringParam(r, "username")
+	username := r.PathValue("username")
 	user, err := h.store.UserByUsername(username)
 	if err != nil {
 		response.JSONServerError(w, r, err)

@@ -4,6 +4,7 @@
 package request
 
 import (
+	"cmp"
 	"net/http"
 
 	"sss/internal/model"
@@ -37,94 +38,65 @@ func WebSession(r *http.Request) *model.WebSession {
 
 // GoogleReaderToken returns the Google Reader token from the request context, if present.
 func GoogleReaderToken(r *http.Request) string {
-	return getContextStringValue(r, GoogleReaderTokenKey)
+	return ctxValue[string](r, GoogleReaderTokenKey)
 }
 
 // IsAdminUser reports whether the logged-in user is an administrator.
 func IsAdminUser(r *http.Request) bool {
-	return getContextBoolValue(r, IsAdminUserContextKey)
+	return ctxValue[bool](r, IsAdminUserContextKey)
 }
 
 // IsAuthenticated reports whether the user is authenticated.
 func IsAuthenticated(r *http.Request) bool {
-	if getContextBoolValue(r, IsAuthenticatedContextKey) {
+	if ctxValue[bool](r, IsAuthenticatedContextKey) {
 		return true
 	}
-
 	if session := WebSession(r); session != nil {
 		return session.IsAuthenticated()
 	}
-
 	return false
 }
 
 // UserID returns the logged-in user's ID from the request context.
 func UserID(r *http.Request) int64 {
-	if userID := getContextInt64Value(r, UserIDContextKey); userID != 0 {
+	if userID := ctxValue[int64](r, UserIDContextKey); userID != 0 {
 		return userID
 	}
-
 	if session := WebSession(r); session != nil {
 		if id, ok := session.UserID(); ok {
 			return id
 		}
 	}
-
 	return 0
 }
 
 // UserName returns the logged-in user's username, or "unknown" when unset.
 func UserName(r *http.Request) string {
-	value := getContextStringValue(r, UserNameContextKey)
-	if value == "" {
-		value = "unknown"
-	}
-	return value
+	return cmp.Or(ctxValue[string](r, UserNameContextKey), "unknown")
 }
 
 // UserTimezone returns the user's timezone, defaulting to "UTC" when unset.
 func UserTimezone(r *http.Request) string {
-	value := getContextStringValue(r, UserTimezoneContextKey)
-	if value == "" {
-		value = "UTC"
-	}
-	return value
+	return cmp.Or(ctxValue[string](r, UserTimezoneContextKey), "UTC")
 }
 
 // ClientIP returns the client IP address stored in the request context.
 func ClientIP(r *http.Request) string {
-	return getContextStringValue(r, ClientIPContextKey)
+	return ctxValue[string](r, ClientIPContextKey)
 }
 
 // IsHTTPS reports whether the request reached the server over HTTPS (directly, via the HTTPS
 // setting, or through a trusted reverse proxy sending X-Forwarded-Proto: https).
 func IsHTTPS(r *http.Request) bool {
-	return getContextBoolValue(r, IsHTTPSContextKey)
+	return ctxValue[bool](r, IsHTTPSContextKey)
 }
 
-func getContextStringValue(r *http.Request, key ContextKey) string {
-	if v := r.Context().Value(key); v != nil {
-		if value, valid := v.(string); valid {
-			return value
-		}
+// ctxValue returns the value stored in the request context at key, or the
+// zero value of T when the key is unset or holds a different type.
+func ctxValue[T any](r *http.Request, key ContextKey) T {
+	if v, valid := r.Context().Value(key).(T); valid {
+		return v
 	}
-	return ""
-}
-
-func getContextBoolValue(r *http.Request, key ContextKey) bool {
-	if v := r.Context().Value(key); v != nil {
-		if value, valid := v.(bool); valid {
-			return value
-		}
-	}
-	return false
-}
-
-func getContextInt64Value(r *http.Request, key ContextKey) int64 {
-	if v := r.Context().Value(key); v != nil {
-		if value, valid := v.(int64); valid {
-			return value
-		}
-	}
-	return 0
+	var zero T
+	return zero
 }

@@ -8,39 +8,18 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-
-	"sss/internal/http/request"
 )
 
 const jsonContentTypeHeader = `application/json`
 
 // JSON creates a new JSON response with a 200 status code.
 func JSON(w http.ResponseWriter, r *http.Request, body any) {
-	responseBody, err := json.Marshal(body)
-	if err != nil {
-		JSONServerError(w, r, err)
-		return
-	}
-
-	NewBuilder(w, r).
-		WithHeader("Content-Type", jsonContentTypeHeader).
-		WithBodyAsBytes(responseBody).
-		Write()
+	jsonStatus(w, r, http.StatusOK, body)
 }
 
 // JSONCreated sends a created response to the client.
 func JSONCreated(w http.ResponseWriter, r *http.Request, body any) {
-	responseBody, err := json.Marshal(body)
-	if err != nil {
-		JSONServerError(w, r, err)
-		return
-	}
-
-	NewBuilder(w, r).
-		WithStatus(http.StatusCreated).
-		WithHeader("Content-Type", jsonContentTypeHeader).
-		WithBodyAsBytes(responseBody).
-		Write()
+	jsonStatus(w, r, http.StatusCreated, body)
 }
 
 // JSONAccepted sends an accepted response to the client.
@@ -53,108 +32,45 @@ func JSONAccepted(w http.ResponseWriter, r *http.Request) {
 
 // JSONServerError sends an internal error to the client.
 func JSONServerError(w http.ResponseWriter, r *http.Request, err error) {
-	slog.Error(http.StatusText(http.StatusInternalServerError),
-		slog.Any("error", err),
-		slog.String("client_ip", request.ClientIP(r)),
-		slog.Group("request",
-			slog.String("method", r.Method),
-			slog.String("uri", r.RequestURI),
-			slog.String("user_agent", r.UserAgent()),
-		),
-		slog.Group("response",
-			slog.Int("status_code", http.StatusInternalServerError),
-		),
-	)
-
-	NewBuilder(w, r).
-		WithStatus(http.StatusInternalServerError).
-		WithHeader("Content-Type", jsonContentTypeHeader).
-		WithBodyAsBytes(generateJSONError(err)).
-		Write()
+	writeError(w, r, slog.LevelError, http.StatusInternalServerError, err,
+		string(generateJSONError(err)), "Content-Type", jsonContentTypeHeader)
 }
 
 // JSONBadRequest sends a bad request error to the client.
 func JSONBadRequest(w http.ResponseWriter, r *http.Request, err error) {
-	slog.Warn(http.StatusText(http.StatusBadRequest),
-		slog.Any("error", err),
-		slog.String("client_ip", request.ClientIP(r)),
-		slog.Group("request",
-			slog.String("method", r.Method),
-			slog.String("uri", r.RequestURI),
-			slog.String("user_agent", r.UserAgent()),
-		),
-		slog.Group("response",
-			slog.Int("status_code", http.StatusBadRequest),
-		),
-	)
-
-	NewBuilder(w, r).
-		WithStatus(http.StatusBadRequest).
-		WithHeader("Content-Type", jsonContentTypeHeader).
-		WithBodyAsBytes(generateJSONError(err)).
-		Write()
+	writeError(w, r, slog.LevelWarn, http.StatusBadRequest, err,
+		string(generateJSONError(err)), "Content-Type", jsonContentTypeHeader)
 }
 
 // JSONUnauthorized sends a not authorized error to the client.
 func JSONUnauthorized(w http.ResponseWriter, r *http.Request) {
-	slog.Warn(http.StatusText(http.StatusUnauthorized),
-		slog.String("client_ip", request.ClientIP(r)),
-		slog.Group("request",
-			slog.String("method", r.Method),
-			slog.String("uri", r.RequestURI),
-			slog.String("user_agent", r.UserAgent()),
-		),
-		slog.Group("response",
-			slog.Int("status_code", http.StatusUnauthorized),
-		),
-	)
-
-	NewBuilder(w, r).
-		WithStatus(http.StatusUnauthorized).
-		WithHeader("Content-Type", jsonContentTypeHeader).
-		WithBodyAsBytes(generateJSONError(errors.New("access unauthorized"))).
-		Write()
+	writeError(w, r, slog.LevelWarn, http.StatusUnauthorized, nil,
+		string(generateJSONError(errors.New("access unauthorized"))), "Content-Type", jsonContentTypeHeader)
 }
 
 // JSONForbidden sends a forbidden error to the client.
 func JSONForbidden(w http.ResponseWriter, r *http.Request) {
-	slog.Warn(http.StatusText(http.StatusForbidden),
-		slog.String("client_ip", request.ClientIP(r)),
-		slog.Group("request",
-			slog.String("method", r.Method),
-			slog.String("uri", r.RequestURI),
-			slog.String("user_agent", r.UserAgent()),
-		),
-		slog.Group("response",
-			slog.Int("status_code", http.StatusForbidden),
-		),
-	)
-
-	NewBuilder(w, r).
-		WithStatus(http.StatusForbidden).
-		WithHeader("Content-Type", jsonContentTypeHeader).
-		WithBodyAsBytes(generateJSONError(errors.New("access forbidden"))).
-		Write()
+	writeError(w, r, slog.LevelWarn, http.StatusForbidden, nil,
+		string(generateJSONError(errors.New("access forbidden"))), "Content-Type", jsonContentTypeHeader)
 }
 
 // JSONNotFound sends a page not found error to the client.
 func JSONNotFound(w http.ResponseWriter, r *http.Request) {
-	slog.Warn(http.StatusText(http.StatusNotFound),
-		slog.String("client_ip", request.ClientIP(r)),
-		slog.Group("request",
-			slog.String("method", r.Method),
-			slog.String("uri", r.RequestURI),
-			slog.String("user_agent", r.UserAgent()),
-		),
-		slog.Group("response",
-			slog.Int("status_code", http.StatusNotFound),
-		),
-	)
+	writeError(w, r, slog.LevelWarn, http.StatusNotFound, nil,
+		string(generateJSONError(errors.New("resource not found"))), "Content-Type", jsonContentTypeHeader)
+}
+
+func jsonStatus(w http.ResponseWriter, r *http.Request, status int, body any) {
+	responseBody, err := json.Marshal(body)
+	if err != nil {
+		JSONServerError(w, r, err)
+		return
+	}
 
 	NewBuilder(w, r).
-		WithStatus(http.StatusNotFound).
+		WithStatus(status).
 		WithHeader("Content-Type", jsonContentTypeHeader).
-		WithBodyAsBytes(generateJSONError(errors.New("resource not found"))).
+		WithBodyAsBytes(responseBody).
 		Write()
 }
 

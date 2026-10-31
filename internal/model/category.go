@@ -3,8 +3,6 @@
 
 package model
 
-import "fmt"
-
 // Category represents a feed category.
 type Category struct {
 	ID           int64  `json:"id"`
@@ -14,11 +12,6 @@ type Category struct {
 	// Pointers are needed to avoid breaking /v1/categories?counts=true
 	FeedCount   *int `json:"feed_count,omitempty"`
 	TotalUnread *int `json:"total_unread,omitempty"`
-}
-
-// String returns a debug representation of the category.
-func (c *Category) String() string {
-	return fmt.Sprintf("ID=%d, UserID=%d, Title=%s", c.ID, c.UserID, c.Title)
 }
 
 // CategoryCreationRequest represents the request to create a category.

@@ -8,13 +8,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"time"
 
 	"sss/internal/http/client"
-	"sss/internal/version"
 )
-
-const defaultClientTimeout = 10 * time.Second
 
 // Client is a Instapaper API client.
 type Client struct {
@@ -38,16 +34,9 @@ func (c *Client) AddURL(entryURL, entryTitle string) error {
 	values.Add("title", entryTitle)
 
 	apiEndpoint := "https://www.instapaper.com/api/add?" + values.Encode()
-	request, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
-	if err != nil {
-		return fmt.Errorf("instapaper: unable to create request: %v", err)
-	}
-
-	request.SetBasicAuth(c.username, c.password)
-	request.Header.Set("User-Agent", "sss/"+version.Version)
-
-	httpClient := client.NewClientWithOptions(client.Options{Timeout: defaultClientTimeout})
-	response, err := httpClient.Do(request)
+	response, err := client.NewRequestBuilder(apiEndpoint).
+		WithBasicAuth(c.username, c.password).
+		Do()
 	if err != nil {
 		return fmt.Errorf("instapaper: unable to send request: %v", err)
 	}

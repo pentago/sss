@@ -24,6 +24,7 @@ import (
 	"golang.org/x/net/publicsuffix"
 
 	"sss/internal/config"
+	"sss/internal/model"
 	"sss/internal/urllib"
 )
 
@@ -50,9 +51,14 @@ type RequestBuilder struct {
 	feedProxyURL       string
 }
 
-// NewRequestBuilder returns a builder with the default timeout.
+// NewRequestBuilder returns a builder with the configured HTTP client timeout
+// (config.Opts.HTTPClientTimeout), or the fixed default when unset.
 func NewRequestBuilder() *RequestBuilder {
-	return &RequestBuilder{headers: make(http.Header), clientTimeout: defaultHTTPClientTimeout}
+	clientTimeout := defaultHTTPClientTimeout
+	if config.Opts != nil && config.Opts.HTTPClientTimeout > 0 {
+		clientTimeout = config.Opts.HTTPClientTimeout
+	}
+	return &RequestBuilder{headers: make(http.Header), clientTimeout: clientTimeout}
 }
 
 // Clone returns an independent copy of the builder.
@@ -171,8 +177,11 @@ func (r *RequestBuilder) ExecuteRequest(requestURL string) (*http.Response, erro
 		if proxyURL, err = url.Parse(r.feedProxyURL); err != nil {
 			return nil, fmt.Errorf("fetcher: invalid feed proxy URL %q: %w", r.feedProxyURL, err)
 		}
-	case r.useClientProxy && r.clientProxyURL != nil:
+	case r.useClientProxy:
 		proxyURL = r.clientProxyURL
+		if proxyURL == nil && config.Opts != nil {
+			proxyURL = config.Opts.HTTPClientProxy
+		}
 	}
 
 	dialer := &net.Dialer{Timeout: 10 * time.Second, KeepAlive: 15 * time.Second}
@@ -340,4 +349,18 @@ func (p *trustedProxyAddresses) contains(address string) bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	return slices.Contains(p.addresses, address)
+}
+
+// ForFeed returns a request builder with the feed's HTTP settings: user agent
+// (falling back to defaultUserAgent), cookie, per-feed and application proxy,
+// TLS and HTTP/2 options. The application proxy URL is resolved from
+// config.Opts.HTTPClientProxy by ExecuteRequest.
+func ForFeed(feed *model.Feed, defaultUserAgent string) *RequestBuilder {
+	return NewRequestBuilder().
+		WithUserAgent(feed.UserAgent, defaultUserAgent).
+		WithCookie(feed.Cookie, feed.FeedURL).
+		WithCustomFeedProxyURL(feed.ProxyURL).
+		UseCustomApplicationProxyURL(feed.FetchViaProxy).
+		IgnoreTLSErrors(feed.AllowSelfSignedCertificates).
+		DisableHTTP2(feed.DisableHTTP2)
 }

@@ -160,16 +160,6 @@ func RootURL(websiteURL string) string {
 	return u.Scheme + "://" + u.Host + "/"
 }
 
-// IsHTTPS reports whether the URL uses HTTPS.
-func IsHTTPS(websiteURL string) bool {
-	parsedURL, err := url.Parse(websiteURL)
-	if err != nil {
-		return false
-	}
-
-	return strings.EqualFold(parsedURL.Scheme, "https")
-}
-
 // Domain returns the host component of the given URL.
 func Domain(websiteURL string) string {
 	parsedURL, err := url.Parse(websiteURL)

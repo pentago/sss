@@ -3,149 +3,35 @@
 
 package response
 
-import (
-	"testing"
-)
+import "testing"
 
-func TestAcceptEncoding(t *testing.T) {
+func TestGzipOK(t *testing.T) {
 	t.Parallel()
 
-	acceptable := []string{
-		"br", "gzip", "deflate",
-	}
-
 	tests := []struct {
-		name           string
 		acceptEncoding string
-		want           string
+		want           bool
 	}{
-		{
-			name:           "Empty input",
-			acceptEncoding: "",
-			want:           "identity",
-		},
-		{
-			name:           "q=0 and *",
-			acceptEncoding: "*;q=0",
-			want:           "identity",
-		},
-		{
-			name:           "gzip",
-			acceptEncoding: "gzip",
-			want:           "gzip",
-		},
-		{
-			name:           "gzip and br",
-			acceptEncoding: "gzip,br",
-			want:           "br",
-		},
-		{
-			name:           "br and gzip",
-			acceptEncoding: "br,gzip,deflate",
-			want:           "br",
-		},
-		{
-			name:           "unsupported encoding",
-			acceptEncoding: "unknown",
-			want:           "identity",
-		},
-		{
-			name:           "empty encoding",
-			acceptEncoding: ",",
-			want:           "identity",
-		},
-		{
-			name:           "multiple encodings and q=0",
-			acceptEncoding: "gzip;q=0,br;q=0",
-			want:           "identity",
-		},
-		{
-			// We want br here but weights are not supported.
-			name:           "multiple encodings and q values",
-			acceptEncoding: "gzip;q=0.5,br;q=0.8",
-			want:           "br",
-		},
-		{
-			name:           "multiple encodings and wildcard",
-			acceptEncoding: "*;q=0,gzip,br",
-			want:           "br",
-		},
-		{
-			name:           "multiple encodings and wildcard and q=0",
-			acceptEncoding: "*;q=0,gzip,br;q=0",
-			want:           "gzip",
-		},
-		{
-			// We want br here but weights are not supported.
-			name:           "multiple encodings and wildcard and q values",
-			acceptEncoding: "*;q=0.5,gzip;q=0.8,br",
-			want:           "br",
-		},
-		{
-			name:           "multiple encodings and wildcard and q values and q=0",
-			acceptEncoding: "*;q=0.5,gzip;q=0.8,br;q=0",
-			want:           "gzip",
-		},
-		{
-			name:           "invalid q value",
-			acceptEncoding: "gzip;q=abc,deflate",
-			want:           "deflate",
-		},
-		{
-			name:           "wrong spaces placing around q value",
-			acceptEncoding: "gzip;q= 0.5, deflate;q=0.8",
-			want:           "deflate",
-		},
-		{
-			name:           "correct spaces placing around q value",
-			acceptEncoding: "gzip ; q=0.5, deflate;q=0.8",
-			want:           "gzip",
-		},
-		{
-			name:           "default for chrome / safari as of 2026",
-			acceptEncoding: "gzip, deflate, br, zstd",
-			want:           "br",
-		},
-		{
-			// Server preference order wins over the client's listed order.
-			name:           "server preference over client order",
-			acceptEncoding: "deflate, gzip",
-			want:           "gzip",
-		},
-		{
-			// q=0 excludes a specific supported encoding; next server pick wins.
-			name:           "q=0 excludes specific supported encoding",
-			acceptEncoding: "br;q=0, gzip",
-			want:           "gzip",
-		},
-		{
-			// A bare wildcard is not treated as opting into compression.
-			name:           "bare wildcard",
-			acceptEncoding: "*",
-			want:           "identity",
-		},
-		{
-			name:           "identity only",
-			acceptEncoding: "identity",
-			want:           "identity",
-		},
-		{
-			name:           "whitespace-only and empty segments",
-			acceptEncoding: " , gzip , ",
-			want:           "gzip",
-		},
+		{"", false},
+		{"identity", false},
+		{"deflate", false},
+		{"br, identity", false},
+		{"gzip", true},
+		{"  gzip  ", true},
+		{"gzip, deflate", true},
+		{"deflate, gzip", true},
+		{"gzip;q=0", false},
+		{"gzip;q=0.0", false},
+		{"gzip;q=0.5", true},
+		{"deflate, gzip;q=1.0", true},
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(test.acceptEncoding, func(t *testing.T) {
 			t.Parallel()
 
-			// Instantiate parser for each test to make sure it doesn't return cached values.
-			parser := AcceptEncoding(acceptable...)
-
-			got := parser.Parse(test.acceptEncoding)
-			if got != test.want {
-				t.Errorf("Parse(%q) = %q, want %q", test.acceptEncoding, got, test.want)
+			if got := gzipOK(test.acceptEncoding); got != test.want {
+				t.Errorf("gzipOK(%q) = %v, want %v", test.acceptEncoding, got, test.want)
 			}
 		})
 	}

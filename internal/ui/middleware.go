@@ -127,16 +127,17 @@ func (h *handler) withUser(r *http.Request, session *model.WebSession) *http.Req
 		if user != nil {
 			ctx = context.WithValue(ctx, contextKey{}, user)
 			ctx = context.WithValue(ctx, request.UserIDContextKey, user.ID)
-			ctx = context.WithValue(ctx, request.UserNameContextKey, user.Username)
-			ctx = context.WithValue(ctx, request.UserTimezoneContextKey, user.Timezone)
-			ctx = context.WithValue(ctx, request.IsAdminUserContextKey, user.IsAdmin)
 		}
 	}
 	return r.WithContext(ctx)
 }
 
 func (h *handler) loadWebSession(r *http.Request) (*model.WebSession, error) {
-	sessionID, secret, ok := strings.Cut(request.CookieValue(r, sessionCookieName), ".")
+	var sessionCookieValue string
+	if c, err := r.Cookie(sessionCookieName); err == nil {
+		sessionCookieValue = c.Value
+	}
+	sessionID, secret, ok := strings.Cut(sessionCookieValue, ".")
 	if !ok || sessionID == "" || secret == "" {
 		return nil, nil
 	}

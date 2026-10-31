@@ -4,24 +4,17 @@
 package ntfy
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
-	"time"
 
 	"sss/internal/config"
 	"sss/internal/http/client"
 	"sss/internal/model"
-	"sss/internal/version"
 )
 
-const (
-	defaultClientTimeout = 10 * time.Second
-	defaultNtfyURL       = "https://ntfy.sh"
-)
+const defaultNtfyURL = "https://ntfy.sh"
 
 // Client is a ntfy API client.
 type Client struct {
@@ -88,31 +81,21 @@ func (c *Client) SendMessages(feed *model.Feed, entries model.Entries) error {
 }
 
 func (c *Client) makeRequest(payload any) error {
-	requestBody, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("ntfy: unable to encode request body: %v", err)
-	}
-
-	request, err := http.NewRequest(http.MethodPost, c.ntfyURL, bytes.NewReader(requestBody))
-	if err != nil {
-		return fmt.Errorf("ntfy: unable to create request: %v", err)
-	}
-
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("User-Agent", "sss/"+version.Version)
+	request := client.NewRequestBuilder(c.ntfyURL).
+		WithMethod(http.MethodPost).
+		WithJSON(payload)
 
 	// See https://docs.ntfy.sh/publish/#access-tokens
 	if c.ntfyApiToken != "" {
-		request.Header.Set("Authorization", "Bearer "+c.ntfyApiToken)
+		request = request.WithHeader("Authorization", "Bearer "+c.ntfyApiToken)
 	}
 
 	// See https://docs.ntfy.sh/publish/#username-password
 	if c.ntfyUsername != "" && c.ntfyPassword != "" {
-		request.SetBasicAuth(c.ntfyUsername, c.ntfyPassword)
+		request = request.WithBasicAuth(c.ntfyUsername, c.ntfyPassword)
 	}
 
-	httpClient := client.NewClientWithOptions(client.Options{Timeout: defaultClientTimeout, BlockPrivateNetworks: !config.Opts.IntegrationAllowPrivateNetworks})
-	response, err := httpClient.Do(request)
+	response, err := request.Do()
 	if err != nil {
 		return fmt.Errorf("ntfy: unable to send request: %v", err)
 	}
@@ -127,19 +110,10 @@ func (c *Client) makeRequest(payload any) error {
 
 // See https://docs.ntfy.sh/publish/#publish-as-json
 type ntfyMessage struct {
-	Topic    string       `json:"topic"`
-	Message  string       `json:"message"`
-	Title    string       `json:"title"`
-	Tags     []string     `json:"tags,omitempty"`
-	Priority int          `json:"priority,omitempty"`
-	Icon     string       `json:"icon,omitempty"` // https://docs.ntfy.sh/publish/#icons
-	Click    string       `json:"click,omitempty"`
-	Actions  []ntfyAction `json:"actions,omitempty"`
-}
-
-// See https://docs.ntfy.sh/publish/#action-buttons
-type ntfyAction struct {
-	Action string `json:"action"`
-	Label  string `json:"label"`
-	URL    string `json:"url"`
+	Topic    string `json:"topic"`
+	Message  string `json:"message"`
+	Title    string `json:"title"`
+	Priority int    `json:"priority,omitempty"`
+	Icon     string `json:"icon,omitempty"` // https://docs.ntfy.sh/publish/#icons
+	Click    string `json:"click,omitempty"`
 }

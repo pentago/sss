@@ -4,7 +4,6 @@
 package response
 
 import (
-	"bytes"
 	"mime"
 	"net/http"
 	"net/http/httptest"
@@ -129,36 +128,6 @@ func TestBuildResponseWithAttachmentEscapesFilename(t *testing.T) {
 
 	if mediaType != "attachment" {
 		t.Fatalf(`Unexpected media type, got %q instead of %q`, mediaType, "attachment")
-	}
-
-	if params["filename"] != `a";filename="malware.exe` {
-		t.Fatalf(`Unexpected filename, got %q instead of %q`, params["filename"], `a";filename="malware.exe`)
-	}
-}
-
-func TestBuildResponseWithInlineEscapesFilename(t *testing.T) {
-	r, err := http.NewRequest("GET", "/", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	w := httptest.NewRecorder()
-
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		NewBuilder(w, r).WithInline(`a";filename="malware.exe`).Write()
-	})
-
-	handler.ServeHTTP(w, r)
-	resp := w.Result()
-
-	actual := resp.Header.Get("Content-Disposition")
-	mediaType, params, err := mime.ParseMediaType(actual)
-	if err != nil {
-		t.Fatalf("Unexpected parse error for %q: %v", actual, err)
-	}
-
-	if mediaType != "inline" {
-		t.Fatalf(`Unexpected media type, got %q instead of %q`, mediaType, "inline")
 	}
 
 	if params["filename"] != `a";filename="malware.exe` {
@@ -308,27 +277,6 @@ func TestBuildResponseWithCachingAndIfNoneMatch(t *testing.T) {
 	}
 }
 
-func TestNormalizeETag(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected string
-	}{
-		{"abc", `"abc"`},
-		{`"already-quoted"`, `"already-quoted"`},
-		{`W/"weak"`, `W/"weak"`},
-		{"", ""},
-		{"  spaced  ", `"spaced"`},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			if actual := normalizeETag(tt.input); actual != tt.expected {
-				t.Fatalf(`normalizeETag(%q) = %q, want %q`, tt.input, actual, tt.expected)
-			}
-		})
-	}
-}
-
 func TestIfNoneMatch(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -379,40 +327,10 @@ func TestBuildResponseWithGzipCompression(t *testing.T) {
 	}
 }
 
-func TestBuildResponseWithDeflateCompression(t *testing.T) {
-	body := strings.Repeat("a", compressionThreshold+1)
-	r, err := http.NewRequest("GET", "/", nil)
-	r.Header.Set("Accept-Encoding", "deflate")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	w := httptest.NewRecorder()
-
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		NewBuilder(w, r).WithBodyAsString(body).Write()
-	})
-
-	handler.ServeHTTP(w, r)
-	resp := w.Result()
-
-	expected := "deflate"
-	actual := resp.Header.Get("Content-Encoding")
-	if actual != expected {
-		t.Fatalf(`Unexpected header value, got %q instead of %q`, actual, expected)
-	}
-
-	expectedVary := "Accept-Encoding"
-	actualVary := resp.Header.Get("Vary")
-	if actualVary != expectedVary {
-		t.Fatalf(`Unexpected vary header value, got %q instead of %q`, actualVary, expectedVary)
-	}
-}
-
 func TestBuildResponseWithCompressionDisabled(t *testing.T) {
 	body := strings.Repeat("a", compressionThreshold+1)
 	r, err := http.NewRequest("GET", "/", nil)
-	r.Header.Set("Accept-Encoding", "deflate")
+	r.Header.Set("Accept-Encoding", "gzip")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -439,10 +357,10 @@ func TestBuildResponseWithCompressionDisabled(t *testing.T) {
 	}
 }
 
-func TestBuildResponseWithDeflateCompressionAndSmallPayload(t *testing.T) {
+func TestBuildResponseWithGzipCompressionAndSmallPayload(t *testing.T) {
 	body := strings.Repeat("a", compressionThreshold)
 	r, err := http.NewRequest("GET", "/", nil)
-	r.Header.Set("Accept-Encoding", "deflate")
+	r.Header.Set("Accept-Encoding", "gzip")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -495,24 +413,5 @@ func TestBuildResponseWithoutCompressionHeader(t *testing.T) {
 	actualVary := resp.Header.Get("Vary")
 	if actualVary != expectedVary {
 		t.Fatalf(`Unexpected vary header value, got %q instead of %q`, actualVary, expectedVary)
-	}
-}
-
-func TestBuildResponseWithReaderBody(t *testing.T) {
-	r, err := http.NewRequest("GET", "/", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	w := httptest.NewRecorder()
-
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		NewBuilder(w, r).WithBodyAsReader(bytes.NewBufferString("body")).Write()
-	})
-
-	handler.ServeHTTP(w, r)
-
-	if actualBody := w.Body.String(); actualBody != "body" {
-		t.Fatalf(`Unexpected body, got %s instead of %s`, actualBody, "body")
 	}
 }

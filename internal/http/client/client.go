@@ -83,6 +83,13 @@ type requestBuilder struct {
 	method   string
 	body     io.Reader
 	headers  http.Header
+	auth     *basicAuth
+	timeout  time.Duration
+}
+
+type basicAuth struct {
+	username string
+	password string
 }
 
 // NewRequestBuilder creates a new request builder for the given endpoint.
@@ -103,6 +110,18 @@ func (r *requestBuilder) WithMethod(method string) *requestBuilder {
 // WithHeader sets a header value.
 func (r *requestBuilder) WithHeader(key, value string) *requestBuilder {
 	r.headers.Set(key, value)
+	return r
+}
+
+// WithBasicAuth sets HTTP basic authentication credentials.
+func (r *requestBuilder) WithBasicAuth(username, password string) *requestBuilder {
+	r.auth = &basicAuth{username: username, password: password}
+	return r
+}
+
+// WithTimeout overrides the default request timeout.
+func (r *requestBuilder) WithTimeout(timeout time.Duration) *requestBuilder {
+	r.timeout = timeout
 	return r
 }
 
@@ -153,8 +172,17 @@ func (r *requestBuilder) Do() (*http.Response, error) {
 
 	req.Header.Set("User-Agent", "sss/"+version.Version)
 
+	if r.auth != nil {
+		req.SetBasicAuth(r.auth.username, r.auth.password)
+	}
+
+	timeout := defaultRequestTimeout
+	if r.timeout > 0 {
+		timeout = r.timeout
+	}
+
 	clientOptions := Options{
-		Timeout:              defaultRequestTimeout,
+		Timeout:              timeout,
 		BlockPrivateNetworks: !config.Opts.IntegrationAllowPrivateNetworks,
 	}
 

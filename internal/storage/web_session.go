@@ -19,10 +19,6 @@ const anonymousWebSessionLifetime = 24 * time.Hour
 
 // CreateWebSession persists a new web session built via model.NewWebSession.
 func (s *Storage) CreateWebSession(session *model.WebSession) error {
-	if session == nil {
-		return errors.New("storage: web session is nil")
-	}
-
 	state, err := session.MarshalState()
 	if err != nil {
 		return fmt.Errorf("storage: unable to serialize web session state: %w", err)
@@ -79,13 +75,6 @@ func (s *Storage) WebSessionByID(sessionID string) (*model.WebSession, error) {
 // RotateWebSession persists a session whose identity has been rotated via
 // (*model.WebSession).Rotate(), updating the row previously keyed by oldID.
 func (s *Storage) RotateWebSession(oldID string, session *model.WebSession) error {
-	if session == nil {
-		return errors.New("storage: web session is nil")
-	}
-	if oldID == "" || session.ID == "" {
-		return errors.New("storage: web session ID cannot be empty")
-	}
-
 	state, err := session.MarshalState()
 	if err != nil {
 		return fmt.Errorf("storage: unable to serialize web session state: %w", err)
@@ -108,13 +97,6 @@ func (s *Storage) RotateWebSession(oldID string, session *model.WebSession) erro
 
 // UpdateWebSession updates the mutable fields of a web session.
 func (s *Storage) UpdateWebSession(session *model.WebSession) error {
-	if session == nil {
-		return errors.New("storage: web session is nil")
-	}
-	if session.ID == "" {
-		return errors.New("storage: web session ID cannot be empty")
-	}
-
 	state, err := session.MarshalState()
 	if err != nil {
 		return fmt.Errorf("storage: unable to serialize web session state: %w", err)

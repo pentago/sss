@@ -59,9 +59,6 @@ func (h *handler) authenticate(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, request.UserIDContextKey, user.ID)
-	ctx = context.WithValue(ctx, request.UserTimezoneContextKey, user.Timezone)
-	ctx = context.WithValue(ctx, request.IsAdminUserContextKey, user.IsAdmin)
-	ctx = context.WithValue(ctx, request.IsAuthenticatedContextKey, true)
 	h.serve(w, r.WithContext(ctx))
 }
 

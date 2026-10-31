@@ -61,6 +61,5 @@ func PushEntry(feed *model.Feed, entry *model.Entry, botToken, chatID string, to
 	}
 
 	client := NewClient(botToken, chatID)
-	_, err := client.SendMessage(message)
-	return err
+	return client.SendMessage(message)
 }

@@ -13,6 +13,7 @@ import (
 
 	"sss/internal/config"
 	"sss/internal/reader/fetcher"
+	"sss/internal/urllib"
 
 	"github.com/andybalholm/cascadia"
 )
@@ -25,20 +26,11 @@ func TestPredefinedRulesAreValidSelectors(t *testing.T) {
 	}
 }
 
-func TestGetPredefinedRules(t *testing.T) {
-	if getPredefinedScraperRules("http://www.phoronix.com/") == "" {
-		t.Error("Unable to find rule for phoronix.com")
+func TestPredefinedRuleLookup(t *testing.T) {
+	if predefinedRules[urllib.DomainWithoutWWW("https://www.linux.com/")] == "" {
+		t.Error("Unable to find rule for linux.com (www prefix should be stripped)")
 	}
-
-	if getPredefinedScraperRules("https://www.linux.com/") == "" {
-		t.Error("Unable to find rule for linux.com")
-	}
-
-	if getPredefinedScraperRules("https://linux.com/") == "" {
-		t.Error("Unable to find rule for linux.com")
-	}
-
-	if getPredefinedScraperRules("https://example.org/") != "" {
+	if predefinedRules[urllib.DomainWithoutWWW("https://example.org/")] != "" {
 		t.Error("A rule not defined should not return anything")
 	}
 }
