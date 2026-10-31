@@ -83,7 +83,7 @@ func (h *handler) markFeedAsRead(w http.ResponseWriter, r *http.Request) {
 		response.HTMLServerError(w, r, err)
 		return
 	}
-	h.redirectBack(w, r, "/feeds")
+	response.HTMLRedirect(w, r, route("/feeds"))
 }
 
 func (h *handler) removeFeed(w http.ResponseWriter, r *http.Request) {
