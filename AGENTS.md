@@ -125,7 +125,7 @@ To check API compatibility, start sss with a fresh database and `FETCHER_ALLOW_P
 - `NOTICE` / `LICENSE`: Apache-2.0 with Miniflux attribution.
 
 ## Runtime/Tooling Preferences
-- `go.mod` must keep `go 1.26.0`, with the patch digit. With the local Go 1.27 toolchain, a bare `go 1.26` makes builds fail.
+- `go.mod` pins the latest Go patch release (`go 1.27.3`) with the patch digit: CI and releases install exactly that version via `setup-go`'s `go-version-file`, so the pin is what keeps release binaries on a patched stdlib. A bare `go 1.27` makes builds fail.
 - Builds always use `CGO_ENABLED=0 -trimpath`. Version info is set with `-X sss/internal/version.{Version,Commit,BuildDate}`.
 - Don't add dependencies unless a few lines of code can't do the job. Current direct deps: sqlite, gofeed, goquery/cascadia, go-oidc + x/oauth2, go-webauthn, x/crypto, x/net, x/term.
 - **Releases** (`.goreleaser.yaml`): binaries, deb/rpm/apk/archlinux packages, a Homebrew cask and `ghcr.io` images.
