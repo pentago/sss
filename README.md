@@ -9,6 +9,7 @@ A minimalist, self-hosted feed reader written in Go:
 - **Integrations:** Apprise, Discord, Gotify, Instapaper, Linkwarden, Matrix, Notion, Ntfy, Pushover, RSS-Bridge, Slack, Telegram and Webhook.
 - **API compatibility:** the Miniflux REST API (`/v1/`), the Fever API (`/fever/`) and the Google Reader API (`/reader/api/0/`), so existing Miniflux clients keep working. Webhooks send `X-Sss-Signature` and `X-Sss-Event-Type` headers. OPML per-feed settings use the `sss:` namespace (`https://github.com/pentago/sss/opml`), so a Miniflux OPML export imports its feeds and categories but not their per-feed settings.
 - **Global feed settings:** Settings → Global sets a user agent and "Fetch original content" for all of a user's feeds. A feed's own user agent takes precedence; fetching original content runs when either the global or the feed setting is on. The API exposes them as `global_user_agent` and `global_crawler` on the user.
+- **The first user is an admin**, however it is created: by an auth proxy (`AUTH_PROXY_USER_CREATION`), OAuth2/OIDC sign-in, or `CREATE_ADMIN`. A password-less install needs no `ADMIN_PASSWORD`. With user creation on and an empty database, whoever signs in first becomes admin (with Google, any Google account), so sign in yourself right after the first start, or use `CREATE_ADMIN`. An OIDC admin-group mapping (`OAUTH2_ADMIN_GROUP`) still takes over from the next sign-in.
 - **English only.**
 
 ## Install
@@ -42,7 +43,7 @@ systemctl --user enable --now sss                               # Linux; or just
 
 ### Run as a system service (Linux)
 
-Edit `/etc/sss.conf`. It is root-only and systemd reads it as an `EnvironmentFile`. For the first start, set `CREATE_ADMIN=1`, `ADMIN_USERNAME` and `ADMIN_PASSWORD` there; remove them once the service has started. Then run:
+Edit `/etc/sss.conf`. It is root-only and systemd reads it as an `EnvironmentFile`. For password login, set `CREATE_ADMIN=1`, `ADMIN_USERNAME` and `ADMIN_PASSWORD` there for the first start and remove them once the service has started; with an auth proxy or OAuth2 user creation, the first user to sign in becomes admin instead. Then run:
 
 ```sh
 sudo systemctl enable --now sss

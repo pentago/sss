@@ -168,20 +168,21 @@ func TestAboutConfigAdminOnly(t *testing.T) {
 		h.ServeHTTP(w, r)
 		return w.Body.String()
 	}
-	if body := about(); strings.Contains(body, "Global configuration options") {
-		t.Fatal("non-admin sees the config")
+	// alice is the first user, so she starts as an admin.
+	body := about()
+	if !strings.Contains(body, "OAUTH2_CLIENT_SECRET=&lt;redacted&gt;") || strings.Contains(body, "hunter2") {
+		t.Fatal("admin config missing or secret leaked")
 	}
 	user, err := store.UserByUsername("alice")
 	if err != nil {
 		t.Fatal(err)
 	}
-	user.IsAdmin = true
+	user.IsAdmin = false
 	if err := store.UpdateUser(user); err != nil {
 		t.Fatal(err)
 	}
-	body := about()
-	if !strings.Contains(body, "OAUTH2_CLIENT_SECRET=&lt;redacted&gt;") || strings.Contains(body, "hunter2") {
-		t.Fatal("admin config missing or secret leaked")
+	if body := about(); strings.Contains(body, "Global configuration options") {
+		t.Fatal("non-admin sees the config")
 	}
 }
 
