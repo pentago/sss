@@ -19,8 +19,14 @@ func appIconURL(name string) string {
 
 const assetCacheDuration = 365 * 24 * time.Hour
 
+// showStylesheet serves css/*.css and the css/fonts/*.woff2 files they reference by relative URL.
 func (h *handler) showStylesheet(w http.ResponseWriter, r *http.Request) {
-	h.serveAsset(w, r, "css/"+r.PathValue("filename"), "text/css; charset=utf-8")
+	name := r.PathValue("path")
+	contentType := "text/css; charset=utf-8"
+	if strings.HasSuffix(name, ".woff2") {
+		contentType = "font/woff2"
+	}
+	h.serveAsset(w, r, "css/"+name, contentType)
 }
 
 func (h *handler) showJavascript(w http.ResponseWriter, r *http.Request) {

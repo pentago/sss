@@ -5,3 +5,7 @@ Portions of this software are derived from Miniflux
 (https://github.com/miniflux/v2), Copyright The Miniflux Authors,
 licensed under the Apache License, Version 2.0
 (https://www.apache.org/licenses/LICENSE-2.0).
+
+The Noto Sans and Noto Serif fonts in internal/ui/static/css/fonts/,
+Copyright 2022 The Noto Project Authors, are licensed under the SIL Open
+Font License, Version 1.1 (internal/ui/static/css/fonts/OFL.txt).

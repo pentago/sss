@@ -110,7 +110,7 @@ Run `./sss -config-dump` to see the values in effect.
 
 ## Themes
 
-User settings → Theme. Values use Miniflux's names, so API clients round-trip unchanged: a color scheme followed by `_serif` or `_sans_serif` (the font of the page and entry content), or `none`. The default is `dark_serif`.
+User settings → Theme. Values use Miniflux's names, so API clients round-trip unchanged: a color scheme followed by `_serif` or `_sans_serif` (the font of the page and entry content), or `none`. The default is `dark_serif`. The fonts are Noto Serif and Noto Sans, served by sss itself (Latin scripts only; other scripts use the system serif or sans-serif).
 
 - `light_*` / `dark_*`: the built-in reference themes.
 - `system_*`: follows the device's light or dark preference (`prefers-color-scheme`).

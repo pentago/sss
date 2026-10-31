@@ -18,7 +18,7 @@ func NewHandler(store *storage.Storage, pool *worker.Pool) http.Handler {
 	mux := http.NewServeMux()
 
 	// Static assets.
-	mux.HandleFunc("GET /stylesheets/{checksum}/{filename}", h.showStylesheet)
+	mux.HandleFunc("GET /stylesheets/{checksum}/{path...}", h.showStylesheet)
 	mux.HandleFunc("GET /js/{checksum}/{filename}", h.showJavascript)
 	mux.HandleFunc("GET /custom.css", h.showCustomCSS)
 	mux.HandleFunc("GET /custom.js", h.showCustomJS)
