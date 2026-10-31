@@ -10,7 +10,7 @@
 {{range .stylesheets}}<link rel="stylesheet" href="{{.Href}}"{{with .Media}} media="{{.}}"{{end}}>
 {{end}}{{range .scripts}}<script src="{{.}}" defer></script>
 {{end}}</head>
-<body{{with .user}}{{if .EntrySwipe}} data-entry-swipe{{end}}{{if and .GestureNav (ne .GestureNav "none")}} data-gesture-nav="{{.GestureNav}}"{{end}}{{end}}>
+<body data-page="{{.page}}"{{with .user}}{{if .EntrySwipe}} data-entry-swipe{{end}}{{if and .GestureNav (ne .GestureNav "none")}} data-gesture-nav="{{.GestureNav}}"{{end}}{{end}}>
 {{if .user}}<header>
 <nav aria-label="Main">
 <a href="{{route "/unread"}}"{{if eq .menu "unread"}} aria-current="page"{{end}}>Unread <data value="{{.countUnread}}">({{.countUnread}})</data></a>

@@ -74,6 +74,16 @@ func TestLogin(t *testing.T) {
 		t.Fatalf("bad password: code %d, body lacks alert", w.Code)
 	}
 
+	// Custom CSS targets the login page by one selector, whichever route served it.
+	if !strings.Contains(w.Body.String(), `<body data-page="login"`) {
+		t.Error(`failed login lacks <body data-page="login">`)
+	}
+	root := httptest.NewRecorder()
+	h.ServeHTTP(root, httptest.NewRequest(http.MethodGet, "/", nil))
+	if !strings.Contains(root.Body.String(), `<body data-page="login"`) {
+		t.Errorf(`GET / lacks <body data-page="login">: code %d`, root.Code)
+	}
+
 	w = postForm(h, "/login", url.Values{"username": {"alice"}, "password": {"secret123"}, "redirect_url": {"/feeds"}})
 	if w.Code != http.StatusSeeOther || w.Header().Get("Location") != "/feeds" {
 		t.Fatalf("good password: code %d, location %q", w.Code, w.Header().Get("Location"))
