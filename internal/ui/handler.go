@@ -280,8 +280,9 @@ func pageAssets(user *model.User, sessionTheme string, now time.Time) (styles []
 }
 
 // render executes the page template with data, filling the layout keys:
-// user, countUnread, countErrorFeeds, hasSaveEntry, successMessage,
-// errorMessage (unless set by the caller), stylesheets, colorScheme, scripts.
+// user, page (the template name unless set by the caller), countUnread,
+// countErrorFeeds, hasSaveEntry, successMessage, errorMessage (unless set by
+// the caller), stylesheets, colorScheme, scripts.
 // data["webauthn"] = true adds webauthn.js when WEBAUTHN is enabled.
 func (h *handler) render(w http.ResponseWriter, r *http.Request, page string, data map[string]any) {
 	tpl, ok := h.pages[page]
@@ -291,6 +292,9 @@ func (h *handler) render(w http.ResponseWriter, r *http.Request, page string, da
 	}
 	if data == nil {
 		data = map[string]any{}
+	}
+	if data["page"] == nil {
+		data["page"] = page
 	}
 	user := currentUser(r)
 	data["user"] = user

@@ -150,10 +150,12 @@ func (h *handler) renderAccount(w http.ResponseWriter, r *http.Request, name str
 	data["localAuth"] = !config.Opts.DisableLocalAuth
 	// Settings sub-navigation highlights the first path segment.
 	page, _, _ := strings.Cut(strings.TrimPrefix(r.URL.Path, "/"), "/")
-	switch page {
-	case "user":
+	switch {
+	case name == "auth_login": // served at /, /login and /oauth2/…/callback
+		page = "login"
+	case page == "user":
 		page = "users"
-	case "webauthn":
+	case page == "webauthn":
 		page = "authentication"
 	}
 	data["page"] = page
