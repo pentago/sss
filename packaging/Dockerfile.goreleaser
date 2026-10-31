@@ -1,7 +1,7 @@
 FROM alpine:3.24 AS certs
 RUN apk add --no-cache ca-certificates
 # Defaults live in the config file (not ENV) so a mounted sss.conf can change them; env vars still override.
-RUN mkdir /config && printf 'LISTEN_ADDR=0.0.0.0:8080\nDATABASE_URL=/config/sss.db\nRUN_MIGRATIONS=1\n' > /config/sss.conf
+RUN mkdir /config && printf 'LISTEN_ADDR=0.0.0.0:8080\nDATABASE_PATH=/config/sss.db\nRUN_MIGRATIONS=1\n' > /config/sss.conf
 
 FROM scratch
 ARG TARGETPLATFORM

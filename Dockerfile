@@ -12,7 +12,7 @@ RUN GOARM="${TARGETVARIANT#v}" CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH g
   -ldflags "-s -w -X sss/internal/version.Version=${VERSION} -X sss/internal/version.Commit=${COMMIT} -X sss/internal/version.BuildDate=${BUILD_DATE}" \
   -o /out/sss .
 
-RUN mkdir /out/config && printf 'LISTEN_ADDR=0.0.0.0:8080\nDATABASE_URL=/config/sss.db\nRUN_MIGRATIONS=1\n' > /out/config/sss.conf
+RUN mkdir /out/config && printf 'LISTEN_ADDR=0.0.0.0:8080\nDATABASE_PATH=/config/sss.db\nRUN_MIGRATIONS=1\n' > /out/config/sss.conf
 
 FROM scratch
 
