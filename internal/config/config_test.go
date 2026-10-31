@@ -21,14 +21,14 @@ func TestDefaultDatabasePathFollowsXDG(t *testing.T) {
 		{[]string{"XDG_DATA_HOME=relative", "HOME=/home/u"}, "/home/u/.local/share/sss/sss.db"}, // XDG requires absolute paths.
 		{[]string{"HOME=/home/u"}, "/home/u/.local/share/sss/sss.db"},
 		{nil, "sss.db"},
-		{[]string{"HOME=/home/u", "DATABASE_URL=/srv/x.db"}, "/srv/x.db"},
+		{[]string{"HOME=/home/u", "DATABASE_PATH=/srv/x.db"}, "/srv/x.db"},
 	} {
 		o, err := Parse(tt.environ)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if o.DatabaseURL != tt.want {
-			t.Errorf("%v: got %q, want %q", tt.environ, o.DatabaseURL, tt.want)
+		if o.DatabasePath != tt.want {
+			t.Errorf("%v: got %q, want %q", tt.environ, o.DatabasePath, tt.want)
 		}
 	}
 }
@@ -80,8 +80,8 @@ func TestDefaults(t *testing.T) {
 	if o.BaseURL != "http://localhost" || o.RootURL != "http://localhost" || o.BasePath != "" {
 		t.Errorf("base URL: %q %q %q", o.BaseURL, o.RootURL, o.BasePath)
 	}
-	if o.DatabaseURL != "sss.db" || o.BatchSize != 100 || o.WorkerPoolSize != 16 {
-		t.Errorf("defaults: %q %d %d", o.DatabaseURL, o.BatchSize, o.WorkerPoolSize)
+	if o.DatabasePath != "sss.db" || o.BatchSize != 100 || o.WorkerPoolSize != 16 {
+		t.Errorf("defaults: %q %d %d", o.DatabasePath, o.BatchSize, o.WorkerPoolSize)
 	}
 	if o.CleanupArchiveReadInterval != 60*24*time.Hour || o.PollingFrequency != time.Hour || o.HTTPClientTimeout != 20*time.Second {
 		t.Errorf("durations: %v %v %v", o.CleanupArchiveReadInterval, o.PollingFrequency, o.HTTPClientTimeout)
@@ -168,24 +168,24 @@ func TestSecretFile(t *testing.T) {
 	empty := filepath.Join(t.TempDir(), "empty")
 	os.WriteFile(empty, nil, 0o600)
 	for _, file := range []string{empty, "/nonexistent/file"} {
-		if _, err := Parse([]string{"DATABASE_URL_FILE=" + file}); err == nil || !strings.Contains(err.Error(), "DATABASE_URL_FILE") {
-			t.Errorf("%s: expected error naming DATABASE_URL_FILE, got %v", file, err)
+		if _, err := Parse([]string{"OAUTH2_CLIENT_SECRET_FILE=" + file}); err == nil || !strings.Contains(err.Error(), "OAUTH2_CLIENT_SECRET_FILE") {
+			t.Errorf("%s: expected error naming OAUTH2_CLIENT_SECRET_FILE, got %v", file, err)
 		}
 	}
 }
 
 func TestDumpRedactsSecrets(t *testing.T) {
-	o, err := Parse([]string{"DATABASE_URL=/data/db.sqlite", "OAUTH2_CLIENT_SECRET=s3cr3t", "LOG_LEVEL=error"})
+	o, err := Parse([]string{"DATABASE_PATH=/data/db.sqlite", "OAUTH2_CLIENT_SECRET=s3cr3t", "LOG_LEVEL=error"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	dump := o.Dump()
-	for _, want := range []string{"DATABASE_URL=<redacted>\n", "OAUTH2_CLIENT_SECRET=<redacted>\n", "LOG_LEVEL=error\n", "ADMIN_PASSWORD=\n", "BATCH_SIZE=100\n"} {
+	for _, want := range []string{"DATABASE_PATH=/data/db.sqlite\n", "OAUTH2_CLIENT_SECRET=<redacted>\n", "LOG_LEVEL=error\n", "ADMIN_PASSWORD=\n", "BATCH_SIZE=100\n"} {
 		if !strings.Contains(dump, want) {
 			t.Errorf("dump missing %q:\n%s", want, dump)
 		}
 	}
-	if strings.Contains(dump, "s3cr3t") || strings.Contains(dump, "db.sqlite") {
+	if strings.Contains(dump, "s3cr3t") {
 		t.Errorf("dump leaks secret:\n%s", dump)
 	}
 }

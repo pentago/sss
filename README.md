@@ -71,7 +71,7 @@ The image is built from `scratch` and runs as an unprivileged user. Its layout:
 - `/sss` is the binary.
 - `/config` is the volume. It holds the config file `/config/sss.conf` and the database `/config/sss.db`.
 
-The image ships a default `sss.conf` with `LISTEN_ADDR=0.0.0.0:8080`, `DATABASE_URL=/config/sss.db` and `RUN_MIGRATIONS=1`. A named volume picks that file up automatically. If you bind-mount your own directory, it must contain an `sss.conf` with those lines. Environment variables override the file.
+The image ships a default `sss.conf` with `LISTEN_ADDR=0.0.0.0:8080`, `DATABASE_PATH=/config/sss.db` and `RUN_MIGRATIONS=1`. A named volume picks that file up automatically. If you bind-mount your own directory, it must contain an `sss.conf` with those lines. Environment variables override the file.
 
 `examples/compose.yaml` runs the `:dev` image with `examples/config` (a ready `sss.conf`; the database is created there) bind-mounted to `/config`.
 
@@ -96,7 +96,7 @@ These differ from Miniflux:
 
 | Variable | Status |
 |---|---|
-| `DATABASE_URL` | Path to the SQLite file or a `file:` URI. Default `$XDG_DATA_HOME/sss/sss.db`, where `XDG_DATA_HOME` defaults to `~/.local/share`. When there is no home directory, the default is `sss.db` in the working directory. |
+| `DATABASE_PATH` | Replaces `DATABASE_URL`. Path to the SQLite file or a `file:` URI. Default `$XDG_DATA_HOME/sss/sss.db`, where `XDG_DATA_HOME` defaults to `~/.local/share`. When there is no home directory, the default is `sss.db` in the working directory. |
 | `DATABASE_MAX_CONNS`, `DATABASE_MIN_CONNS`, `DATABASE_CONNECTION_LIFETIME` | Removed (SQLite) |
 | `METRICS_*` | Removed (no Prometheus) |
 | `HTTP_CLIENT_PROXIES`, `FETCHER_ALLOW_PRIVATE_FEED_PROXY` | Removed |

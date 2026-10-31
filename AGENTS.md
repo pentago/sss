@@ -53,7 +53,7 @@ CGO_ENABLED=0 go build -o /tmp/sss .
 /tmp/sss -config-dump                       # effective config, secrets redacted
 docker build -t sss:ci . && docker run --rm sss:ci -version   # same as CI's docker job
 ```
-To run locally: `RUN_MIGRATIONS=1 CREATE_ADMIN=1 ADMIN_USERNAME=admin ADMIN_PASSWORD=test123456 LISTEN_ADDR=127.0.0.1:8097 DATABASE_URL=/tmp/sss-dev.db /tmp/sss`
+To run locally: `RUN_MIGRATIONS=1 CREATE_ADMIN=1 ADMIN_USERNAME=admin ADMIN_PASSWORD=test123456 LISTEN_ADDR=127.0.0.1:8097 DATABASE_PATH=/tmp/sss-dev.db /tmp/sss`
 
 To check API compatibility, start sss with a fresh database and `FETCHER_ALLOW_PRIVATE_NETWORKS=1`, then run upstream's suite against it from the Miniflux clone: `TEST_MINIFLUX_BASE_URL=http://127.0.0.1:8097 TEST_MINIFLUX_ADMIN_USERNAME=admin TEST_MINIFLUX_ADMIN_PASSWORD=test123456 go test -count=1 ./internal/api/`. `TestGetUsersEndpointAsAdmin` and `TestCreateUserEndpointAsAdmin` are expected to fail: they assert upstream defaults (theme `light_serif`, gesture nav `tap`), while sss defaults to `dark_serif` with opt-in JS off.
 
@@ -74,7 +74,7 @@ To check API compatibility, start sss with a fresh database and `FETCHER_ALLOW_P
 - **Logging:** `log/slog` only, with structured attributes (`slog.Int64("user_id", …)`, `slog.Any("error", err)`).
 - **Config:** read `config.Opts.Field` directly; there are no getters. To add an option:
   1. Add a field to `Options`, in alphabetical order by env name.
-  2. Add one line to the `Parse` struct literal using the matching helper (`str` with optional choices, `boolean`, `integer`, `duration`, `list`, `url`, or `secret` for credentials, which also gives `_FILE` support). Put cross-field checks in `validate()`.
+  2. Add one line to the `Parse` struct literal using the matching helper (`str` with optional choices, `boolean`, `integer`, `duration`, `list`, `url`, or `secret` for credentials, which also gives `_FILE` support and redacts the value in `Dump`; `fileValue(name, def, false)` gives `_FILE` support without redaction). Put cross-field checks in `validate()`.
   3. Add cases to `config_test.go`.
   4. Update the README table of differences from Miniflux, and `packaging/sss.conf` if it's a common setting.
 - **Storage:**
@@ -132,7 +132,7 @@ To check API compatibility, start sss with a fresh database and `FETCHER_ALLOW_P
 - **Docker:** there are two Dockerfiles, the root `Dockerfile` and `packaging/Dockerfile.goreleaser`. Keep them in sync:
   - `FROM scratch`, binary at `/sss`, volume `/config` holding `sss.conf` and `sss.db`, running as user 65534.
   - Defaults are written into `/config/sss.conf`, not `ENV`, because env vars would override a user's mounted config.
-- **systemd:** the system unit sets only `XDG_DATA_HOME=%S` (no `DATABASE_URL`) and is fully sandboxed (`SystemCallFilter=@system-service ~@privileged`, `ProtectHome`, and so on). The user unit has only light hardening that works without privileges. Don't add `PrivateUsers` or network restrictions.
+- **systemd:** the system unit sets only `XDG_DATA_HOME=%S` (no `DATABASE_PATH`) and is fully sandboxed (`SystemCallFilter=@system-service ~@privileged`, `ProtectHome`, and so on). The user unit has only light hardening that works without privileges. Don't add `PrivateUsers` or network restrictions.
 - **CI:**
   - GitHub Actions are pinned as `owner/action@<commit-sha> # vX.Y.Z`.
   - `.github/dependabot.yml` updates Go modules weekly, Docker base images and actions monthly. Base images need explicit tags (`alpine:3.24`), or Dependabot can't bump them.

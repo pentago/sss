@@ -97,7 +97,7 @@ func main() {
 		return
 	}
 
-	db, err := database.Open(cfg.DatabaseURL)
+	db, err := database.Open(cfg.DatabasePath)
 	if err != nil {
 		fatal(fmt.Errorf("unable to open database: %w", err))
 	}

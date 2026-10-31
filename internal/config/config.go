@@ -49,7 +49,7 @@ type Options struct {
 	CleanupFrequency                   time.Duration
 	CleanupRemoveSessionsInterval      time.Duration
 	CreateAdmin                        bool
-	DatabaseURL                        string // SQLite file path or file: URI.
+	DatabasePath                       string // SQLite file path or file: URI.
 	DisableAPI                         bool
 	DisableHSTS                        bool
 	DisableHTTPService                 bool
@@ -192,7 +192,7 @@ func Parse(environ []string) (*Options, error) {
 		CleanupFrequency:                   p.duration("CLEANUP_FREQUENCY_HOURS", "24", time.Hour, 1),
 		CleanupRemoveSessionsInterval:      p.duration("CLEANUP_REMOVE_SESSIONS_DAYS", "30", 24*time.Hour, math.MinInt),
 		CreateAdmin:                        p.boolean("CREATE_ADMIN", false),
-		DatabaseURL:                        p.secret("DATABASE_URL", cmp.Or(xdgPath(p.env["XDG_DATA_HOME"], p.env["HOME"], ".local/share", "sss.db"), "sss.db")),
+		DatabasePath:                       p.str("DATABASE_PATH", cmp.Or(xdgPath(p.env["XDG_DATA_HOME"], p.env["HOME"], ".local/share", "sss.db"), "sss.db")),
 		DisableAPI:                         p.boolean("DISABLE_API", false),
 		DisableHSTS:                        p.boolean("DISABLE_HSTS", false),
 		DisableHTTPService:                 p.boolean("DISABLE_HTTP_SERVICE", false),
