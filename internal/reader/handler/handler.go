@@ -6,10 +6,12 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"runtime/trace"
 
 	"sss/internal/config"
 	"sss/internal/integration"
@@ -153,8 +155,12 @@ func createFeed(store *storage.Storage, user *model.User, req *model.FeedCreatio
 }
 
 // RefreshFeed downloads a feed again and stores its new and updated entries.
-func RefreshFeed(store *storage.Storage, userID, feedID int64, forceRefresh bool) error {
+// It runs as a "feed.refresh" task for `go tool trace`, one region per step.
+func RefreshFeed(ctx context.Context, store *storage.Storage, userID, feedID int64, forceRefresh bool) error {
 	slog.Debug("Begin feed refresh process", slog.Int64("user_id", userID), slog.Int64("feed_id", feedID), slog.Bool("force_refresh", forceRefresh))
+	ctx, task := trace.NewTask(ctx, "feed.refresh")
+	defer task.End()
+	trace.Logf(ctx, "feed_id", "%d", feedID)
 
 	feed, err := store.FeedByID(userID, feedID)
 	if err != nil {
@@ -184,7 +190,9 @@ func RefreshFeed(store *storage.Storage, userID, feedID int64, forceRefresh bool
 		rb = rb.WithETag(feed.EtagHeader).WithLastModified(feed.LastModifiedHeader)
 	}
 
+	region := trace.StartRegion(ctx, "fetch")
 	rh := fetcher.NewResponseHandler(rb.ExecuteRequest(feed.FeedURL))
+	region.End()
 	defer rh.Close()
 
 	if rh.IsRateLimited() {
@@ -203,13 +211,17 @@ func RefreshFeed(store *storage.Storage, userID, feedID int64, forceRefresh bool
 	}
 
 	if ignoreHTTPCache || rh.IsModified(feed.EtagHeader, feed.LastModifiedHeader) {
+		region = trace.StartRegion(ctx, "read_body")
 		body, err := rh.ReadBody(config.Opts.HTTPClientMaxBodySize)
+		region.End()
 		if err != nil {
 			slog.Warn("Unable to fetch feed", slog.String("feed_url", feed.FeedURL), slog.Any("error", err))
 			return recordError(store, feed, err)
 		}
 
+		region = trace.StartRegion(ctx, "parse")
 		updated, err := parser.ParseFeed(rh.EffectiveURL(), bytes.NewReader(body))
+		region.End()
 		if err != nil {
 			return recordError(store, feed, parseError(err))
 		}
@@ -219,11 +231,15 @@ func RefreshFeed(store *storage.Storage, userID, feedID int64, forceRefresh bool
 		feed.ScheduleNextCheck(weeklyEntryCount, refreshDelay)
 
 		feed.Entries = updated.Entries
+		region = trace.StartRegion(ctx, "process")
 		processor.ProcessFeedEntries(store, feed, user, forceRefresh)
+		region.End()
 
 		// Existing entries are not updated when crawling or ignoring entry updates, unless forced.
 		updateExisting := forceRefresh || (!feed.Crawler && !user.GlobalCrawler && !feed.IgnoreEntryUpdates)
+		region = trace.StartRegion(ctx, "store")
 		newEntries, err := store.RefreshFeedEntries(feed.UserID, feed.ID, feed.Entries, updateExisting)
+		region.End()
 		if err != nil {
 			return recordError(store, feed, databaseError(err))
 		}
@@ -239,7 +255,9 @@ func RefreshFeed(store *storage.Storage, userID, feedID int64, forceRefresh bool
 		feed.Language = updated.Language
 		feed.IconURL = updated.IconURL
 		if forceRefresh || !store.HasFeedIcon(feed.ID) {
+			region = trace.StartRegion(ctx, "icon")
 			updateIcon(store, feed, user)
+			region.End()
 		}
 	} else if rh.LastModified() != "" {
 		// Per RFC 9111 §4.3.4 a 304 may carry an updated Last-Modified.

@@ -80,7 +80,7 @@ func TestCreateAndRefreshFeed(t *testing.T) {
 
 	items = 3
 	for range 2 {
-		if err := RefreshFeed(store, user.ID, feed.ID, false); err != nil {
+		if err := RefreshFeed(t.Context(), store, user.ID, feed.ID, false); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -88,7 +88,7 @@ func TestCreateAndRefreshFeed(t *testing.T) {
 		t.Fatalf("entries after refresh = %d, want 3", n)
 	}
 
-	if err := RefreshFeed(store, user.ID, feed.ID+1, false); err != ErrFeedNotFound {
+	if err := RefreshFeed(t.Context(), store, user.ID, feed.ID+1, false); err != ErrFeedNotFound {
 		t.Errorf("unknown feed: got %v, want ErrFeedNotFound", err)
 	}
 }
@@ -173,7 +173,7 @@ func TestGlobalFeedSettings(t *testing.T) {
 	if err := store.UpdateFeed(feed); err != nil {
 		t.Fatal(err)
 	}
-	if err := RefreshFeed(store, user.ID, feed.ID, true); err != nil {
+	if err := RefreshFeed(t.Context(), store, user.ID, feed.ID, true); err != nil {
 		t.Fatal(err)
 	}
 	if ua := lastUA("/feed.xml"); ua != "feed-ua" {
@@ -191,7 +191,7 @@ func TestGlobalFeedSettings(t *testing.T) {
 	if err := store.UpdateUser(user); err != nil {
 		t.Fatal(err)
 	}
-	if err := RefreshFeed(store, user.ID, feed.ID, true); err != nil {
+	if err := RefreshFeed(t.Context(), store, user.ID, feed.ID, true); err != nil {
 		t.Fatal(err)
 	}
 	if ua := lastUA("/feed.xml"); ua != "env-ua" {

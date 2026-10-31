@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"runtime/trace"
 	"strings"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 	"sss/internal/fever"
 	"sss/internal/googlereader"
 	"sss/internal/http/request"
+	"sss/internal/metric"
 	"sss/internal/storage"
 	"sss/internal/ui"
 	"sss/internal/worker"
@@ -35,6 +37,9 @@ func NewHandler(store *storage.Storage, pool *worker.Pool) http.Handler {
 
 	app := http.NewServeMux()
 	app.HandleFunc("GET /healthcheck", readiness)
+	if config.Opts.MetricsCollector {
+		app.Handle("GET /metrics", metric.Handler())
+	}
 	app.Handle("/fever/", fever.NewHandler(store))
 	gr := googlereader.NewHandler(store)
 	app.Handle("POST /accounts/ClientLogin", gr)
@@ -91,7 +96,8 @@ func maintenance(next http.Handler) http.Handler {
 	})
 }
 
-// middleware stores the client IP in the request context, logs the request and sets HSTS.
+// middleware stores the client IP in the request context, logs the request, sets HSTS
+// and wraps the request in an "http" task for `go tool trace`.
 func middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		trusted := config.Opts.TrustedReverseProxyNetworks
@@ -117,7 +123,12 @@ func middleware(next http.Handler) http.Handler {
 			w.Header().Set("Strict-Transport-Security", "max-age=31536000")
 		}
 
-		ctx := context.WithValue(r.Context(), request.ClientIPContextKey, clientIP)
+		ctx, task := trace.NewTask(r.Context(), "http")
+		defer task.End()
+		if trace.IsEnabled() {
+			trace.Log(ctx, "request", r.Method+" "+r.URL.Path)
+		}
+		ctx = context.WithValue(ctx, request.ClientIPContextKey, clientIP)
 		ctx = context.WithValue(ctx, request.IsHTTPSContextKey, isHTTPS)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

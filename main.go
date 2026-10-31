@@ -13,7 +13,9 @@ import (
 	"io"
 	"io/fs"
 	"log/slog"
+	"net"
 	"net/http"
+	_ "net/http/pprof" // registers /debug/pprof/ on http.DefaultServeMux, served only on PPROF_LISTEN_ADDR
 	"os"
 	"os/signal"
 	"runtime"
@@ -26,6 +28,7 @@ import (
 
 	"sss/internal/config"
 	"sss/internal/database"
+	"sss/internal/metric"
 	"sss/internal/model"
 	"sss/internal/reader/opml"
 	"sss/internal/server"
@@ -172,6 +175,21 @@ func main() {
 func runDaemon(store *storage.Storage) {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	if addr := config.Opts.PprofListenAddr; addr != "" {
+		ln, err := net.Listen("tcp", addr)
+		if err != nil {
+			fatal(fmt.Errorf("unable to listen on PPROF_LISTEN_ADDR: %w", err))
+		}
+		// Sample 1 in 100 mutex contentions and about one blocking event per 1ms of blocked time.
+		runtime.SetMutexProfileFraction(100)
+		runtime.SetBlockProfileRate(int(time.Millisecond))
+		slog.Info("Serving pprof", slog.String("listen_address", addr))
+		go func() { slog.Error("pprof server failed", slog.Any("error", http.Serve(ln, nil))) }()
+	}
+	if config.Opts.MetricsCollector {
+		go metric.Collect(ctx, store)
+	}
 
 	pool := worker.NewPool(store, config.Opts.WorkerPoolSize)
 	if !config.Opts.DisableSchedulerService && !config.Opts.MaintenanceMode {

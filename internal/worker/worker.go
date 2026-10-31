@@ -5,11 +5,13 @@
 package worker
 
 import (
+	"context"
 	"log/slog"
 	"sync"
 	"time"
 
 	"sss/internal/config"
+	"sss/internal/metric"
 	"sss/internal/model"
 	"sss/internal/reader/handler"
 	"sss/internal/storage"
@@ -33,7 +35,10 @@ func NewPool(store *storage.Storage, nbWorkers int) *Pool {
 				case <-p.shutdown:
 					return
 				case job := <-p.queue:
-					if err := handler.RefreshFeed(store, job.UserID, job.FeedID, false); err != nil {
+					start := time.Now()
+					err := handler.RefreshFeed(context.Background(), store, job.UserID, job.FeedID, false)
+					metric.ObserveSince(metric.BackgroundFeedRefreshDuration, start, err)
+					if err != nil {
 						slog.Warn("Unable to refresh feed", slog.Int64("user_id", job.UserID), slog.Int64("feed_id", job.FeedID), slog.Any("error", err))
 					}
 				}
@@ -88,16 +93,20 @@ func RunCleanupTasks(store *storage.Storage) {
 		slog.Info("Sessions cleanup completed", slog.Int64("web_sessions_removed", n))
 	}
 
+	start := time.Now()
 	if n, err := store.ArchiveEntries(model.EntryStatusRead, config.Opts.CleanupArchiveReadInterval, config.Opts.CleanupArchiveBatchSize); err != nil {
 		slog.Error("Unable to archive read entries", slog.Any("error", err))
 	} else {
 		slog.Info("Archiving read entries completed", slog.Int64("read_entries_archived", n))
+		metric.ArchiveEntriesDuration.WithLabelValues(model.EntryStatusRead).Observe(time.Since(start).Seconds())
 	}
 
+	start = time.Now()
 	if n, err := store.ArchiveEntries(model.EntryStatusUnread, config.Opts.CleanupArchiveUnreadInterval, config.Opts.CleanupArchiveBatchSize); err != nil {
 		slog.Error("Unable to archive unread entries", slog.Any("error", err))
 	} else {
 		slog.Info("Archiving unread entries completed", slog.Int64("unread_entries_archived", n))
+		metric.ArchiveEntriesDuration.WithLabelValues(model.EntryStatusUnread).Observe(time.Since(start).Seconds())
 	}
 
 	if n, err := store.CleanupOrphanIcons(); err != nil {

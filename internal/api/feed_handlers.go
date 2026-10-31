@@ -81,7 +81,7 @@ func (h *handler) refreshFeedHandler(w http.ResponseWriter, r *http.Request) {
 	// force=true mirrors the web UI's forced refresh: it bypasses the HTTP cache
 	// and reprocesses (and re-scrapes) entries that are already stored.
 	forceRefresh := request.QueryBoolParam(r, "force", false)
-	localizedError := feedHandler.RefreshFeed(h.store, userID, feedID, forceRefresh)
+	localizedError := feedHandler.RefreshFeed(r.Context(), h.store, userID, feedID, forceRefresh)
 	if localizedError != nil {
 		response.JSONServerError(w, r, localizedError)
 		return

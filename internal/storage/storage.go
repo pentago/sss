@@ -43,6 +43,34 @@ func (s *Storage) Ping() error {
 	return s.db.PingContext(ctx)
 }
 
+// DBStats returns the connection pool statistics.
+func (s *Storage) DBStats() sql.DBStats {
+	return s.db.Stats()
+}
+
+// MetricCounts holds the row counts exported by the metrics collector.
+type MetricCounts struct {
+	Users, EnabledFeeds, DisabledFeeds, BrokenFeeds, UnreadEntries, ReadEntries int64
+}
+
+// MetricCounts counts users, feeds and entries; a feed is broken once it has
+// errorLimit parsing errors.
+func (s *Storage) MetricCounts(errorLimit int) (MetricCounts, error) {
+	var c MetricCounts
+	err := s.db.QueryRow(`SELECT
+		(SELECT count(*) FROM users),
+		(SELECT count(*) FROM feeds WHERE disabled=0),
+		(SELECT count(*) FROM feeds WHERE disabled=1),
+		(SELECT count(*) FROM feeds WHERE parsing_error_count >= $1),
+		(SELECT count(*) FROM entries WHERE status='unread'),
+		(SELECT count(*) FROM entries WHERE status='read')`, max(errorLimit, 1),
+	).Scan(&c.Users, &c.EnabledFeeds, &c.DisabledFeeds, &c.BrokenFeeds, &c.UnreadEntries, &c.ReadEntries)
+	if err != nil {
+		return c, fmt.Errorf("storage: unable to count metrics: %w", err)
+	}
+	return c, nil
+}
+
 // DBSize returns the size of the database file in a human readable form.
 func (s *Storage) DBSize() (string, error) {
 	var size int64

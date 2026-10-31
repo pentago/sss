@@ -127,7 +127,7 @@ To check API compatibility, start sss with a fresh database and `FETCHER_ALLOW_P
 ## Runtime/Tooling Preferences
 - `go.mod` pins the latest Go patch release (`go 1.27.3`) with the patch digit: CI and releases install exactly that version via `setup-go`'s `go-version-file`, so the pin is what keeps release binaries on a patched stdlib. A bare `go 1.27` makes builds fail.
 - Builds always use `CGO_ENABLED=0 -trimpath`. Version info is set with `-X sss/internal/version.{Version,Commit,BuildDate}`.
-- Don't add dependencies unless a few lines of code can't do the job. Current direct deps: sqlite, gofeed, goquery/cascadia, go-oidc + x/oauth2, go-webauthn, x/crypto, x/net, x/term.
+- Don't add dependencies unless a few lines of code can't do the job. Current direct deps: sqlite, gofeed, goquery/cascadia, go-oidc + x/oauth2, go-webauthn, x/crypto, x/net, x/term, prometheus/client_golang (METRICS_*). Profiling and tracing use only the stdlib (`net/http/pprof`, `runtime/trace`); don't add OpenTelemetry or profiler SDKs.
 - **Releases** (`.goreleaser.yaml`): binaries, deb/rpm/apk/archlinux packages, a Homebrew cask and `ghcr.io` images.
 - **Docker:** there are two Dockerfiles, the root `Dockerfile` and `packaging/Dockerfile.goreleaser`. Keep them in sync:
   - `FROM scratch`, binary at `/sss`, volume `/config` holding `sss.conf` and `sss.db`, running as user 65534.
@@ -137,6 +137,13 @@ To check API compatibility, start sss with a fresh database and `FETCHER_ALLOW_P
   - GitHub Actions are pinned as `owner/action@<commit-sha> # vX.Y.Z`.
   - `.github/dependabot.yml` updates Go modules weekly, Docker base images and actions monthly. Base images need explicit tags (`alpine:3.24`), or Dependabot can't bump them.
 - **Git:** work in git worktrees (`wt switch -c <branch>`, under `.worktrees/`), and don't commit unless asked.
+
+## Profiling & Tracing
+Stdlib only; full guide in `docs/instrumentation.md`.
+- Start with `PPROF_LISTEN_ADDR=127.0.0.1:6060` (unauthenticated, localhost only).
+- CPU: `go tool pprof -http=:8081 http://127.0.0.1:6060/debug/pprof/profile?seconds=30`. Swap `profile` for `heap`, `allocs`, `goroutine`, `mutex` or `block`; add `-top` for text output.
+- Latency breakdown: `curl -o t.out 'http://127.0.0.1:6060/debug/pprof/trace?seconds=10'`, reproduce, then `go tool trace t.out` (User-defined tasks: `http` per request, `feed.refresh` per refresh with regions `fetch`/`read_body`/`parse`/`process`/`store`/`icon`). For text output use `go tool trace -d=parsed t.out`, or `-pprof=net|sync|syscall|sched`.
+- New hot paths get a task or region: `ctx, task := trace.NewTask(ctx, "name"); defer task.End()` or `defer trace.StartRegion(ctx, "step").End()`. They cost almost nothing while no trace is running. Wrap `trace.Log` arguments that are expensive to build in `if trace.IsEnabled()`.
 
 ## Testing & QA
 - **Style:**
