@@ -54,7 +54,7 @@
     --font-body: "Noto Sans", sans-serif;
     --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
     --font-size: 1rem;
-    --content-font-size: 1.0625rem;
+    --content-font-size: 1rem;
     --page-width: 52rem;
     --content-width: 42rem;
 }
