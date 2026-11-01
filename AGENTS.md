@@ -110,9 +110,9 @@ To check API compatibility, start sss with a fresh database and `FETCHER_ALLOW_P
   - Scripts reuse the existing forms: `fetch(form.action, {method: "POST", redirect: "manual"})`, treating `opaqueredirect` as success. Entry list items have no forms (sss keeps lists to feed, title, reading time and date), so read/star toggles there post to `<base>/entry/status` and `<base>/entry/star/{id}` built from `data-id`/`data-status`, with `<base>` derived from `document.currentScript.src`.
   - The CSP is `script-src 'self'`, `style-src 'self'`, and Trusted Types (policies `html`/`url`) are enforced.
 - **Themes:**
-  - `model.ThemeDefault = "dark_serif"`. Values are `{light,dark,system,time}_{serif,sans_serif}` or `none`.
-  - `time_*` themes are resolved on the server by `User.ThemeAt`; `system_*` uses CSS `media` queries.
-  - `light.css` and `dark.css` contain only color variables. A new variable must be added to both.
+  - `model.ThemeDefault = "dark_serif"`. Values are `{light,dark,oled,system,time,time_oled}_{serif,sans_serif}` or `none`.
+  - The `time_*` and `time_oled_*` themes are resolved on the server by `User.ThemeAt`; `system_*` uses CSS `media` queries.
+  - `light.css`, `dark.css` and `oled.css` contain only color variables. A new variable must be added to all three.
 
 ## Important Files
 - `main.go`: flags, startup order, `runDaemon`, `setupLogger`, `healthCheck`.

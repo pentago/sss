@@ -6,8 +6,8 @@
   <fieldset>
     <legend>Appearance</legend>
     <label>Theme <select name="theme">{{range $k, $v := $.themes}}<option value="{{$k}}"{{if eq $k $.form.Theme}} selected{{end}}>{{$v}}</option>{{end}}</select></label>
-    <label>Light theme from (hour, with the "light by day" theme) <input type="number" name="theme_light_hour" min="0" max="23" value="{{.ThemeLightHour}}"></label>
-    <label>Dark theme from (hour, with the "light by day" theme) <input type="number" name="theme_dark_hour" min="0" max="23" value="{{.ThemeDarkHour}}"></label>
+    <label>Light theme from (hour, with the "light by day" themes) <input type="number" name="theme_light_hour" min="0" max="23" value="{{.ThemeLightHour}}"></label>
+    <label>Dark theme from (hour, with the "light by day" themes) <input type="number" name="theme_dark_hour" min="0" max="23" value="{{.ThemeDarkHour}}"></label>
     <label>Timezone <select name="timezone">{{range $.timezones}}<option{{if eq . $.form.Timezone}} selected{{end}}>{{.}}</option>{{end}}</select></label>
     <label>Web app display mode <select name="display_mode">
       <option value="standalone"{{if eq .DisplayMode "standalone"}} selected{{end}}>Standalone</option>

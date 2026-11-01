@@ -45,6 +45,8 @@ func TestValidateUserModification(t *testing.T) {
 		{"theme system", model.UserModificationRequest{Theme: new("system_sans_serif")}, false},
 		{"theme time", model.UserModificationRequest{Theme: new("time_serif")}, false},
 		{"theme none", model.UserModificationRequest{Theme: new("none")}, false},
+		{"theme oled", model.UserModificationRequest{Theme: new("oled_serif")}, false},
+		{"theme time oled", model.UserModificationRequest{Theme: new("time_oled_serif")}, false},
 		{"bare scheme", model.UserModificationRequest{Theme: new("dark")}, true},
 		{"unknown theme", model.UserModificationRequest{Theme: new("none_serif")}, true},
 		{"hours bounds", model.UserModificationRequest{ThemeLightHour: new(0), ThemeDarkHour: new(23)}, false},
