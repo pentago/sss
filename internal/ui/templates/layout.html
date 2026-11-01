@@ -7,6 +7,7 @@
 <meta name="color-scheme" content="{{.colorScheme}}">
 <link rel="manifest" href="{{route "/manifest.json"}}">
 <link rel="icon" href="{{route "/favicon.ico"}}">
+<link rel="apple-touch-icon" href="{{appIconURL "apple-touch-icon.png"}}">
 {{range .stylesheets}}<link rel="stylesheet" href="{{.Href}}"{{with .Media}} media="{{.}}"{{end}}>
 {{end}}{{range .scripts}}<script src="{{.}}" defer></script>
 {{end}}</head>
