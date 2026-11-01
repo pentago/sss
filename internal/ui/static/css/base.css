@@ -266,8 +266,9 @@ nav a[rel~="next"] {
 }
 
 /* ---------- Lists: entries, feeds, categories ----------
- * Each item is a `main > article`: compact title line, muted meta line,
- * small action row. Read entries are dimmed so unread ones stand out.
+ * Each item is a `main > article`. Entries: feed line, title, then reading
+ * time and date at the bottom right. Feeds and categories: title, muted meta
+ * line, small action row. Read entries are dimmed so unread ones stand out.
  */
 
 main > article {
@@ -306,9 +307,22 @@ main > article > header p :is(a, small) {
     font-size: inherit;
 }
 
+main > article > header p:first-child {
+    margin: 0 0 0.15rem;
+}
+
 main > article > footer {
     margin-top: 0.25rem;
     font-size: 0.875rem;
+}
+
+main > article > footer:has(> time) {
+    text-align: end;
+    color: var(--muted);
+}
+
+main > article > footer > small {
+    font-size: inherit;
 }
 
 main > article[data-status="read"] > header h2,
@@ -583,7 +597,8 @@ dialog h2 {
 /* ---------- Small screens ---------- */
 
 @media (max-width: 40rem) {
-    main > article > header p {
+    main > article > header p,
+    main > article > footer:has(> time) {
         font-size: 0.8125rem;
     }
 }

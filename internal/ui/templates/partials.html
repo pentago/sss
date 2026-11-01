@@ -5,20 +5,15 @@
 {{define "entry_meta"}}{{$tz := .user.Timezone}}{{with .entry}}<a href="{{route "/feed/%d/entries" .Feed.ID}}">{{with iconURL .Feed.Icon}}<img src="{{.}}" alt="" width="16" height="16" loading="lazy"> {{end}}{{.Feed.Title}}</a>
 {{with .Feed.Category}}<a href="{{route "/category/%d/entries" .ID}}">{{.Title}}</a>{{end}}
 <time datetime="{{isodate .Date}}" title="{{date $tz .Date}}">{{elapsed $tz .Date}}</time>
-{{if and $.user.ShowReadingTime .ReadingTime}}<small>{{plural .ReadingTime "minute" "minutes"}} read</small>{{end}}{{end}}{{end}}
+{{if and $.user.ShowReadingTime .ReadingTime}}<small>{{.ReadingTime}}m read</small>{{end}}{{end}}{{end}}
 
 {{define "entries"}}{{range .entries}}
 <article data-id="{{.ID}}" data-status="{{.Status}}" data-starred="{{.Starred}}">
 <header>
+<p><a href="{{route "/feed/%d/entries" .Feed.ID}}">{{with iconURL .Feed.Icon}}<img src="{{.}}" alt="" width="16" height="16" loading="lazy"> {{end}}{{.Feed.Title}}</a></p>
 <h2><a href="{{route $.entryPath .ID}}{{$.entryQuery}}">{{or .Title .URL}}</a></h2>
-<p>{{template "entry_meta" (dict "user" $.user "entry" .)}}</p>
 </header>
-<footer><ul>
-<li>{{template "entry_status_form" .}}</li>
-<li>{{template "entry_star_form" .}}</li>
-<li><a href="{{untrustedURL .URL}}" rel="noopener noreferrer" referrerpolicy="no-referrer" {{newTab $.user}}>Original</a></li>
-{{with .CommentsURL}}<li><a href="{{untrustedURL .}}" rel="noopener noreferrer" referrerpolicy="no-referrer" {{newTab $.user}}>Comments</a></li>{{end}}
-</ul></footer>
+<footer>{{if and $.user.ShowReadingTime .ReadingTime}}<small>{{.ReadingTime}}m read</small> / {{end}}<time datetime="{{isodate .Date}}" title="{{date $.user.Timezone .Date}}">{{elapsed $.user.Timezone .Date}}</time></footer>
 </article>
 {{else}}
 <p role="status">There are no entries.</p>

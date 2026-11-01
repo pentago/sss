@@ -181,6 +181,8 @@ func plural(n int, singular, pluralForm string) string {
 	return fmt.Sprintf("%d %s", n, pluralForm)
 }
 
+// elapsed is the compact time since t: "now", "5m ago", "19h ago", "2mo ago".
+// sss: shorter than upstream's "5 minutes ago" so dates draw little attention.
 func elapsed(tz string, t time.Time) string {
 	if t.IsZero() {
 		return "not yet"
@@ -194,21 +196,19 @@ func elapsed(tz string, t time.Time) string {
 	days := int(diff.Hours() / 24)
 	switch {
 	case diff < time.Minute:
-		return "just now"
+		return "now"
 	case diff < time.Hour:
-		return plural(int(diff.Minutes()), "minute", "minutes") + " ago"
+		return fmt.Sprintf("%dm ago", int(diff.Minutes()))
 	case diff < 24*time.Hour:
-		return plural(int(diff.Hours()), "hour", "hours") + " ago"
-	case days == 1:
-		return "yesterday"
+		return fmt.Sprintf("%dh ago", int(diff.Hours()))
 	case days < 21:
-		return plural(days, "day", "days") + " ago"
+		return fmt.Sprintf("%dd ago", days)
 	case days < 31:
-		return plural(int(math.Round(float64(days)/7)), "week", "weeks") + " ago"
+		return fmt.Sprintf("%dw ago", int(math.Round(float64(days)/7)))
 	case days < 365:
-		return plural(int(math.Round(float64(days)/30)), "month", "months") + " ago"
+		return fmt.Sprintf("%dmo ago", int(math.Round(float64(days)/30)))
 	default:
-		return plural(int(math.Round(float64(days)/365)), "year", "years") + " ago"
+		return fmt.Sprintf("%dy ago", int(math.Round(float64(days)/365)))
 	}
 }
 

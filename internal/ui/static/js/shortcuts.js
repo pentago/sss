@@ -17,35 +17,37 @@
     const goTo = (path) => follow($(`nav[aria-label="Main"] a[href$="${path}"]`));
     const goRel = (rel) => follow($(`main a[rel~="${rel}"]`));
 
-    // Submit a form in the background (urlencoded, like the browser would); the server answers with a redirect.
-    async function post(form) {
-        const res = await fetch(form.action, { method: "POST", body: new URLSearchParams(new FormData(form)), redirect: "manual" });
-        if (res.type !== "opaqueredirect" && !res.ok) throw new Error(`${form.action}: HTTP ${res.status}`);
+    // POST in the background (urlencoded, like a form would); the server answers with a redirect.
+    async function post(url, body) {
+        const res = await fetch(url, { method: "POST", body, redirect: "manual" });
+        if (res.type !== "opaqueredirect" && !res.ok) throw new Error(`${url}: HTTP ${res.status}`);
     }
 
+    // Entry list items have no forms, so read/star requests are built from data-*;
+    // the entry page's own buttons are kept in sync.
     async function toggleRead(article) {
-        const form = article && $('form[action$="/entry/status"]', article);
+        if (!article?.dataset.status) return;
+        const status = article.dataset.status === "unread" ? "read" : "unread";
+        await post(new URL("entry/status", base), new URLSearchParams({ id: article.dataset.id, status }));
+        article.dataset.status = status;
+        const form = $('form[action$="/entry/status"]', article);
         if (!form) return;
-        const status = form.elements.namedItem("status");
-        await post(form);
-        article.dataset.status = status.value;
-        status.value = status.value === "read" ? "unread" : "read";
-        $("button", form).textContent = status.value === "read" ? "Mark as read" : "Mark as unread";
+        form.elements.namedItem("status").value = status === "read" ? "unread" : "read";
+        $("button", form).textContent = status === "read" ? "Mark as unread" : "Mark as read";
     }
 
     async function toggleStar(article) {
-        const form = article && $('form[action*="/entry/star/"]', article);
-        if (!form) return;
-        await post(form);
+        if (!article?.dataset.starred) return;
+        await post(new URL(`entry/star/${article.dataset.id}`, base));
         const starred = article.dataset.starred !== "true";
         article.dataset.starred = String(starred);
-        $("button", form).setAttribute("aria-pressed", String(starred));
+        $('form[action*="/entry/star/"] button', article)?.setAttribute("aria-pressed", String(starred));
     }
 
     async function save(article) {
         const form = article && $('form[action*="/entry/save/"]', article);
         if (!form) return;
-        await post(form);
+        await post(form.action);
         $("button", form).disabled = true;
     }
 
@@ -84,26 +86,8 @@
         else location.href = link.href;
     };
 
-    async function openOriginal(newTab) {
-        const article = currentEntry();
-        if (!article) return;
-        if (isEntryPage()) {
-            open($("header h1 a", article), newTab);
-            return;
-        }
-        const link = $('footer a[rel~="noreferrer"]', article);
-        if (!link) return;
-        if (!newTab) {
-            if (article.dataset.status === "unread") await toggleRead(article);
-            open(link, false);
-            return;
-        }
-        open(link, true);
-        // On lists other than Starred, mark as read and move on.
-        if ($('nav[aria-label="Main"] [aria-current="page"]')?.getAttribute("href").endsWith("/starred")) return;
-        select(1);
-        if (article.dataset.status === "unread") toggleRead(article);
-    }
+    // Entry pages only: list items carry no original link.
+    const originalLink = () => isEntryPage() && $("main > article > header h1 a");
 
     const commentsLink = (article) => article && [...article.querySelectorAll("a")].find((a) => a.textContent === "Comments");
 
@@ -140,8 +124,8 @@
         [["h"], "Previous page", () => goRel("prev")],
         [["z t"], "Scroll selected item to top", () => currentEntry()?.scrollIntoView({ block: "start" })],
         [["o", "Enter"], "Open selected item", () => follow(selectedItem() && $("h2 a", selectedItem()))],
-        [["v"], "Open original link in new tab", () => openOriginal(true)],
-        [["V"], "Open original link in current tab", () => openOriginal(false)],
+        [["v"], "Open original link in new tab", () => open(originalLink(), true)],
+        [["V"], "Open original link in current tab", () => open(originalLink(), false)],
         [["c"], "Open comments link in new tab", () => open(commentsLink(currentEntry()), true)],
         [["C"], "Open comments link in current tab", () => open(commentsLink(currentEntry()), false)],
         [["m"], "Toggle read, select next", () => readAndMove(1)],

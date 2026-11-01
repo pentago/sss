@@ -34,6 +34,30 @@ func TestBackURL(t *testing.T) {
 	}
 }
 
+// Dates use a compact form so they draw little attention; "m" is minutes, "mo" months.
+func TestElapsed(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		ago  time.Duration
+		want string
+	}{
+		{10 * time.Second, "now"},
+		{5 * time.Minute, "5m ago"},
+		{19 * time.Hour, "19h ago"},
+		{30 * time.Hour, "1d ago"},
+		{3 * 24 * time.Hour, "3d ago"},
+		{25 * 24 * time.Hour, "4w ago"},
+		{60 * 24 * time.Hour, "2mo ago"},
+		{800 * 24 * time.Hour, "2y ago"},
+		{-time.Hour, "not yet"},
+	}
+	for _, tt := range tests {
+		if got := elapsed("UTC", now.Add(-tt.ago)); got != tt.want {
+			t.Errorf("elapsed(-%v) = %q, want %q", tt.ago, got, tt.want)
+		}
+	}
+}
+
 func TestPageAssets(t *testing.T) {
 	config.Opts = &config.Options{}
 	noon := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)

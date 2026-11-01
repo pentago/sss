@@ -5,8 +5,8 @@
     "use strict";
 
     if (document.querySelector("main > article > section")) return; // entry page, not a list
-    const statusForm = document.querySelector('form[action$="/entry/status"]');
-    if (!statusForm) return;
+    // Application root is derived from this script's URL (<base>/js/<checksum>/scroll.js).
+    const statusURL = new URL("../../entry/status", document.currentScript.src);
 
     const pending = new Set();
     let timer = 0;
@@ -18,18 +18,9 @@
         const body = new URLSearchParams();
         for (const article of articles) body.append("id", article.dataset.id);
         body.append("status", "read");
-        const res = await fetch(statusForm.action, { method: "POST", body, redirect: "manual", keepalive: true });
-        if (res.type !== "opaqueredirect" && !res.ok) throw new Error(`${statusForm.action}: HTTP ${res.status}`);
-        for (const article of articles) {
-            article.dataset.status = "read";
-            // Keep the item's own toggle form consistent with the new state.
-            const form = article.querySelector('form[action$="/entry/status"]');
-            const status = form?.elements.namedItem("status");
-            if (status) {
-                status.value = "unread";
-                form.querySelector("button").textContent = "Mark as unread";
-            }
-        }
+        const res = await fetch(statusURL, { method: "POST", body, redirect: "manual", keepalive: true });
+        if (res.type !== "opaqueredirect" && !res.ok) throw new Error(`${statusURL}: HTTP ${res.status}`);
+        for (const article of articles) article.dataset.status = "read";
     }
 
     const observer = new IntersectionObserver((records) => {

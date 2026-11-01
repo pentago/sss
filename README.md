@@ -11,6 +11,7 @@ A minimalist, self-hosted feed reader written in Go:
 - **Global feed settings:** Settings → Global sets a user agent and "Fetch original content" for all of a user's feeds. A feed's own user agent takes precedence; fetching original content runs when either the global or the feed setting is on. The API exposes them as `global_user_agent` and `global_crawler` on the user.
 - **The first user is an admin**, however it is created: by an auth proxy (`AUTH_PROXY_USER_CREATION`), OAuth2/OIDC sign-in, or `CREATE_ADMIN`. A password-less install needs no `ADMIN_PASSWORD`. With user creation on and an empty database, whoever signs in first becomes admin (with Google, any Google account), so sign in yourself right after the first start, or use `CREATE_ADMIN`. An OIDC admin-group mapping (`OAUTH2_ADMIN_GROUP`) still takes over from the next sign-in.
 - **Newest entries first** by default for new users (Settings → Entry direction). The API's `/v1/entries` still defaults to `direction=asc`, as Miniflux clients expect.
+- **Minimal entry lists:** each item shows only the feed, the title, and the reading time and date. There are no per-item read, star, original or comments actions and no category; they live on the entry page.
 - **English only.**
 
 ## Install
@@ -124,11 +125,12 @@ Custom CSS and Custom JS are user settings. The markup is stable and uses only s
 | Current page | `body[data-page="…"]`: the entry list (`unread`, `starred`, `history`, `shares`, `search`, `feed`, `category`, `tag`), the settings section (`settings`, `authentication`, `integrations`, `keys`, `sessions`, `users`, `about`, `login`), otherwise the template name (`entry`, `feeds`, `categories`, `category_form`, `feed_edit`, `subscribe`, `subscribe_choose`, `import`, `share`, `offline`) |
 | Main navigation | `body > header nav[aria-label="Main"]`: the Unread link (`> a`), then the other links in a menu (`> details > ul`, toggle `> details > summary`, shown only on narrow screens). Current item: `[aria-current="page"]` |
 | Entry, feed and category list items | `main > article` |
+| Entry list item | `> header p` (feed), `> header h2` (title), `> footer` (`small` reading time, `time` date) |
 | Read / unread entry | `article[data-status="read"]`, `article[data-status="unread"]` |
 | Starred entry | `article[data-starred="true"]` |
 | Feed with errors / unread items | `article[data-errors]`, `article[data-unread]` |
 | Entry content | `main > article > section` |
-| Action buttons | `article footer form button`, `nav[aria-label="Entry actions"]` |
+| Action buttons | `nav[aria-label="Entry actions"]`, feed and category lists: `article footer form button` |
 | Page actions, pagination | `nav[aria-label="Page actions"]`, `nav[aria-label="Bottom page actions"]` (end of entry lists), `nav[aria-label="Pagination"] a[rel=prev\|next]` |
 | Messages | `[role="alert"]` (errors), `[role="status"]` (info) |
 | Confirmations | `details > summary` + `form` |

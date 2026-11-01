@@ -107,7 +107,7 @@ To check API compatibility, start sss with a fresh database and `FETCHER_ALLOW_P
 - **JS (`internal/ui/static/js/`):**
   - Plain ES2020 with no dependencies, loaded as `<script src defer>`.
   - Each script is included only when its user setting is on (`pageAssets` in `handler.go`).
-  - Scripts reuse the existing forms: `fetch(form.action, {method: "POST", redirect: "manual"})`, treating `opaqueredirect` as success.
+  - Scripts reuse the existing forms: `fetch(form.action, {method: "POST", redirect: "manual"})`, treating `opaqueredirect` as success. Entry list items have no forms (sss keeps lists to feed, title, reading time and date), so read/star toggles there post to `<base>/entry/status` and `<base>/entry/star/{id}` built from `data-id`/`data-status`, with `<base>` derived from `document.currentScript.src`.
   - The CSP is `script-src 'self'`, `style-src 'self'`, and Trusted Types (policies `html`/`url`) are enforced.
 - **Themes:**
   - `model.ThemeDefault = "dark_serif"`. Values are `{light,dark,system,time}_{serif,sans_serif}` or `none`.
