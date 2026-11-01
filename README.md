@@ -49,7 +49,7 @@ Each `v*` tag builds release artifacts in GitHub Actions (`.github/workflows/rel
 | macOS | `brew install --cask <owner>/tap/sss` |
 | Anything else | Unpack the `tar.gz` for your OS/architecture (Linux, macOS, FreeBSD) |
 
-The Linux packages install `/usr/bin/sss`, a system unit, a user unit and `/etc/sss.conf`.
+The Linux packages install `/usr/bin/sss`, a systemd user unit and `/usr/share/doc/sss/sss.conf.example`. sss is configured per user only; there is no system-wide config in `/etc`.
 
 ### Run as your user (XDG)
 
@@ -65,16 +65,6 @@ systemctl --user enable --now sss                               # Linux; or just
 - **Database:** `$XDG_DATA_HOME/sss/sss.db` (default `~/.local/share/sss/sss.db`); the directory is created automatically.
 - **Linux:** to keep the user service running after you log out, run `loginctl enable-linger $USER`.
 - **macOS:** there is no launchd service; run `sss` directly. It uses the same paths.
-
-### Run as a system service (Linux)
-
-Edit `/etc/sss.conf`. It is root-only and systemd reads it as an `EnvironmentFile`. For password login, set `CREATE_ADMIN=1`, `ADMIN_USERNAME` and `ADMIN_PASSWORD` there for the first start and remove them once the service has started; with an auth proxy or OAuth2 user creation, the first user to sign in becomes admin instead. Then run:
-
-```sh
-sudo systemctl enable --now sss
-```
-
-The unit (`packaging/systemd/sss.service`) uses `Type=notify` with a watchdog and `DynamicUser`. It is sandboxed following the [Arch wiki](https://wiki.archlinux.org/title/Systemd/Sandboxing): read-only system, no home directories, a system-call allowlist, and only IPv4/IPv6/Unix sockets. Its only capability is binding ports below 1024. Because of `ProtectHome`, `CERT_FILE` and `KEY_FILE` must not be under `/home`. It sets only `XDG_DATA_HOME=/var/lib`, so the database lives in `/var/lib/sss/sss.db`.
 
 ### From source
 

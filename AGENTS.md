@@ -70,7 +70,7 @@ README's "Key differences" section lists more intentional changes; read it befor
 | `internal/worker` | Pool, scheduler, cleanup tasks |
 | `internal/metric`, `internal/mediaproxy` | Prometheus collector (`sss_` prefix); `/proxy/` media route |
 | `internal/validator` | Request validation behind a small `validator.Store` interface (it does not import storage) |
-| `packaging/` | `sss.conf`, systemd system and user units, `Dockerfile.goreleaser` |
+| `packaging/` | `sss.conf`, the systemd user unit, `Dockerfile.goreleaser` |
 | `examples/` | `compose.yaml` (the `:dev` image) and `config/sss.conf` |
 | `docs/` | `instrumentation.md`, and `screenshot.png`, which the README shows |
 
@@ -95,7 +95,7 @@ Three tests are expected to fail:
 - `TestGetUsersEndpointAsAdmin` and `TestCreateUserEndpointAsAdmin` assert upstream defaults (theme `light_serif`, gesture nav `tap`), while sss defaults to `dark_serif` with opt-in JS off.
 - `TestGetCategoriesEndpoint` expects the default category `All`, which sss names `Uncategorized`.
 
-**Never run privileged containers, systemd-in-Docker, or live system-unit tests on the dev workstation.** It has crashed the host session. Check the system unit only with `systemd-analyze verify` and `systemd-analyze security --offline=true`.
+**Never run privileged containers or systemd-in-Docker on the dev workstation.** It has crashed the host session. Check the unit statically with `systemd-analyze --user verify` and `systemd-analyze --user security --offline=true`.
 
 The user unit may be tested live, with the user's approval:
 1. Copy it to `~/.config/systemd/user/`.
@@ -128,7 +128,7 @@ The user unit may be tested live, with the user's approval:
 
        Checks on a single value go after the literal and use `p.fail`. Cross-field checks go in `validate()`.
     3. Add cases to `config_test.go`.
-    4. Update the README table of differences from Miniflux, and `packaging/sss.conf` if it's a common setting. That file must parse both as a systemd `EnvironmentFile=` (it is installed as `/etc/sss.conf` for the system unit; sss itself never reads that path) and as an sss config file (it is also installed as `sss.conf.example`, which users copy to `~/.config/sss/sss.conf`).
+    4. Update the README table of differences from Miniflux, and `packaging/sss.conf` if it's a common setting (it is installed as `sss.conf.example`, which users copy to `~/.config/sss/sss.conf`).
 - **Storage:**
   - No `context.Context` parameters (except `CertificateCache`, which implements autocert's interface).
   - Raw SQL with `$N` placeholders. ID lists are passed as one JSON argument: `id IN (SELECT value FROM json_each($N))` with `jsonArray(ids)`. JSON columns (`entries.tags`) are written with `jsonArray` and scanned with `jsonStrings`.
@@ -188,7 +188,7 @@ The user unit may be tested live, with the user's approval:
   - Profiling and tracing use only the stdlib (`net/http/pprof`, `runtime/trace`); don't add OpenTelemetry or profiler SDKs.
 - **Releases** (`.goreleaser.yaml`, `release.yml` on `v*` tags):
   - Binaries for linux, darwin and freebsd; deb/rpm/apk/archlinux packages; a Homebrew cask; and `ghcr.io` images tagged `{{.Version}}` and `latest`.
-  - Packages install `packaging/sss.conf` as `/etc/sss.conf` (0600, `config|noreplace`) and as `/usr/share/doc/sss/sss.conf.example`, which the README and the user unit reference. `archives.files` and `nfpms.contents` list the packaged files separately, so a new file must be added to both.
+  - Packages install `packaging/sss.conf` as `/usr/share/doc/sss/sss.conf.example`, which the README and the user unit reference. Nothing is installed under `/etc`: sss is configured per user only. `archives.files` and `nfpms.contents` list the packaged files separately, so a new file must be added to both.
   - The image platform list (`linux/amd64,linux/arm64,linux/arm/v7,linux/riscv64`) appears in `ci.yml`, `.goreleaser.yaml` (`dockers_v2`) and the README. Keep all three in sync.
 - **Docker:** there are two Dockerfiles. The root `Dockerfile` builds from source and is the one CI builds. `packaging/Dockerfile.goreleaser` copies the released binary. Keep them in sync:
   - `FROM scratch`, binary at `/sss`, volume `/config` holding `sss.conf` and `sss.db`, running as user 65534.
@@ -196,10 +196,7 @@ The user unit may be tested live, with the user's approval:
   - Defaults (`LISTEN_ADDR`, `DATABASE_PATH`, `RUN_MIGRATIONS`) are written into `/config/sss.conf`, not `ENV`, because env vars would override a user's mounted config.
   - `-healthcheck auto` uses the first `LISTEN_ADDR` entry, so it must be a TCP `host:port`.
   - Drift in `Dockerfile.goreleaser` only shows up at release.
-- **systemd:**
-  - The system unit sets only `XDG_DATA_HOME=%S` (no `DATABASE_PATH`) and is fully sandboxed: `DynamicUser`, `Type=notify` with `WatchdogSec`, `SystemCallFilter=@system-service ~@privileged`, `ProtectHome`, and so on.
-  - The user unit has the same seccomp filter and `NoNewPrivileges`, but none of the `Protect*`/`DynamicUser` settings.
-  - Don't add `PrivateUsers` or network restrictions; the units have comments explaining why.
+- **systemd:** one user unit, `packaging/systemd/sss.service` (installed to `/usr/lib/systemd/user/`); there is no system unit. It uses `Type=notify` with `WatchdogSec`, `SystemCallFilter=@system-service ~@privileged`, `NoNewPrivileges` and `PrivateTmp`, and relies on XDG defaults for config and database. Don't add network restrictions: sss fetches arbitrary feeds and listens on `LISTEN_ADDR`.
 - **CI (`.github/workflows/ci.yml`):**
   - Jobs: `test` (gofmt, vet, `go test -race`, build), `docker` (build + `-version`), and `publish`. `publish` runs after both, on main pushes only, and pushes a multi-arch `ghcr.io/…/sss` image tagged `dev` and `pr-<N>`, with a provenance attestation.
   - GitHub Actions are pinned as `owner/action@<commit-sha> # vX.Y.Z`.
