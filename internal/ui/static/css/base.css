@@ -307,9 +307,9 @@ nav a[rel~="next"] {
 }
 
 /* ---------- Lists: entries, feeds, categories ----------
- * Each item is a `main > article`. Entries: feed line, title, then reading
- * time and date at the bottom right. Feeds and categories: title, muted meta
- * line, small action row. Read entries are dimmed so unread ones stand out.
+ * Each item is a `main > article`. Entries: feed name on the left, reading
+ * time and date on the right, above the title. Feeds and categories: title,
+ * muted meta line, small action row. Read entries are dimmed so unread ones stand out.
  */
 
 main > article {
@@ -359,6 +359,11 @@ main > article > header p :is(a, small) {
     font-size: inherit;
 }
 
+/* Entry lists: reading time and date pushed to the right of the feed name. */
+main > article > header p > span {
+    margin-left: auto;
+}
+
 main > article > header p:first-child {
     margin: 0 0 0.15rem;
 }
@@ -366,15 +371,6 @@ main > article > header p:first-child {
 main > article > footer {
     margin-top: 0.25rem;
     font-size: 0.875rem;
-}
-
-main > article > footer:has(> time) {
-    text-align: end;
-    color: var(--muted);
-}
-
-main > article > footer > small {
-    font-size: inherit;
 }
 
 main > article[data-status="read"] > header h2,
@@ -411,7 +407,7 @@ main > article > header h1 a {
 main > article > section {
     max-width: var(--content-width);
     font-size: var(--content-font-size);
-    line-height: 1.65;
+    line-height: 1.3;
 }
 
 main > article > section :is(img, video, audio, iframe, svg, canvas) {
@@ -649,8 +645,7 @@ dialog h2 {
 /* ---------- Small screens ---------- */
 
 @media (max-width: 40rem) {
-    main > article > header p,
-    main > article > footer:has(> time) {
+    main > article > header p {
         font-size: 0.8125rem;
     }
 }
