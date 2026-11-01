@@ -1,20 +1,40 @@
 # sss
 
-A minimalist, self-hosted feed reader written in Go:
+A minimalist self-hosted feed reader written in Go.
 
-- **SQLite** storage. It uses the pure Go driver (no CGO), so the binary stays static.
-- **Classless semantic HTML.** Pages use only plain elements, with no `class`, `id` or `style` attributes, so a theme needs very little CSS.
-- **No JavaScript by default.** Every action is a plain HTML form. Keyboard shortcuts, swipe gestures, mark-as-read-on-scroll, the offline service worker and passkeys are opt-in.
-- **XDG paths when run as a user:** the config file lives at `~/.config/sss/sss.conf` and the database at `~/.local/share/sss/sss.db`.
-- **Integrations:** Apprise, Discord, Gotify, Instapaper, Linkwarden, Matrix, Notion, Ntfy, Pushover, RSS-Bridge, Slack, Telegram and Webhook.
-- **API compatibility:** the Miniflux REST API (`/v1/`), the Fever API (`/fever/`) and the Google Reader API (`/reader/api/0/`), so existing Miniflux clients keep working. Webhooks send `X-Sss-Signature` and `X-Sss-Event-Type` headers. OPML per-feed settings use the `sss:` namespace (`https://github.com/pentago/sss/opml`), so a Miniflux OPML export imports its feeds and categories but not their per-feed settings.
-- **Global feed settings:** Settings → Global sets a user agent and "Fetch original content" for all of a user's feeds. A feed's own user agent takes precedence; fetching original content runs when either the global or the feed setting is on. The API exposes them as `global_user_agent` and `global_crawler` on the user.
-- **The first user is an admin**, however it is created: by an auth proxy (`AUTH_PROXY_USER_CREATION`), OAuth2/OIDC sign-in, or `CREATE_ADMIN`. A password-less install needs no `ADMIN_PASSWORD`. With user creation on and an empty database, whoever signs in first becomes admin (with Google, any Google account), so sign in yourself right after the first start, or use `CREATE_ADMIN`. An OIDC admin-group mapping (`OAUTH2_ADMIN_GROUP`) still takes over from the next sign-in.
-- **Newest entries first** by default for new users (Settings → Entry direction). The API's `/v1/entries` still defaults to `direction=asc`, as Miniflux clients expect.
-- **Minimal entry lists:** each item shows only the feed, the title, and the reading time and date. There are no per-item read, star, original or comments actions and no category; they live on the entry page.
-- **Per-category refresh cooldown:** `FORCE_REFRESH_INTERVAL` applies to each category separately, so refreshing one category doesn't block another. "Refresh all feeds" starts the cooldown for every category.
-- **Uncategorized instead of All:** the category every user starts with, and where feeds added without a category go, is named "Uncategorized" (existing "All" categories are renamed). The categories page lists it last and hides it while it has no feeds; Settings → Reading → "Hide categories without feeds" hides every empty category. The API exposes the setting as `hide_empty_categories` on the user.
-- **English only.**
+sss is an opinionated fork of already opinionated and beloved [Miniflux](https://miniflux.app/) project. I know, lots of opinions here.
+
+Primarily, I use web UI (PWA) for reading thus the main goal of this fork was to make the web UI more usable by improving readability, removing clutter, and removing unnecessary fat. Full API and trimmed roster of integrations is still there to use with clients.
+
+![sss screenshot](docs/screenshot.png)
+
+Key differences from Miniflux:
+
+**Storage and runtime**
+
+- **SQLite** storage. It uses the pure Go driver (no CGO), so the binary stays static. Search uses SQLite FTS5 over titles and content: words, `"quoted phrases"`, `or` and `-term`, ranked by relevance and recency. A query that only excludes words is ignored.
+- **Honoring XDG on Linux:** the config file lives at `~/.config/sss/sss.conf` and the database at `~/.local/share/sss/sss.db`.
+- **Configuration:** same variable names, with a few removed or added (see [Configuration](#configuration)). A missing `-c` file only logs a warning. A non-numeric value for a numeric setting stops startup instead of falling back to the default.
+- **English only.** There is no language setting.
+
+**Web UI**
+
+- **Classless semantic HTML.** Pages use only plain elements, with no `class`, `id` or `style` attributes, so themes are easier to write CSS for.
+- **Mark as read on scroll** - optional. It marks entries as read when they scroll out of view.
+- **No JavaScript by default.** Every action is a plain HTML form. Keyboard shortcuts, swipe gestures, gesture navigation, mark-as-read-on-scroll, the offline service worker and passkeys are opt-in.
+- **Themes:** dark_serif theme by default. sss adds `oled_*` (true black), `time_*` / `time_oled_*` (light by day, dark or OLED black by night, picked by the server) and `none` (Custom CSS only), see [Themes](#themes).
+- **Readability:** Bundled-in amazing [Noto fonts](https://fonts.google.com/noto) (Latin and Latin Extended; other scripts fall back to system fonts).
+- **Simpler header:** Top of reader is now less crowded, with links collapsable into a menu on narrow screens.
+- **Minimal entry lists:** Less crowded lists with focus on content and less misclicks.
+- **Global feed settings:** Settings → Global provides a way to configure certain settings globally, for all feeds.
+- **Per-category refresh cooldown:** Not all categories are equally important.
+- **Hide empty categories:** - optional. Settings → Reading section provides way to hide categories with no feeds.
+- **The first user is an admin**, however it is created.
+
+**Packaging**
+
+- **size matters:** A smaller binary and minimal `scratch` container image.
+- **systemd:** provided secure user systemd unit.
 
 ## Install
 
@@ -35,8 +55,9 @@ The Linux packages install `/usr/bin/sss`, a system unit, a user unit and `/etc/
 
 ```sh
 mkdir -p ~/.config/sss
-cp /usr/share/doc/sss/sss.conf.example ~/.config/sss/sss.conf   # RUN_MIGRATIONS=1 is already set
-sss -create-admin                                               # interactive
+cp /usr/share/doc/sss/sss.conf.example ~/.config/sss/sss.conf   # sets RUN_MIGRATIONS=1, so upgrades migrate on start
+sss -migrate                                                    # creates ~/.local/share/sss/sss.db
+sss -create-admin                                               # interactive; needs the migrated database
 systemctl --user enable --now sss                               # Linux; or just run `sss`
 ```
 
@@ -59,7 +80,7 @@ The unit (`packaging/systemd/sss.service`) uses `Type=notify` with a watchdog an
 
 ```sh
 go build -o sss .
-RUN_MIGRATIONS=1 CREATE_ADMIN=1 ADMIN_USERNAME=admin ADMIN_PASSWORD=change-me-please ./sss
+RUN_MIGRATIONS=1 CREATE_ADMIN=1 ADMIN_USERNAME=admin ADMIN_PASSWORD=changeme ./sss
 ```
 
 The server listens on `127.0.0.1:8080` by default. Run `sss -h` to list the maintenance flags (`-migrate`, `-reset-password`, `-healthcheck auto`, `-config-dump`, …). For cron-driven polling, set `DISABLE_SCHEDULER_SERVICE=1` and run `sss -refresh-feeds` periodically.
@@ -69,7 +90,7 @@ The server listens on `127.0.0.1:8080` by default. Run `sss -h` to list the main
 ```sh
 docker build -t sss .
 docker run -d -p 8080:8080 -v sss-config:/config \
-  -e CREATE_ADMIN=1 -e ADMIN_USERNAME=admin -e ADMIN_PASSWORD=change-me-please sss
+  -e CREATE_ADMIN=1 -e ADMIN_USERNAME=admin -e ADMIN_PASSWORD=changeme sss
 ```
 
 The image is built from `scratch` and runs as an unprivileged user. Its layout:
@@ -113,31 +134,20 @@ Run `./sss -config-dump` to see the values in effect.
 
 ## Themes
 
-User settings → Theme. Values use Miniflux's names, so API clients round-trip unchanged: a color scheme followed by `_serif` or `_sans_serif` (the font of the page and entry content), or `none`. The default is `dark_serif`. The fonts are Noto Serif and Noto Sans, served by sss itself (Latin scripts only; other scripts use the system serif or sans-serif).
+User settings → Theme. A theme is a color scheme followed by `_serif` or `_sans_serif` (the font of the page and entry content), or `none`. `light_*`, `dark_*` and `system_*` use Miniflux's names; `oled_*`, `time_*`, `time_oled_*` and `none` are sss-only. The default is `dark_serif`. The fonts are Noto Serif and Noto Sans, served by sss itself (Latin scripts only; other scripts use the system serif or sans-serif).
 
 - `light_*` / `dark_*`: the built-in reference themes.
+- `oled_*`: true black background with dimmed text, for OLED screens and night reading.
 - `system_*`: follows the device's light or dark preference (`prefers-color-scheme`).
 - `time_*`: light between two hours of the day in your timezone, dark otherwise. Both hours are configurable. The server picks the theme, so no JavaScript is needed.
+- `time_oled_*`: like `time_*`, but true black OLED at night.
 - `none`: no built-in CSS; only your Custom CSS applies.
 
-Custom CSS and Custom JS are user settings. The markup is stable and uses only semantic elements:
+Custom CSS and Custom JS are user settings. The markup is stable and uses only semantic elements.
 
-| What | Selector |
-|---|---|
-| Current page | `body[data-page="…"]`: the entry list (`unread`, `starred`, `history`, `shares`, `search`, `feed`, `category`, `tag`), the settings section (`settings`, `authentication`, `integrations`, `keys`, `sessions`, `users`, `about`, `login`), otherwise the template name (`entry`, `feeds`, `categories`, `category_form`, `feed_edit`, `subscribe`, `subscribe_choose`, `import`, `share`, `offline`) |
-| Main navigation | `body > header nav[aria-label="Main"]`: the Unread link (`> a`), then the other links in a menu (`> details > ul`, toggle `> details > summary`, shown only on narrow screens). Current item: `[aria-current="page"]` |
-| Entry, feed and category list items | `main > article` |
-| Entry list item | `> header p` (feed left; `small` reading time and `time` date right), `> header h2` (title) |
-| Read / unread entry | `article[data-status="read"]`, `article[data-status="unread"]` |
-| Starred entry | `article[data-starred="true"]` |
-| Feed with errors / unread items | `article[data-errors]`, `article[data-unread]` |
-| Entry content | `main > article > section` |
-| Action buttons | `nav[aria-label="Entry actions"]`, feed and category lists: `article footer form button` |
-| Page actions, pagination | `nav[aria-label="Page actions"]`, `nav[aria-label="Bottom page actions"]` (end of entry lists), `nav[aria-label="Pagination"] a[rel=prev\|next]` |
-| Messages | `[role="alert"]` (errors), `[role="status"]` (info) |
-| Confirmations | `details > summary` + `form` |
+The reference stylesheets in `internal/ui/static/css/` are a good starting point: `base.css` holds the layout, and `light.css` / `dark.css` / `oled.css` hold the colors.
 
-The reference stylesheets in `internal/ui/static/css/` are a good starting point: `base.css` holds the layout, and `light.css` / `dark.css` hold the colors.
+Project name is a play on next letter after "r" in "rss" → "sss", suggesting moving forward in [RSS](https://en.wikipedia.org/wiki/RSS) ecosystem. It is pronounced whatever you want it to be.
 
 ## License
 
