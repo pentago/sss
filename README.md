@@ -127,7 +127,7 @@ Custom CSS and Custom JS are user settings. The markup is stable and uses only s
 | Current page | `body[data-page="…"]`: the entry list (`unread`, `starred`, `history`, `shares`, `search`, `feed`, `category`, `tag`), the settings section (`settings`, `authentication`, `integrations`, `keys`, `sessions`, `users`, `about`, `login`), otherwise the template name (`entry`, `feeds`, `categories`, `category_form`, `feed_edit`, `subscribe`, `subscribe_choose`, `import`, `share`, `offline`) |
 | Main navigation | `body > header nav[aria-label="Main"]`: the Unread link (`> a`), then the other links in a menu (`> details > ul`, toggle `> details > summary`, shown only on narrow screens). Current item: `[aria-current="page"]` |
 | Entry, feed and category list items | `main > article` |
-| Entry list item | `> header p` (feed), `> header h2` (title), `> footer` (`small` reading time, `time` date) |
+| Entry list item | `> header p` (feed left; `small` reading time and `time` date right), `> header h2` (title) |
 | Read / unread entry | `article[data-status="read"]`, `article[data-status="unread"]` |
 | Starred entry | `article[data-starred="true"]` |
 | Feed with errors / unread items | `article[data-errors]`, `article[data-unread]` |
