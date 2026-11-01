@@ -26,7 +26,6 @@ archives:
       - README.md
       - packaging/sss.conf
       - packaging/systemd/sss.service
-      - packaging/systemd/user/sss.service
 
 checksum:
   name_template: checksums.txt
@@ -42,13 +41,7 @@ nfpms:
     bindir: /usr/bin
     contents:
       - src: packaging/systemd/sss.service
-        dst: /usr/lib/systemd/system/sss.service
-      - src: packaging/systemd/user/sss.service
         dst: /usr/lib/systemd/user/sss.service
-      - src: packaging/sss.conf
-        dst: /etc/sss.conf
-        type: config|noreplace
-        file_info: { mode: 0600, owner: root, group: root }
       - src: packaging/sss.conf
         dst: /usr/share/doc/sss/sss.conf.example
       - src: README.md
