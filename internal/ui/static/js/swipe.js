@@ -13,15 +13,14 @@
     const follow = (rel) => { const link = $(`main a[rel~="${rel}"]`); if (link) location.href = link.href; };
     const SWIPE = 75; // px of horizontal travel that counts as a swipe
 
+    // List items have no forms: post what the entry page's status form would.
+    // Application root is derived from this script's URL (<base>/js/<checksum>/swipe.js).
+    const statusURL = new URL("../../entry/status", document.currentScript.src);
     async function toggleRead(article) {
-        const form = $('form[action$="/entry/status"]', article);
-        if (!form) return;
-        const status = form.elements.namedItem("status");
-        const res = await fetch(form.action, { method: "POST", body: new URLSearchParams(new FormData(form)), redirect: "manual" });
-        if (res.type !== "opaqueredirect" && !res.ok) throw new Error(`${form.action}: HTTP ${res.status}`);
-        article.dataset.status = status.value;
-        status.value = status.value === "read" ? "unread" : "read";
-        $("button", form).textContent = status.value === "read" ? "Mark as read" : "Mark as unread";
+        const status = article.dataset.status === "unread" ? "read" : "unread";
+        const res = await fetch(statusURL, { method: "POST", body: new URLSearchParams({ id: article.dataset.id, status }), redirect: "manual" });
+        if (res.type !== "opaqueredirect" && !res.ok) throw new Error(`${statusURL}: HTTP ${res.status}`);
+        article.dataset.status = status;
     }
 
     // Horizontal travel of a gesture, or 0 while it still looks like a vertical scroll.

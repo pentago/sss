@@ -38,7 +38,12 @@ func (h *handler) refreshAllFeeds(w http.ResponseWriter, r *http.Request) {
 // false when a server error response has been written.
 func (h *handler) refreshFeeds(w http.ResponseWriter, r *http.Request, categoryID int64) bool {
 	session := request.WebSession(r)
-	if time.Since(session.LastForceRefresh()) < config.Opts.ForceRefreshInterval {
+	// sss: each category has its own cooldown; refreshing all feeds also starts it for every category.
+	last := session.LastForceRefresh(categoryID)
+	if all := session.LastForceRefresh(0); all.After(last) {
+		last = all
+	}
+	if time.Since(last) < config.Opts.ForceRefreshInterval {
 		session.SetErrorMessage(fmt.Sprintf("You have refreshed your feeds too recently. Please wait %s between manual refreshes.",
 			plural(int(config.Opts.ForceRefreshInterval.Minutes()), "minute", "minutes")))
 		return true
@@ -58,7 +63,7 @@ func (h *handler) refreshFeeds(w http.ResponseWriter, r *http.Request, categoryI
 	slog.Info("Triggered a manual refresh of feeds from the web ui",
 		slog.Int64("user_id", request.UserID(r)), slog.Int64("category_id", categoryID), slog.Int("nb_jobs", len(jobs)))
 	go h.pool.Push(jobs)
-	session.MarkForceRefreshed()
+	session.MarkForceRefreshed(categoryID)
 	session.SetSuccessMessage("Feeds are being refreshed in the background.")
 	return true
 }

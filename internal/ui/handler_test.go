@@ -34,6 +34,30 @@ func TestBackURL(t *testing.T) {
 	}
 }
 
+// Dates use a compact form so they draw little attention; "m" is minutes, "mo" months.
+func TestElapsed(t *testing.T) {
+	now := time.Now()
+	tests := []struct {
+		ago  time.Duration
+		want string
+	}{
+		{10 * time.Second, "now"},
+		{5 * time.Minute, "5m ago"},
+		{19 * time.Hour, "19h ago"},
+		{30 * time.Hour, "1d ago"},
+		{3 * 24 * time.Hour, "3d ago"},
+		{25 * 24 * time.Hour, "4w ago"},
+		{60 * 24 * time.Hour, "2mo ago"},
+		{800 * 24 * time.Hour, "2y ago"},
+		{-time.Hour, "not yet"},
+	}
+	for _, tt := range tests {
+		if got := elapsed("UTC", now.Add(-tt.ago)); got != tt.want {
+			t.Errorf("elapsed(-%v) = %q, want %q", tt.ago, got, tt.want)
+		}
+	}
+}
+
 func TestPageAssets(t *testing.T) {
 	config.Opts = &config.Options{}
 	noon := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
@@ -165,6 +189,87 @@ func TestMarkAllAsReadRedirectsToList(t *testing.T) {
 		if w.Code != http.StatusSeeOther || w.Header().Get("Location") != tt.want {
 			t.Errorf("%s: got %d %q, want 303 %q", tt.path, w.Code, w.Header().Get("Location"), tt.want)
 		}
+	}
+}
+
+// Each category has its own manual-refresh cooldown, so refreshing one doesn't
+// block the others; refreshing all feeds starts the cooldown everywhere.
+func TestRefreshCooldownPerCategory(t *testing.T) {
+	h, store := newAccountTestServer(t)
+	cookie := login(t, h)
+	var categories []string
+	for _, title := range []string{"A", "B", "C"} {
+		c, err := store.CreateCategory(1, &model.CategoryCreationRequest{Title: title})
+		if err != nil {
+			t.Fatal(err)
+		}
+		categories = append(categories, "/category/"+itoa(c.ID)+"/entries/refresh")
+	}
+	// refresh posts path and reports whether the flash message says it was refused.
+	refresh := func(path string) bool {
+		t.Helper()
+		w := postForm(h, path, nil, cookie)
+		if w.Code != http.StatusSeeOther {
+			t.Fatalf("%s: code %d", path, w.Code)
+		}
+		r := httptest.NewRequest(http.MethodGet, w.Header().Get("Location"), nil)
+		r.AddCookie(cookie)
+		page := httptest.NewRecorder()
+		h.ServeHTTP(page, r)
+		return strings.Contains(page.Body.String(), "too recently")
+	}
+	steps := []struct {
+		path    string
+		refused bool
+	}{
+		{categories[0], false},
+		{categories[1], false}, // another category isn't blocked
+		{categories[0], true},
+		{"/feeds/refresh", false}, // all feeds have their own cooldown
+		{categories[2], true},     // and refreshing all covers every category
+	}
+	for i, s := range steps {
+		if got := refresh(s.path); got != s.refused {
+			t.Errorf("step %d %s: refused = %v, want %v", i, s.path, got, s.refused)
+		}
+	}
+}
+
+// An empty Uncategorized never clutters the categories page; other empty
+// categories are hidden only when the user asks for it.
+func TestCategoriesPageHidesEmpty(t *testing.T) {
+	h, store := newAccountTestServer(t)
+	cookie := login(t, h)
+	if _, err := store.CreateCategory(1, &model.CategoryCreationRequest{Title: "Empty"}); err != nil {
+		t.Fatal(err)
+	}
+	page := func() string {
+		r := httptest.NewRequest(http.MethodGet, "/categories", nil)
+		r.AddCookie(cookie)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		return w.Body.String()
+	}
+	body := page()
+	if strings.Contains(body, ">Uncategorized<") || !strings.Contains(body, ">Empty<") {
+		t.Fatalf("default: want only Empty listed:\n%s", body)
+	}
+
+	user, err := store.UserByID(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	user.HideEmptyCategories = true
+	if err := store.UpdateUser(user); err != nil {
+		t.Fatal(err)
+	}
+	if body := page(); strings.Contains(body, ">Empty<") {
+		t.Fatalf("hide_empty_categories: Empty still listed:\n%s", body)
+	}
+
+	seedEntries(t, store) // gives Uncategorized a feed
+	if body := page(); !strings.Contains(body, ">Uncategorized<") {
+		t.Fatalf("Uncategorized with a feed is hidden:\n%s", body)
 	}
 }
 

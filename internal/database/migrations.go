@@ -298,4 +298,11 @@ CREATE TABLE acme_cache (
 ALTER TABLE users ADD COLUMN global_user_agent TEXT NOT NULL DEFAULT '';
 ALTER TABLE users ADD COLUMN global_crawler INTEGER NOT NULL DEFAULT 0;
 `,
+	`
+ALTER TABLE users ADD COLUMN hide_empty_categories INTEGER NOT NULL DEFAULT 0;
+UPDATE categories SET title = 'Uncategorized'
+WHERE title = 'All' AND NOT EXISTS (
+	SELECT 1 FROM categories c WHERE c.user_id = categories.user_id AND lower(c.title) = 'uncategorized'
+);
+`,
 }

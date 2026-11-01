@@ -47,8 +47,9 @@ type User struct {
 	ServiceWorker             bool       `json:"service_worker"`
 	ThemeLightHour            int        `json:"theme_light_hour"`
 	ThemeDarkHour             int        `json:"theme_dark_hour"`
-	GlobalUserAgent           string     `json:"global_user_agent"` // sss: used by feeds without their own user agent.
-	GlobalCrawler             bool       `json:"global_crawler"`    // sss: fetches original content of every feed.
+	GlobalUserAgent           string     `json:"global_user_agent"`     // sss: used by feeds without their own user agent.
+	GlobalCrawler             bool       `json:"global_crawler"`        // sss: fetches original content of every feed.
+	HideEmptyCategories       bool       `json:"hide_empty_categories"` // sss: hides categories without feeds on the categories page.
 }
 
 // UserCreationRequest represents the request to create a user.
@@ -93,6 +94,7 @@ type UserModificationRequest struct {
 	ThemeDarkHour             *int    `json:"theme_dark_hour"`
 	GlobalUserAgent           *string `json:"global_user_agent"`
 	GlobalCrawler             *bool   `json:"global_crawler"`
+	HideEmptyCategories       *bool   `json:"hide_empty_categories"`
 }
 
 // Patch updates the User object with the modification request.
@@ -219,6 +221,10 @@ func (u *UserModificationRequest) Patch(user *User) {
 
 	if u.GlobalCrawler != nil {
 		user.GlobalCrawler = *u.GlobalCrawler
+	}
+
+	if u.HideEmptyCategories != nil {
+		user.HideEmptyCategories = *u.HideEmptyCategories
 	}
 }
 

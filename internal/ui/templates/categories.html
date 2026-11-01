@@ -6,13 +6,11 @@
 {{range .categories}}
 <article data-id="{{.ID}}" data-unread="{{deref .TotalUnread}}">
 <header>
-<h2><a href="{{route "/category/%d/entries" .ID}}">{{.Title}}</a> <data value="{{deref .TotalUnread}}">({{deref .TotalUnread}})</data></h2>
-<p>{{plural (deref .FeedCount) "feed" "feeds"}}{{if .HideGlobally}}, hidden from the unread list{{end}}</p>
+<h2><a href="{{route "/category/%d/entries" .ID}}">{{.Title}}</a> <data value="{{deref .TotalUnread}}">({{deref .TotalUnread}})</data> <small><a href="{{route "/category/%d/feeds" .ID}}">{{plural (deref .FeedCount) "feed" "feeds"}}</a></small></h2>
+{{if .HideGlobally}}<p>Hidden from the unread list</p>{{end}}
 </header>
 <footer><ul>
-<li><a href="{{route "/category/%d/feeds" .ID}}">Feeds</a></li>
 <li><a href="{{route "/category/%d/edit" .ID}}">Edit</a></li>
-{{if deref .TotalUnread}}<li><form method="post" action="{{route "/category/%d/mark-all-as-read" .ID}}"><button>Read all</button></form></li>{{end}}
 {{if not (deref .FeedCount)}}<li><details><summary>Remove</summary><form method="post" action="{{route "/category/%d/remove" .ID}}"><button>Confirm removal</button></form></details></li>{{end}}
 </ul></footer>
 </article>

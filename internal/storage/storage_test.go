@@ -78,7 +78,7 @@ func TestUsers(t *testing.T) {
 	if !s.UserExists("ALICE") || s.AnotherUserExists(user.ID, "alice") {
 		t.Fatal("UserExists/AnotherUserExists mismatch")
 	}
-	if category, err := s.FirstCategory(user.ID); err != nil || category.Title != "All" {
+	if category, err := s.FirstCategory(user.ID); err != nil || category.Title != model.UncategorizedCategory {
 		t.Fatalf("default category: %v %v", category, err)
 	}
 
@@ -206,7 +206,7 @@ func TestFeedEntriesDedupAndRefresh(t *testing.T) {
 		t.Fatal(entry, err)
 	}
 	if entry.Status != model.EntryStatusUnread || !entry.Date.Equal(first.Date) || entry.Feed.Title != feed.Title ||
-		entry.Feed.Category.Title != "All" || !slices.Equal(entry.Tags, []string{"Go"}) || len(entry.Enclosures) != 1 ||
+		entry.Feed.Category.Title != model.UncategorizedCategory || !slices.Equal(entry.Tags, []string{"Go"}) || len(entry.Enclosures) != 1 ||
 		entry.Enclosures[0].URL != "https://example.org/a.mp3" {
 		t.Fatalf("unexpected entry: %+v", entry)
 	}
@@ -321,7 +321,7 @@ func TestEntryQueryBuilder(t *testing.T) {
 		{"all tags", q().WithTags("tech", "go"), []int64{e1.ID}},
 		{"limit offset", q().WithLimit(1).WithOffset(1), []int64{e2.ID}},
 		{"offset only", q().WithOffset(2), []int64{e3.ID}},
-		{"category title sort", s.NewEntryQueryBuilder(user.ID).WithSorting("category_title", "desc").WithSorting("id", "asc"), []int64{e3.ID, e1.ID, e2.ID}},
+		{"category title sort", s.NewEntryQueryBuilder(user.ID).WithSorting("category_title", "asc").WithSorting("id", "asc"), []int64{e3.ID, e1.ID, e2.ID}},
 		{"search", q().WithSearchQuery("quick"), []int64{e1.ID, e3.ID}},
 		{"search stemming", q().WithSearchQuery("run"), []int64{e1.ID}},
 		{"search phrase", q().WithSearchQuery(`"brown fox"`), []int64{e1.ID}},
@@ -393,9 +393,14 @@ func TestEntryQueryBuilder(t *testing.T) {
 		t.Fatal("pagination search", prev, next, err)
 	}
 
+	// Uncategorized is listed last even with the most unread entries, yet stays
+	// the default for new feeds although "News" sorts before it.
 	categories, err := s.CategoriesWithFeedCount(user.ID, "unread_count")
-	if err != nil || len(categories) != 2 || categories[0].Title != "All" || *categories[0].FeedCount != 1 || *categories[0].TotalUnread != 1 {
+	if err != nil || len(categories) != 2 || categories[1].ID != all.ID || *categories[1].FeedCount != 1 || *categories[1].TotalUnread != 1 {
 		t.Fatal("CategoriesWithFeedCount", categories, err)
+	}
+	if first, err := s.FirstCategory(user.ID); err != nil || first.ID != all.ID {
+		t.Fatal("FirstCategory", first, err)
 	}
 
 	feeds, err := s.FeedsWithCounters(user.ID)
@@ -727,5 +732,27 @@ func TestWebAuthnCredentials(t *testing.T) {
 	}
 	if creds, err = s.WebAuthnCredentialsByUserID(user.ID); err != nil || len(creds) != 0 {
 		t.Fatal("DeleteCredentialByHandle", err)
+	}
+}
+
+// Feeds of a removed category (Google Reader label deletion) go to Uncategorized,
+// even when another category sorts before it.
+func TestRemoveCategoriesReassignsToUncategorized(t *testing.T) {
+	s := newTestStorage(t)
+	user := mustCreateUser(t, s, "alice")
+	uncategorized, _ := s.FirstCategory(user.ID)
+	for _, title := range []string{"Apps", "News"} {
+		if _, err := s.CreateCategory(user.ID, &model.CategoryCreationRequest{Title: title}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	news, _ := s.CategoryByTitle(user.ID, "News")
+	feed := mustCreateFeed(t, s, user.ID, news.ID, "https://a.example/feed")
+	if err := s.RemoveAndReplaceCategoriesByName(user.ID, []string{"News"}); err != nil {
+		t.Fatal(err)
+	}
+	got, err := s.FeedByID(user.ID, feed.ID)
+	if err != nil || got.Category.ID != uncategorized.ID {
+		t.Fatalf("feed category = %+v, want Uncategorized (%d): %v", got.Category, uncategorized.ID, err)
 	}
 }
