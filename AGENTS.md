@@ -55,7 +55,7 @@ docker build -t sss:ci . && docker run --rm sss:ci -version   # same as CI's doc
 ```
 To run locally: `RUN_MIGRATIONS=1 CREATE_ADMIN=1 ADMIN_USERNAME=admin ADMIN_PASSWORD=test123456 LISTEN_ADDR=127.0.0.1:8097 DATABASE_PATH=/tmp/sss-dev.db /tmp/sss`
 
-To check API compatibility, start sss with a fresh database and `FETCHER_ALLOW_PRIVATE_NETWORKS=1`, then run upstream's suite against it from the Miniflux clone: `TEST_MINIFLUX_BASE_URL=http://127.0.0.1:8097 TEST_MINIFLUX_ADMIN_USERNAME=admin TEST_MINIFLUX_ADMIN_PASSWORD=test123456 go test -count=1 ./internal/api/`. `TestGetUsersEndpointAsAdmin` and `TestCreateUserEndpointAsAdmin` are expected to fail: they assert upstream defaults (theme `light_serif`, gesture nav `tap`), while sss defaults to `dark_serif` with opt-in JS off.
+To check API compatibility, start sss with a fresh database and `FETCHER_ALLOW_PRIVATE_NETWORKS=1`, then run upstream's suite against it from the Miniflux clone: `TEST_MINIFLUX_BASE_URL=http://127.0.0.1:8097 TEST_MINIFLUX_ADMIN_USERNAME=admin TEST_MINIFLUX_ADMIN_PASSWORD=test123456 go test -count=1 ./internal/api/`. `TestGetUsersEndpointAsAdmin` and `TestCreateUserEndpointAsAdmin` are expected to fail: they assert upstream defaults (theme `light_serif`, gesture nav `tap`), while sss defaults to `dark_serif` with opt-in JS off. `TestGetCategoriesEndpoint` is expected to fail too: it expects the default category `All`, which sss names `Uncategorized`.
 
 **Never run privileged containers, systemd-in-Docker, or live systemd unit tests on the dev workstation.** It has crashed the host session. Check units only with `systemd-analyze verify` and `systemd-analyze security --offline=true`.
 

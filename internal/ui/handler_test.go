@@ -235,6 +235,44 @@ func TestRefreshCooldownPerCategory(t *testing.T) {
 	}
 }
 
+// An empty Uncategorized never clutters the categories page; other empty
+// categories are hidden only when the user asks for it.
+func TestCategoriesPageHidesEmpty(t *testing.T) {
+	h, store := newAccountTestServer(t)
+	cookie := login(t, h)
+	if _, err := store.CreateCategory(1, &model.CategoryCreationRequest{Title: "Empty"}); err != nil {
+		t.Fatal(err)
+	}
+	page := func() string {
+		r := httptest.NewRequest(http.MethodGet, "/categories", nil)
+		r.AddCookie(cookie)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		return w.Body.String()
+	}
+	body := page()
+	if strings.Contains(body, ">Uncategorized<") || !strings.Contains(body, ">Empty<") {
+		t.Fatalf("default: want only Empty listed:\n%s", body)
+	}
+
+	user, err := store.UserByID(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	user.HideEmptyCategories = true
+	if err := store.UpdateUser(user); err != nil {
+		t.Fatal(err)
+	}
+	if body := page(); strings.Contains(body, ">Empty<") {
+		t.Fatalf("hide_empty_categories: Empty still listed:\n%s", body)
+	}
+
+	seedEntries(t, store) // gives Uncategorized a feed
+	if body := page(); !strings.Contains(body, ">Uncategorized<") {
+		t.Fatalf("Uncategorized with a feed is hidden:\n%s", body)
+	}
+}
+
 func TestCrossOriginPostRejected(t *testing.T) {
 	h, store := newAccountTestServer(t)
 	cookie := login(t, h)

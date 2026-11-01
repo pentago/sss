@@ -3,6 +3,10 @@
 
 package model
 
+// UncategorizedCategory is the title of the category every user starts with;
+// feeds added without a category go there. sss: upstream names it "All".
+const UncategorizedCategory = "Uncategorized"
+
 // Category represents a feed category.
 type Category struct {
 	ID           int64  `json:"id"`

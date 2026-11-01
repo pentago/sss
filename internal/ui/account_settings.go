@@ -48,6 +48,7 @@ func settingsRequest(r *http.Request) *model.UserModificationRequest {
 		EntriesPerPage:            formInt(r, "entries_per_page"),
 		DefaultHomePage:           formString(r, "default_home_page"),
 		CategoriesSortingOrder:    formString(r, "categories_sorting_order"),
+		HideEmptyCategories:       formBool(r, "hide_empty_categories"),
 		DisplayMode:               formString(r, "display_mode"),
 		DefaultReadingSpeed:       formInt(r, "default_reading_speed"),
 		CJKReadingSpeed:           formInt(r, "cjk_reading_speed"),

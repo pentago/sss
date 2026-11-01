@@ -20,6 +20,7 @@
     <legend>Reading</legend>
     <label>Default home page <select name="default_home_page">{{range $k, $v := $.homePages}}<option value="{{$k}}"{{if eq $k $.form.DefaultHomePage}} selected{{end}}>{{$v}}</option>{{end}}</select></label>
     <label>Categories sorting <select name="categories_sorting_order">{{range $k, $v := $.categoriesSorting}}<option value="{{$k}}"{{if eq $k $.form.CategoriesSortingOrder}} selected{{end}}>{{$v}}</option>{{end}}</select></label>
+    <label><input type="checkbox" name="hide_empty_categories"{{if .HideEmptyCategories}} checked{{end}}> Hide categories without feeds</label>
     <label>Entry sorting <select name="entry_order">
       <option value="published_at"{{if eq .EntryOrder "published_at"}} selected{{end}}>Published date</option>
       <option value="created_at"{{if eq .EntryOrder "created_at"}} selected{{end}}>Date added</option>

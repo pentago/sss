@@ -44,10 +44,12 @@ func (s *Storage) Category(userID, categoryID int64) (*model.Category, error) {
 	return s.fetchCategory(`SELECT id, user_id, title, hide_globally FROM categories WHERE user_id=$1 AND id=$2`, userID, categoryID)
 }
 
-// FirstCategory returns the first category for the given user.
+// FirstCategory returns the category for feeds added without one: Uncategorized,
+// or the first by title when the user removed or renamed it.
 // It returns ErrNoCategory if the user does not have any category.
 func (s *Storage) FirstCategory(userID int64) (*model.Category, error) {
-	category, err := s.fetchCategory(`SELECT id, user_id, title, hide_globally FROM categories WHERE user_id=$1 ORDER BY title ASC LIMIT 1`, userID)
+	// sss: upstream's default "All" sorts first by title; "Uncategorized" doesn't, so prefer it explicitly.
+	category, err := s.fetchCategory(`SELECT id, user_id, title, hide_globally FROM categories WHERE user_id=$1 ORDER BY title = $2 DESC, title ASC LIMIT 1`, userID, model.UncategorizedCategory)
 	if err == nil && category == nil {
 		return nil, ErrNoCategory
 	}
@@ -91,7 +93,8 @@ func (s *Storage) Categories(userID int64) (model.Categories, error) {
 }
 
 // CategoriesWithFeedCount returns all categories with the number of feeds and
-// unread entries, sorted by unread count ("unread_count") or title ("alphabetical").
+// unread entries, sorted by unread count ("unread_count") or title ("alphabetical"),
+// with Uncategorized last.
 func (s *Storage) CategoriesWithFeedCount(userID int64, sortOrder string) (model.Categories, error) {
 	query := `
 		SELECT
@@ -117,13 +120,14 @@ func (s *Storage) CategoriesWithFeedCount(userID int64, sortOrder string) (model
 		) uc ON uc.category_id = c.id
 		WHERE c.user_id = $2
 	`
+	// sss: Uncategorized is listed last.
 	if sortOrder == "alphabetical" {
-		query += ` ORDER BY c.title ASC`
+		query += ` ORDER BY c.title = $3, c.title ASC`
 	} else {
-		query += ` ORDER BY coalesce(uc.unread_count, 0) DESC, c.title ASC`
+		query += ` ORDER BY c.title = $3, coalesce(uc.unread_count, 0) DESC, c.title ASC`
 	}
 
-	rows, err := s.db.Query(query, model.EntryStatusUnread, userID)
+	rows, err := s.db.Query(query, model.EntryStatusUnread, userID, model.UncategorizedCategory)
 	if err != nil {
 		return nil, fmt.Errorf("storage: unable to fetch categories: %w", err)
 	}
@@ -177,8 +181,8 @@ func (s *Storage) RemoveCategory(userID, categoryID int64) error {
 }
 
 // RemoveAndReplaceCategoriesByName deletes categories with the given titles and
-// reassigns affected feeds to the user's first remaining category. It returns
-// an error if the deletion would leave the user without any categories.
+// reassigns affected feeds to Uncategorized, or the first remaining category by
+// title. It returns an error if the deletion would leave the user without any categories.
 func (s *Storage) RemoveAndReplaceCategoriesByName(userID int64, titles []string) error {
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -195,16 +199,17 @@ func (s *Storage) RemoveAndReplaceCategoriesByName(userID int64, titles []string
 		return rollback(tx, errors.New("storage: at least 1 category must remain after deletion"))
 	}
 
+	// sss: prefer Uncategorized, like FirstCategory.
 	_, err = tx.Exec(`
 		UPDATE feeds SET category_id = (
 			SELECT id FROM categories
 			WHERE user_id=$1 AND title NOT IN (SELECT value FROM json_each($2))
-			ORDER BY title ASC
+			ORDER BY title = $3 DESC, title ASC
 			LIMIT 1
 		)
 		WHERE user_id=$1 AND category_id IN (
 			SELECT id FROM categories WHERE user_id=$1 AND title IN (SELECT value FROM json_each($2))
-		)`, userID, titlesJSON)
+		)`, userID, titlesJSON, model.UncategorizedCategory)
 	if err != nil {
 		return rollback(tx, fmt.Errorf("storage: unable to replace categories: %w", err))
 	}

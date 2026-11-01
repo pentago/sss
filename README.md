@@ -13,6 +13,7 @@ A minimalist, self-hosted feed reader written in Go:
 - **Newest entries first** by default for new users (Settings → Entry direction). The API's `/v1/entries` still defaults to `direction=asc`, as Miniflux clients expect.
 - **Minimal entry lists:** each item shows only the feed, the title, and the reading time and date. There are no per-item read, star, original or comments actions and no category; they live on the entry page.
 - **Per-category refresh cooldown:** `FORCE_REFRESH_INTERVAL` applies to each category separately, so refreshing one category doesn't block another. "Refresh all feeds" starts the cooldown for every category.
+- **Uncategorized instead of All:** the category every user starts with, and where feeds added without a category go, is named "Uncategorized" (existing "All" categories are renamed). The categories page lists it last and hides it while it has no feeds; Settings → Reading → "Hide categories without feeds" hides every empty category. The API exposes the setting as `hide_empty_categories` on the user.
 - **English only.**
 
 ## Install

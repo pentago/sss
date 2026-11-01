@@ -5,6 +5,7 @@ package ui
 
 import (
 	"net/http"
+	"slices"
 	"time"
 
 	"sss/internal/http/request"
@@ -20,6 +21,10 @@ func (h *handler) showCategoryListPage(w http.ResponseWriter, r *http.Request) {
 		response.HTMLServerError(w, r, err)
 		return
 	}
+	// sss: an empty Uncategorized is always hidden; other empty categories only on request.
+	categories = slices.DeleteFunc(categories, func(c model.Category) bool {
+		return *c.FeedCount == 0 && (user.HideEmptyCategories || c.Title == model.UncategorizedCategory)
+	})
 	h.render(w, r, "categories", map[string]any{"title": "Categories", "menu": "categories", "categories": categories})
 }
 
