@@ -104,7 +104,8 @@ func parseTemplates() map[string]*template.Template {
 }
 
 var templateFuncs = template.FuncMap{
-	"route": route,
+	"route":      route,
+	"appIconURL": appIconURL,
 	// mediaURL returns the URL to use for an enclosure of the given media kind (image, audio, video).
 	"mediaURL": func(link, kind string) template.URL {
 		if slices.Contains(config.Opts.MediaProxyResourceTypes, kind) && mediaproxy.ShouldProxify(link) {
