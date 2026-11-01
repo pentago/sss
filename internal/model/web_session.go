@@ -30,12 +30,12 @@ type WebSession struct {
 
 // webSessionState stores transient browser session state as a JSON blob.
 type webSessionState struct {
-	SuccessMessage     string                `json:"success_message,omitempty"`
-	ErrorMessage       string                `json:"error_message,omitempty"`
-	OAuth2             *WebSessionOAuth2     `json:"oauth2,omitempty"`
-	WebAuthn           *webauthn.SessionData `json:"webauthn,omitempty"`
-	LastForceRefreshAt *time.Time            `json:"last_force_refresh_at,omitempty"`
-	Theme              string                `json:"theme,omitempty"`
+	SuccessMessage   string                `json:"success_message,omitempty"`
+	ErrorMessage     string                `json:"error_message,omitempty"`
+	OAuth2           *WebSessionOAuth2     `json:"oauth2,omitempty"`
+	WebAuthn         *webauthn.SessionData `json:"webauthn,omitempty"`
+	ForceRefreshedAt map[int64]time.Time   `json:"force_refreshed_at,omitempty"` // sss: keyed by category ID, 0 = all feeds
+	Theme            string                `json:"theme,omitempty"`
 }
 
 // WebSessionOAuth2 stores transient OAuth2 flow state.
@@ -158,12 +158,10 @@ func (s *WebSession) ConsumeWebAuthnSession() *webauthn.SessionData {
 	return data
 }
 
-// LastForceRefresh returns the last force refresh timestamp, or zero time if unset.
-func (s *WebSession) LastForceRefresh() time.Time {
-	if s.state.LastForceRefreshAt != nil {
-		return *s.state.LastForceRefreshAt
-	}
-	return time.Time{}
+// LastForceRefresh returns when the feeds of categoryID (0 for all feeds) were
+// last force-refreshed, or zero time if never.
+func (s *WebSession) LastForceRefresh(categoryID int64) time.Time {
+	return s.state.ForceRefreshedAt[categoryID]
 }
 
 // ConsumeMessages returns and clears the success and error messages.
@@ -225,11 +223,14 @@ func (s *WebSession) ClearUser() {
 	s.userID = nil
 }
 
-// MarkForceRefreshed records the current time as the last force refresh.
-func (s *WebSession) MarkForceRefreshed() {
+// MarkForceRefreshed records the current time as the last force refresh of
+// categoryID (0 for all feeds).
+func (s *WebSession) MarkForceRefreshed(categoryID int64) {
 	s.dirty = true
-	now := time.Now().UTC()
-	s.state.LastForceRefreshAt = &now
+	if s.state.ForceRefreshedAt == nil {
+		s.state.ForceRefreshedAt = make(map[int64]time.Time)
+	}
+	s.state.ForceRefreshedAt[categoryID] = time.Now().UTC()
 }
 
 // SetWebAuthn stores or clears WebAuthn session data.

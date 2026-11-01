@@ -192,6 +192,49 @@ func TestMarkAllAsReadRedirectsToList(t *testing.T) {
 	}
 }
 
+// Each category has its own manual-refresh cooldown, so refreshing one doesn't
+// block the others; refreshing all feeds starts the cooldown everywhere.
+func TestRefreshCooldownPerCategory(t *testing.T) {
+	h, store := newAccountTestServer(t)
+	cookie := login(t, h)
+	var categories []string
+	for _, title := range []string{"A", "B", "C"} {
+		c, err := store.CreateCategory(1, &model.CategoryCreationRequest{Title: title})
+		if err != nil {
+			t.Fatal(err)
+		}
+		categories = append(categories, "/category/"+itoa(c.ID)+"/entries/refresh")
+	}
+	// refresh posts path and reports whether the flash message says it was refused.
+	refresh := func(path string) bool {
+		t.Helper()
+		w := postForm(h, path, nil, cookie)
+		if w.Code != http.StatusSeeOther {
+			t.Fatalf("%s: code %d", path, w.Code)
+		}
+		r := httptest.NewRequest(http.MethodGet, w.Header().Get("Location"), nil)
+		r.AddCookie(cookie)
+		page := httptest.NewRecorder()
+		h.ServeHTTP(page, r)
+		return strings.Contains(page.Body.String(), "too recently")
+	}
+	steps := []struct {
+		path    string
+		refused bool
+	}{
+		{categories[0], false},
+		{categories[1], false}, // another category isn't blocked
+		{categories[0], true},
+		{"/feeds/refresh", false}, // all feeds have their own cooldown
+		{categories[2], true},     // and refreshing all covers every category
+	}
+	for i, s := range steps {
+		if got := refresh(s.path); got != s.refused {
+			t.Errorf("step %d %s: refused = %v, want %v", i, s.path, got, s.refused)
+		}
+	}
+}
+
 func TestCrossOriginPostRejected(t *testing.T) {
 	h, store := newAccountTestServer(t)
 	cookie := login(t, h)

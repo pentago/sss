@@ -12,6 +12,7 @@ A minimalist, self-hosted feed reader written in Go:
 - **The first user is an admin**, however it is created: by an auth proxy (`AUTH_PROXY_USER_CREATION`), OAuth2/OIDC sign-in, or `CREATE_ADMIN`. A password-less install needs no `ADMIN_PASSWORD`. With user creation on and an empty database, whoever signs in first becomes admin (with Google, any Google account), so sign in yourself right after the first start, or use `CREATE_ADMIN`. An OIDC admin-group mapping (`OAUTH2_ADMIN_GROUP`) still takes over from the next sign-in.
 - **Newest entries first** by default for new users (Settings → Entry direction). The API's `/v1/entries` still defaults to `direction=asc`, as Miniflux clients expect.
 - **Minimal entry lists:** each item shows only the feed, the title, and the reading time and date. There are no per-item read, star, original or comments actions and no category; they live on the entry page.
+- **Per-category refresh cooldown:** `FORCE_REFRESH_INTERVAL` applies to each category separately, so refreshing one category doesn't block another. "Refresh all feeds" starts the cooldown for every category.
 - **English only.**
 
 ## Install
