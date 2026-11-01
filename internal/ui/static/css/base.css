@@ -325,8 +325,13 @@ main > article:focus {
 
 main > article > header h2 {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     font-weight: 600;
+}
+
+/* Feed and category lists: the name is the page's primary content. */
+main > article[data-unread] > header h2 {
+    font-size: 1.3rem;
 }
 
 /* Category feed count: a muted link inline after the unread count. */
