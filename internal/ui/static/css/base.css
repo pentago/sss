@@ -288,6 +288,17 @@ main > article > header h2 {
     font-weight: 600;
 }
 
+/* Category feed count: a muted link inline after the unread count. */
+main > article > header h2 small {
+    margin-left: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: normal;
+}
+
+main > article > header h2 small a {
+    color: var(--muted);
+}
+
 main > article > header :is(h2, p) img {
     vertical-align: -0.15em;
 }
