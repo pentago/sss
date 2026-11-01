@@ -12,7 +12,7 @@ Key differences from Miniflux:
 
 **Storage and runtime**
 
-- **SQLite** storage. It uses the pure Go driver (no CGO), so the binary stays static. Search uses SQLite FTS5 over titles and content: words, `"quoted phrases"`, `or` and `-term`, ranked by relevance and recency. A query that only excludes words is ignored.
+- **SQLite** backend only. It uses the pure Go driver (no CGO) so no dependency on Postgres like Miniflux.
 - **Honoring XDG on Linux:** the config file lives at `~/.config/sss/sss.conf` and the database at `~/.local/share/sss/sss.db`.
 - **Configuration:** same variable names, with a few removed or added (see [Configuration](#configuration)). A missing `-c` file only logs a warning. A non-numeric value for a numeric setting stops startup instead of falling back to the default.
 - **English only.** There is no language setting.
@@ -49,7 +49,7 @@ Each `v*` tag builds release artifacts in GitHub Actions (`.github/workflows/rel
 | macOS | `brew install --cask <owner>/tap/sss` |
 | Anything else | Unpack the `tar.gz` for your OS/architecture (Linux, macOS, FreeBSD) |
 
-The Linux packages install `/usr/bin/sss`, a systemd user unit and `/usr/share/doc/sss/sss.conf.example`. sss is configured per user only; there is no system-wide config in `/etc`.
+The Linux packages install `/usr/bin/sss`, a user-level systemd unit and `/usr/share/doc/sss/sss.conf.example`. sss is configured per user only; there is no system-wide config in `/etc`.
 
 ### Run as your user (XDG)
 
