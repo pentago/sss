@@ -1,0 +1,27 @@
+/* sss OLED theme: colors only. Layout lives in base.css.
+ * True black background for OLED screens, dimmed text for night reading. */
+:root {
+    color-scheme: dark;
+
+    /* Page */
+    --bg: #000;
+    --fg: #c8c8c8;         /* dimmer than dark.css for comfortable night reading */
+    --muted: #8f8f8f;
+    --border: #2e2e2e;
+    --surface: #141517;    /* code, table headers, dialogs */
+    --selected: #2a2718;   /* keyboard-selected list item */
+
+    /* Links and controls */
+    --link: #7fa8ec;
+    --accent: #7fa8ec;     /* focus rings, current nav item */
+    --button-bg: #33578d;
+    --button-fg: #fff;
+    --input-bg: #0a0a0a;
+
+    /* Messages */
+    --alert-fg: #e0a49e;
+    --alert-bg: #2a1513;
+    --status-fg: #93c4a3;
+    --status-bg: #142419;
+    --star: #d9b04c;
+}

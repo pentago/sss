@@ -230,9 +230,14 @@ func (u *UserModificationRequest) Patch(user *User) {
 
 // ThemeAt returns the color scheme to render at the given instant and whether
 // the serif font is used: the "time" scheme resolves to "light" between
-// ThemeLightHour and ThemeDarkHour in the user timezone and "dark" otherwise.
+// ThemeLightHour and ThemeDarkHour in the user timezone and "dark" otherwise;
+// "time_oled" is the same, with the OLED scheme at night.
 func (u *User) ThemeAt(now time.Time) (scheme string, serif bool) {
 	scheme, serif = SplitTheme(u.Theme)
+	night := SchemeDark
+	if scheme == SchemeTimeOLED {
+		scheme, night = SchemeTime, SchemeOLED
+	}
 	if scheme != SchemeTime {
 		return scheme, serif
 	}
@@ -244,7 +249,7 @@ func (u *User) ThemeAt(now time.Time) (scheme string, serif bool) {
 	if light {
 		return SchemeLight, serif
 	}
-	return SchemeDark, serif
+	return night, serif
 }
 
 // DefaultUserAgent returns the User-Agent for feeds that don't set one: the

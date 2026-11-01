@@ -110,6 +110,9 @@ func TestUserThemeAt(t *testing.T) {
 		{User{Theme: "time_sans_serif", Timezone: "UTC", ThemeLightHour: 7, ThemeDarkHour: 19}, at(18), SchemeLight},
 		{User{Theme: "time_sans_serif", Timezone: "UTC", ThemeLightHour: 7, ThemeDarkHour: 19}, at(19), SchemeDark},
 		{User{Theme: "time_sans_serif", Timezone: "UTC", ThemeLightHour: 7, ThemeDarkHour: 19}, at(3), SchemeDark},
+		{User{Theme: "time_oled_sans_serif", Timezone: "UTC", ThemeLightHour: 7, ThemeDarkHour: 19}, at(12), SchemeLight},
+		{User{Theme: "time_oled_sans_serif", Timezone: "UTC", ThemeLightHour: 7, ThemeDarkHour: 19}, at(19), SchemeOLED},
+		{User{Theme: "time_oled_sans_serif", Timezone: "UTC", ThemeLightHour: 22, ThemeDarkHour: 4}, at(12), SchemeOLED},
 		// 20:30 UTC is 05:30 in Tokyo.
 		{User{Theme: "time_sans_serif", Timezone: "Asia/Tokyo", ThemeLightHour: 7, ThemeDarkHour: 19}, at(20), SchemeDark},
 		{User{Theme: "time_sans_serif", Timezone: "Asia/Tokyo", ThemeLightHour: 7, ThemeDarkHour: 19}, at(0), SchemeLight},
