@@ -106,8 +106,12 @@ func TestPageAssets(t *testing.T) {
 			name, _, _ := strings.Cut(s[strings.LastIndex(s, "/")+1:], "?")
 			gotScripts = append(gotScripts, name)
 		}
-		if strings.Join(gotStyles, ",") != strings.Join(tt.styles, ",") || colorScheme != tt.colorScheme || strings.Join(gotScripts, ",") != strings.Join(tt.scripts, ",") {
-			t.Errorf("%s: got %v %q %v, want %v %q %v", tt.name, gotStyles, colorScheme, gotScripts, tt.styles, tt.colorScheme, tt.scripts)
+		wantScripts := tt.scripts
+		if tt.user != nil { // app.js is always loaded for a logged-in user
+			wantScripts = append([]string{"app.js"}, wantScripts...)
+		}
+		if strings.Join(gotStyles, ",") != strings.Join(tt.styles, ",") || colorScheme != tt.colorScheme || strings.Join(gotScripts, ",") != strings.Join(wantScripts, ",") {
+			t.Errorf("%s: got %v %q %v, want %v %q %v", tt.name, gotStyles, colorScheme, gotScripts, tt.styles, tt.colorScheme, wantScripts)
 		}
 	}
 }
