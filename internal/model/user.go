@@ -231,23 +231,26 @@ func (u *UserModificationRequest) Patch(user *User) {
 // ThemeAt returns the color scheme to render at the given instant and whether
 // the serif font is used: the "time" scheme resolves to "light" between
 // ThemeLightHour and ThemeDarkHour in the user timezone and "dark" otherwise;
-// "time_oled" is the same, with the OLED scheme at night.
+// "time_oled" uses OLED at night, "time_dark_oled" dark by day and OLED at night.
 func (u *User) ThemeAt(now time.Time) (scheme string, serif bool) {
 	scheme, serif = SplitTheme(u.Theme)
-	night := SchemeDark
-	if scheme == SchemeTimeOLED {
-		scheme, night = SchemeTime, SchemeOLED
-	}
-	if scheme != SchemeTime {
+	day, night := SchemeLight, SchemeDark
+	switch scheme {
+	case SchemeTime:
+	case SchemeTimeOLED:
+		night = SchemeOLED
+	case SchemeTimeDarkOLED:
+		day, night = SchemeDark, SchemeOLED
+	default:
 		return scheme, serif
 	}
 	hour := timezone.Convert(u.Timezone, now).Hour()
-	light := hour >= u.ThemeLightHour && hour < u.ThemeDarkHour
+	isDay := hour >= u.ThemeLightHour && hour < u.ThemeDarkHour
 	if u.ThemeLightHour > u.ThemeDarkHour {
-		light = hour >= u.ThemeLightHour || hour < u.ThemeDarkHour
+		isDay = hour >= u.ThemeLightHour || hour < u.ThemeDarkHour
 	}
-	if light {
-		return SchemeLight, serif
+	if isDay {
+		return day, serif
 	}
 	return night, serif
 }
