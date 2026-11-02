@@ -64,6 +64,7 @@ func TestPageAssets(t *testing.T) {
 	night := time.Date(2026, 1, 1, 22, 0, 0, 0, time.UTC)
 	timeUser := &model.User{Theme: "time_sans_serif", Timezone: "UTC", ThemeLightHour: 7, ThemeDarkHour: 19, GestureNav: "none"}
 	oledTimeUser := &model.User{Theme: "time_oled_sans_serif", Timezone: "UTC", ThemeLightHour: 7, ThemeDarkHour: 19, GestureNav: "none"}
+	darkOLEDTimeUser := &model.User{Theme: "time_dark_oled_serif", Timezone: "UTC", ThemeLightHour: 7, ThemeDarkHour: 19, GestureNav: "none"}
 
 	tests := []struct {
 		name        string
@@ -82,6 +83,8 @@ func TestPageAssets(t *testing.T) {
 		{"time night", timeUser, night, []string{"base.css", "dark.css"}, "dark", nil},
 		{"time oled day", oledTimeUser, noon, []string{"base.css", "light.css"}, "light", nil},
 		{"time oled night", oledTimeUser, night, []string{"base.css", "oled.css"}, "dark", nil},
+		{"time dark oled day", darkOLEDTimeUser, noon, []string{"base.css", "dark.css", "serif.css"}, "dark", nil},
+		{"time dark oled night", darkOLEDTimeUser, night, []string{"base.css", "oled.css", "serif.css"}, "dark", nil},
 		{"none with custom", &model.User{Theme: model.ThemeNone, Stylesheet: "body{}", GestureNav: "none"}, noon, []string{"custom.css"}, "light dark", nil},
 		{"all scripts", &model.User{Theme: "light_sans_serif", KeyboardShortcuts: true, GestureNav: "tap", MarkReadOnScroll: true, ServiceWorker: true, CustomJS: "1"}, noon,
 			[]string{"base.css", "light.css"}, "light", []string{"shortcuts.js", "swipe.js", "scroll.js", "sw-register.js", "custom.js"}},

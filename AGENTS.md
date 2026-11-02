@@ -165,8 +165,8 @@ The user unit may be tested live, with the user's approval:
   - Scripts reuse the existing forms: `fetch(form.action, {method: "POST", redirect: "manual"})`, treating `opaqueredirect` as success. Entry list items have no forms (sss keeps lists to feed, title, reading time and date), so read/star toggles there post to `<base>/entry/status` and `<base>/entry/star/{id}` built from `data-id`/`data-status`, with `<base>` derived from `document.currentScript.src`.
   - The CSP (`ui/middleware.go`, set per user) is `default-src 'self'`, `script-src 'self'`, `style-src 'self'` plus the user's external font hosts, and `img-src`/`media-src`/`frame-src *`. Trusted Types are enforced: the policy names `html` and `url` are allowed, but only `url` is created so far (`sw-register.js`). Any DOM sink a new script uses needs one of these policies.
 - **Themes:**
-  - `model.ThemeDefault = "dark_serif"`. Values are `{light,dark,oled,system,time,time_oled}_{serif,sans_serif}` or `none`.
-  - The `time_*` and `time_oled_*` themes are resolved on the server by `User.ThemeAt`; `system_*` uses CSS `media` queries.
+  - `model.ThemeDefault = "dark_serif"`. Values are `{light,dark,oled,system,time,time_oled,time_dark_oled}_{serif,sans_serif}` or `none`.
+  - The `time_*` themes (`time`, `time_oled`, `time_dark_oled`) are resolved on the server by `User.ThemeAt`; `system_*` uses CSS `media` queries.
   - `light.css`, `dark.css` and `oled.css` contain only color variables. A new variable must be added to all three.
 
 ## Important Files
