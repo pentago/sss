@@ -555,6 +555,36 @@ button:disabled {
     cursor: default;
 }
 
+/* "Mark all above as read" (app.js): after a long press, the entry list item
+ * is covered by the action, centered, until tapped or dismissed.
+ * The row keeps its height. Text selection is off so the long press isn't
+ * taken by the browser. */
+main > article[data-mark-above] {
+    position: relative;
+}
+
+main > article[data-mark-above] > header h2 > a::after {
+    content: "▲ Mark all above as read";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* A tad toward --fg: lighter on dark themes, darker on light ones. */
+    background: color-mix(in srgb, var(--bg), var(--fg) 10%);
+    color: color-mix(in srgb, var(--link), var(--fg) 10%);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+@media (pointer: coarse) {
+    main > article[data-status]:not(:has(> section)) {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+    }
+}
+
 /* ---------- Sign-in page: centered, no fieldset or labels ---------- */
 
 main:has(form[action$="/login"]) {
