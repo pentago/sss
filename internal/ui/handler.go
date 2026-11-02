@@ -265,6 +265,7 @@ func pageAssets(user *model.User, sessionTheme string, now time.Time) (styles []
 		styles = append(styles, stylesheet{Href: route("/custom.css?%s", checksum([]byte(user.Stylesheet)))})
 	}
 	js := func(name string) string { return route("/js/%s/%s", assets["js/"+name].checksum, name) }
+	scripts = append(scripts, js("app.js"))
 	if user.KeyboardShortcuts {
 		scripts = append(scripts, js("shortcuts.js"))
 	}
