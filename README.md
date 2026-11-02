@@ -21,7 +21,7 @@ Key differences from Miniflux:
 
 - **Classless semantic HTML.** Pages use only plain elements, with no `class`, `id` or `style` attributes, so themes are easier to write CSS for.
 - **Mark as read on scroll** - optional. It marks entries as read when they scroll out of view.
-- **Minimal JavaScript.** Actions are plain HTML forms. One tiny always-loaded script reloads pages restored from the browser's back/forward cache, so lists don't show stale read state. Keyboard shortcuts, swipe gestures, gesture navigation, mark-as-read-on-scroll, the offline service worker and passkeys are optional.
+- **Minimal JavaScript.** Actions are plain HTML forms. One tiny always-loaded script reloads pages the browser restores from its back/forward cache, and sends "Read page"/"Read all" without adding history entries, so going back doesn't leave already-read entries listed. "Read all" on a feed or category then returns to Feeds or Categories. Keyboard shortcuts, swipe gestures, gesture navigation, mark-as-read-on-scroll, the offline service worker and passkeys are optional.
 - **Themes:** dark_serif theme by default. sss adds `oled_*` (true black), `time_*` / `time_oled_*` / `time_dark_oled_*` (switch by time of day, picked by the server) and `none` (Custom CSS only), see [Themes](#themes).
 - **Readability:** Bundled-in amazing [Noto fonts](https://fonts.google.com/noto) (Latin and Latin Extended; other scripts fall back to system fonts).
 - **Simpler header:** Top of reader is now less crowded, with links collapsable into a menu on narrow screens.

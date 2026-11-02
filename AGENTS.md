@@ -3,7 +3,7 @@
 ## Project Overview
 `sss` is a minimalist, self-hosted feed reader written in Go (module `sss`, single static binary). It is an opinionated fork of [Miniflux](https://github.com/miniflux/v2): it keeps Miniflux's behavior and its policy ("the purpose is to read feeds, nothing else"), but focuses on a cleaner web UI. The deliberate differences are:
 - SQLite only (`modernc.org/sqlite`, pure Go, `CGO_ENABLED=0`). No Postgres.
-- Classless semantic HTML UI with minimal JavaScript. Actions are plain forms; `app.js` is always loaded for logged-in users (back/forward-cache reload), and other scripts are per-user options.
+- Classless semantic HTML UI with minimal JavaScript. Actions are plain forms; `app.js` is always loaded for logged-in users (back/forward-cache reload, history-safe "Read page"/"Read all"), and other scripts are per-user options.
 - Config comes from env vars and an optional `KEY=VALUE` file. English only (no i18n).
 - Clients stay compatible: Miniflux REST API `/v1/`, Fever `/fever/`, and Google Reader `/reader/api/0/`.
 - Trimmed integration set: Apprise, Discord, Gotify, Instapaper, Linkwarden, Matrix, Notion, Ntfy, Pushover, RSS-Bridge, Slack, Telegram, Webhook. Do not re-add the other upstream integrations.
@@ -93,7 +93,7 @@ To check API compatibility, start sss with a fresh database and `FETCHER_ALLOW_P
 TEST_MINIFLUX_BASE_URL=http://127.0.0.1:8097 TEST_MINIFLUX_ADMIN_USERNAME=admin TEST_MINIFLUX_ADMIN_PASSWORD=test123456 go test -count=1 ./internal/api/
 ```
 Three tests are expected to fail:
-- `TestGetUsersEndpointAsAdmin` and `TestCreateUserEndpointAsAdmin` assert upstream defaults (theme `light_serif`, gesture nav `tap`), while sss defaults to `dark_serif` with opt-in JS off.
+- `TestGetUsersEndpointAsAdmin` and `TestCreateUserEndpointAsAdmin` assert upstream defaults (theme `light_serif`, gesture nav `tap`), while sss defaults to `dark_serif` with the optional JS features off.
 - `TestGetCategoriesEndpoint` expects the default category `All`, which sss names `Uncategorized`.
 
 **Never run privileged containers or systemd-in-Docker on the dev workstation.** It has crashed the host session. Check the unit statically with `systemd-analyze --user verify` and `systemd-analyze --user security --offline=true`.
@@ -162,7 +162,7 @@ The user unit may be tested live, with the user's approval:
   - User Custom CSS/JS, `static/js/*` and `base.css` (e.g. `form[action$="/entry/status"]`) all depend on these selectors, on button labels (`"Mark as read"`/`"Mark as unread"`) and on form actions. Treat them as a public API. If you change one, update every consumer. The README no longer lists the selectors; this section is the reference.
 - **JS (`internal/ui/static/js/`):**
   - Plain ES2020 with no dependencies, loaded as `<script src defer>`.
-  - `app.js` (bfcache restore → reload) is always loaded for logged-in users; keep it tiny. Every other script is included only when its user setting is on (`pageAssets` in `handler.go`). `swipe.js` loads when entry swipe is on or gesture nav isn't `none`. `webauthn.js` loads only when the handler sets `data["webauthn"]=true` and `WEBAUTHN` is enabled.
+  - `app.js` is always loaded for logged-in users; keep it tiny. It reloads pages restored from the back/forward cache, and submits "Read page"/"Read all" with `fetch` so no stale list is left in history. "Read page" then `location.replace`s the current URL without its hash (a fresh load from the top). "Read all" on a feed or category `location.replace`s the form's `data-redirect` list (`/feeds`, `/categories`; keep it equal to the handler's redirect, which is the no-JS path; `TestMarkAllAsReadRedirectsToList` checks it). Don't use `history.back()` there: after "Go to top" the previous entry is the same list. Every other script is included only when its user setting is on (`pageAssets` in `handler.go`). `swipe.js` loads when entry swipe is on or gesture nav isn't `none`. `webauthn.js` loads only when the handler sets `data["webauthn"]=true` and `WEBAUTHN` is enabled.
   - Scripts reuse the existing forms: `fetch(form.action, {method: "POST", redirect: "manual"})`, treating `opaqueredirect` as success. Entry list items have no forms (sss keeps lists to feed, title, reading time and date), so read/star toggles there post to `<base>/entry/status` and `<base>/entry/star/{id}` built from `data-id`/`data-status`, with `<base>` derived from `document.currentScript.src`.
   - The CSP (`ui/middleware.go`, set per user) is `default-src 'self'`, `script-src 'self'`, `style-src 'self'` plus the user's external font hosts, and `img-src`/`media-src`/`frame-src *`. Trusted Types are enforced: the policy names `html` and `url` are allowed, but only `url` is created so far (`sw-register.js`). Any DOM sink a new script uses needs one of these policies.
 - **Themes:**

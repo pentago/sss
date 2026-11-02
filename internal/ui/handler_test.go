@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -180,6 +181,9 @@ func TestUpdateEntriesStatus(t *testing.T) {
 
 // Marking a feed or category as read lands on the fresh list, not back on the
 // now-empty entries page, whose stale twin a "back" would restore from cache.
+//
+// app.js sends "Read all" to the form's data-redirect without following the
+// redirect, so it must render and name the same list as the handler.
 func TestMarkAllAsReadRedirectsToList(t *testing.T) {
 	h, store := newAccountTestServer(t)
 	cookie := login(t, h)
@@ -188,18 +192,28 @@ func TestMarkAllAsReadRedirectsToList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tests := []struct{ path, referer, want string }{
-		{"/feed/1/mark-all-as-read", "http://example.com/feed/1/entries", "/feeds"},
-		{"/category/" + itoa(category.ID) + "/mark-all-as-read", "http://example.com/category/" + itoa(category.ID) + "/entries", "/categories"},
+	readAll := regexp.MustCompile(`<form method="post" action="([^"]*/mark-all-as-read)" data-redirect="([^"]*)">`)
+	tests := []struct{ page, want string }{
+		{"/feed/1/entries", "/feeds"},
+		{"/category/" + itoa(category.ID) + "/entries", "/categories"},
 	}
 	for _, tt := range tests {
-		r := httptest.NewRequest(http.MethodPost, tt.path, nil)
-		r.Header.Set("Referer", tt.referer)
+		r := httptest.NewRequest(http.MethodGet, tt.page, nil)
 		r.AddCookie(cookie)
 		w := httptest.NewRecorder()
 		h.ServeHTTP(w, r)
+		m := readAll.FindStringSubmatch(w.Body.String())
+		if w.Code != http.StatusOK || m == nil || m[2] != tt.want {
+			t.Fatalf("%s: got %d, Read all form %q, want 200 with data-redirect %q", tt.page, w.Code, m, tt.want)
+		}
+
+		r = httptest.NewRequest(http.MethodPost, m[1], nil)
+		r.Header.Set("Referer", "http://example.com"+tt.page)
+		r.AddCookie(cookie)
+		w = httptest.NewRecorder()
+		h.ServeHTTP(w, r)
 		if w.Code != http.StatusSeeOther || w.Header().Get("Location") != tt.want {
-			t.Errorf("%s: got %d %q, want 303 %q", tt.path, w.Code, w.Header().Get("Location"), tt.want)
+			t.Errorf("%s: got %d %q, want 303 %q", m[1], w.Code, w.Header().Get("Location"), tt.want)
 		}
 	}
 }
