@@ -246,7 +246,7 @@ func TestAddYoutubeVideoFromId(t *testing.T) {
 	}
 
 	for input, expected := range scenarios {
-		actual := addYoutubeVideoFromId(input)
+		actual := addYoutubeVideoFromID(input)
 		if actual != expected {
 			t.Errorf(`addYoutubeVideoFromId test failed for input "%s"`, input)
 			t.Errorf(`Expected: "%s"`, expected)
@@ -268,7 +268,7 @@ func TestAddYoutubeVideoFromIdWithCustomEmbedURL(t *testing.T) {
 	input := `Some content with youtube_id: "dQw4w9WgXcQ"`
 	expected := `<iframe width="650" height="350" frameborder="0" src="https://invidious.custom/embed/dQw4w9WgXcQ" allowfullscreen></iframe><br>Some content with youtube_id: "dQw4w9WgXcQ"`
 
-	actual := addYoutubeVideoFromId(input)
+	actual := addYoutubeVideoFromID(input)
 	if actual != expected {
 		t.Errorf(`addYoutubeVideoFromId with custom embed URL failed`)
 		t.Errorf(`Expected: "%s"`, expected)

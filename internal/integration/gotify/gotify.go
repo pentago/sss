@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package gotify sends new entry notifications to a Gotify server.
 package gotify
 
 import (

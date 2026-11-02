@@ -41,7 +41,7 @@ README's "Key differences" section lists more intentional changes; read it befor
   3. The processor order is fixed:
      1. filter
      2. urlcleaner
-     3. `RewriteEntryURL`
+     3. `rewrite.EntryURL`
      4. scraper, for new or forced entries when `feed.Crawler || user.GlobalCrawler`
      5. content rewrite
      6. re-filter, only if the scraper replaced the content
@@ -78,12 +78,13 @@ README's "Key differences" section lists more intentional changes; read it befor
 ```sh
 gofmt -l .                                  # must print nothing
 go vet ./...
+go run honnef.co/go/tools/cmd/staticcheck@v0.8.2 ./...   # config: staticcheck.conf
 go test -race ./...                         # CI runs with -race
 CGO_ENABLED=0 go build -o /tmp/sss .
 /tmp/sss -config-dump                       # effective config, secrets redacted
 docker build -t sss:ci . && docker run --rm sss:ci -version   # same as CI's docker job
 ```
-There is no golangci-lint, staticcheck, Makefile or CHANGELOG. The checks above are the whole of CI.
+There is no golangci-lint, Makefile or CHANGELOG. The checks above are the whole of CI. `staticcheck.conf` enables every check except ST1005, because user-facing and API error strings copy upstream's wording. Its version is pinned in `ci.yml` and here; Dependabot doesn't bump it.
 
 To run locally: `RUN_MIGRATIONS=1 CREATE_ADMIN=1 ADMIN_USERNAME=admin ADMIN_PASSWORD=test123456 LISTEN_ADDR=127.0.0.1:8097 DATABASE_PATH=/tmp/sss-dev.db /tmp/sss`
 
@@ -198,7 +199,7 @@ The user unit may be tested live, with the user's approval:
   - Drift in `Dockerfile.goreleaser` only shows up at release.
 - **systemd:** one user unit, `packaging/systemd/sss.service` (installed to `/usr/lib/systemd/user/`); there is no system unit. It uses `Type=notify` with `WatchdogSec`, `SystemCallFilter=@system-service ~@privileged`, `NoNewPrivileges` and `PrivateTmp`, and relies on XDG defaults for config and database. Don't add network restrictions: sss fetches arbitrary feeds and listens on `LISTEN_ADDR`.
 - **CI (`.github/workflows/ci.yml`):**
-  - Jobs: `test` (gofmt, vet, `go test -race`, build), `docker` (build + `-version`), and `publish`. `publish` runs after both, on main pushes only, and pushes a multi-arch `ghcr.io/…/sss` image tagged `dev` and `pr-<N>`, with a provenance attestation.
+  - Jobs: `test` (gofmt, vet, staticcheck, `go test -race`, build), `docker` (build + `-version`), and `publish`. `publish` runs after both, on main pushes only, and pushes a multi-arch `ghcr.io/…/sss` image tagged `dev` and `pr-<N>`, with a provenance attestation.
   - GitHub Actions are pinned as `owner/action@<commit-sha> # vX.Y.Z`.
   - `.github/dependabot.yml` updates Go modules weekly, Docker base images and actions monthly, grouped into one PR per ecosystem. Base images need explicit tags (`alpine:3.24`), or Dependabot can't bump them.
 - **Git:** work in git worktrees (`wt switch -c <branch>`, under `.worktrees/`), and don't commit unless asked.

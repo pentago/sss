@@ -10,12 +10,12 @@ import (
 
 // GetRefererForURL returns the referer for the given URL if it exists, otherwise an empty string.
 func GetRefererForURL(u string) string {
-	parsedUrl, err := url.Parse(u)
+	parsedURL, err := url.Parse(u)
 	if err != nil {
 		return ""
 	}
 
-	switch parsedUrl.Hostname() {
+	switch parsedURL.Hostname() {
 	case "appinn.com":
 		return "https://appinn.com"
 	case "bjp.org.cn":
@@ -35,11 +35,11 @@ func GetRefererForURL(u string) string {
 	}
 
 	switch {
-	case strings.HasSuffix(parsedUrl.Hostname(), ".cdninstagram.com"):
+	case strings.HasSuffix(parsedURL.Hostname(), ".cdninstagram.com"):
 		return "https://www.instagram.com"
-	case strings.HasSuffix(parsedUrl.Hostname(), ".moyu.im"):
+	case strings.HasSuffix(parsedURL.Hostname(), ".moyu.im"):
 		return "https://i.jandan.net"
-	case strings.HasSuffix(parsedUrl.Hostname(), ".sinaimg.cn"):
+	case strings.HasSuffix(parsedURL.Hostname(), ".sinaimg.cn"):
 		return "https://weibo.com"
 	}
 

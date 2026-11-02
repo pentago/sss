@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package telegrambot posts new entries to a Telegram chat.
 package telegrambot
 
 import (

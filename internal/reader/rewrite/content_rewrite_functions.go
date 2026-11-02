@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	youtubeIdRegex = regexp.MustCompile(`youtube_id"?\s*[:=]\s*"([a-zA-Z0-9_-]{11})"`)
+	youtubeIDRegex = regexp.MustCompile(`youtube_id"?\s*[:=]\s*"([a-zA-Z0-9_-]{11})"`)
 	textLinkRegex  = regexp.MustCompile(`(?mi)(\bhttps?:\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])`)
 )
 
@@ -102,11 +102,11 @@ func addMailtoSubject(entryContent string) string {
 }
 
 func addDynamicImage(entryContent string) string {
-	parserHtml, err := nethtml.ParseWithOptions(strings.NewReader(entryContent), nethtml.ParseOptionEnableScripting(false))
+	parserHTML, err := nethtml.ParseWithOptions(strings.NewReader(entryContent), nethtml.ParseOptionEnableScripting(false))
 	if err != nil {
 		return entryContent
 	}
-	doc := goquery.NewDocumentFromNode(parserHtml)
+	doc := goquery.NewDocumentFromNode(parserHTML)
 
 	// Ordered most preferred to least preferred.
 	candidateAttrs := [...]string{
@@ -309,8 +309,8 @@ func addYoutubeVideoUsingInvidiousPlayer(entryURL, entryContent string) string {
 	return entryContent
 }
 
-func addYoutubeVideoFromId(entryContent string) string {
-	matches := youtubeIdRegex.FindAllStringSubmatch(entryContent, -1)
+func addYoutubeVideoFromID(entryContent string) string {
+	matches := youtubeIDRegex.FindAllStringSubmatch(entryContent, -1)
 	if matches == nil {
 		return entryContent
 	}
@@ -426,11 +426,11 @@ func applyFuncOnTextContent(entryContent string, selector string, repl func(stri
 }
 
 func decodeBase64Content(entryContent string) string {
-	if ret, err := base64.StdEncoding.DecodeString(strings.TrimSpace(entryContent)); err != nil {
+	ret, err := base64.StdEncoding.DecodeString(strings.TrimSpace(entryContent))
+	if err != nil {
 		return entryContent
-	} else {
-		return html.EscapeString(string(ret))
 	}
+	return html.EscapeString(string(ret))
 }
 
 func addHackerNewsLinksUsing(entryContent, app string) string {
@@ -439,14 +439,14 @@ func addHackerNewsLinksUsing(entryContent, app string) string {
 		return entryContent
 	}
 
-	hn_prefix := "https://news.ycombinator.com/"
-	matches := doc.Find(`a[href^="` + hn_prefix + `"]`)
+	hnPrefix := "https://news.ycombinator.com/"
+	matches := doc.Find(`a[href^="` + hnPrefix + `"]`)
 
 	if matches.Length() > 0 {
 		matches.Each(func(i int, a *goquery.Selection) {
 			hrefAttr, _ := a.Attr("href")
 
-			hn_uri, err := url.Parse(hrefAttr)
+			hnURI, err := url.Parse(hrefAttr)
 			if err != nil {
 				return
 			}
@@ -454,7 +454,7 @@ func addHackerNewsLinksUsing(entryContent, app string) string {
 			switch app {
 			case "opener":
 				params := url.Values{}
-				params.Add("url", hn_uri.String())
+				params.Add("url", hnURI.String())
 
 				url := url.URL{
 					Scheme:   "opener",
@@ -463,13 +463,13 @@ func addHackerNewsLinksUsing(entryContent, app string) string {
 					RawQuery: params.Encode(),
 				}
 
-				open_with_opener := `<a href="` + url.String() + `">Open with Opener</a>`
-				a.Parent().AppendHtml(" " + open_with_opener)
+				openWithOpener := `<a href="` + url.String() + `">Open with Opener</a>`
+				a.Parent().AppendHtml(" " + openWithOpener)
 			case "hack":
-				url := strings.Replace(hn_uri.String(), hn_prefix, "hack://", 1)
+				url := strings.Replace(hnURI.String(), hnPrefix, "hack://", 1)
 
-				open_with_hack := `<a href="` + url + `">Open with HACK</a>`
-				a.Parent().AppendHtml(" " + open_with_hack)
+				openWithHack := `<a href="` + url + `">Open with HACK</a>`
+				a.Parent().AppendHtml(" " + openWithHack)
 			default:
 				slog.Warn("Unknown app provided for openHackerNewsLinksWith rewrite rule",
 					slog.String("app", app),
@@ -503,7 +503,7 @@ func removeTables(entryContent string) string {
 				break
 			}
 
-			innerHtml, err := loopElement.Html()
+			innerHTML, err := loopElement.Html()
 			if err != nil {
 				break
 			}
@@ -512,7 +512,7 @@ func removeTables(entryContent string) string {
 			// surrounding content keeps its original document order.
 			// Appending to the parent would move the unwrapped content to
 			// the end of the parent instead.
-			loopElement.ReplaceWithHtml(innerHtml)
+			loopElement.ReplaceWithHtml(innerHTML)
 		}
 	}
 

@@ -4,6 +4,7 @@
 package api
 
 import (
+	"context"
 	json_parser "encoding/json"
 	"errors"
 	"log/slog"
@@ -81,7 +82,8 @@ func (h *handler) refreshFeedHandler(w http.ResponseWriter, r *http.Request) {
 	// force=true mirrors the web UI's forced refresh: it bypasses the HTTP cache
 	// and reprocesses (and re-scrapes) entries that are already stored.
 	forceRefresh := request.QueryBoolParam(r, "force", false)
-	localizedError := feedHandler.RefreshFeed(r.Context(), h.store, userID, feedID, forceRefresh)
+	// A client disconnect must not abort the refresh.
+	localizedError := feedHandler.RefreshFeed(context.WithoutCancel(r.Context()), h.store, userID, feedID, forceRefresh)
 	if localizedError != nil {
 		response.JSONServerError(w, r, localizedError)
 		return

@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package ntfy sends new entry notifications to an ntfy server.
 package ntfy
 
 import (
@@ -18,20 +19,20 @@ const defaultNtfyURL = "https://ntfy.sh"
 
 // Client is a ntfy API client.
 type Client struct {
-	ntfyURL, ntfyTopic, ntfyApiToken, ntfyUsername, ntfyPassword, ntfyIconURL string
+	ntfyURL, ntfyTopic, ntfyAPIToken, ntfyUsername, ntfyPassword, ntfyIconURL string
 	ntfyInternalLinks                                                         bool
 	ntfyPriority                                                              int
 }
 
 // NewClient returns a ntfy client.
-func NewClient(ntfyURL, ntfyTopic, ntfyApiToken, ntfyUsername, ntfyPassword, ntfyIconURL string, ntfyInternalLinks bool, ntfyPriority int) *Client {
+func NewClient(ntfyURL, ntfyTopic, ntfyAPIToken, ntfyUsername, ntfyPassword, ntfyIconURL string, ntfyInternalLinks bool, ntfyPriority int) *Client {
 	if ntfyURL == "" {
 		ntfyURL = defaultNtfyURL
 	}
 	return &Client{
 		ntfyURL:           ntfyURL,
 		ntfyTopic:         ntfyTopic,
-		ntfyApiToken:      ntfyApiToken,
+		ntfyAPIToken:      ntfyAPIToken,
 		ntfyUsername:      ntfyUsername,
 		ntfyPassword:      ntfyPassword,
 		ntfyIconURL:       ntfyIconURL,
@@ -86,8 +87,8 @@ func (c *Client) makeRequest(payload any) error {
 		WithJSON(payload)
 
 	// See https://docs.ntfy.sh/publish/#access-tokens
-	if c.ntfyApiToken != "" {
-		request = request.WithHeader("Authorization", "Bearer "+c.ntfyApiToken)
+	if c.ntfyAPIToken != "" {
+		request = request.WithHeader("Authorization", "Bearer "+c.ntfyAPIToken)
 	}
 
 	// See https://docs.ntfy.sh/publish/#username-password
@@ -97,7 +98,7 @@ func (c *Client) makeRequest(payload any) error {
 
 	response, err := request.Do()
 	if err != nil {
-		return fmt.Errorf("ntfy: unable to send request: %v", err)
+		return fmt.Errorf("ntfy: unable to send request: %w", err)
 	}
 	defer response.Body.Close()
 

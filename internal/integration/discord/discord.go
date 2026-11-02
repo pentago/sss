@@ -1,8 +1,9 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Discord Webhooks documentation: https://discord.com/developers/docs/resources/webhook
-
+// Package discord sends new entry notifications to Discord webhooks.
+//
+// Webhooks documentation: https://discord.com/developers/docs/resources/webhook
 package discord
 
 import (

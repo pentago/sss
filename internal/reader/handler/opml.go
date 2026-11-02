@@ -54,7 +54,7 @@ func ImportOPML(store *storage.Storage, userID int64, r io.Reader) error {
 			KeeplistRules:               feed.KeeplistRules,
 			BlockFilterEntryRules:       feed.BlockFilterEntryRules,
 			KeepFilterEntryRules:        feed.KeepFilterEntryRules,
-			UrlRewriteRules:             feed.UrlRewriteRules,
+			URLRewriteRules:             feed.URLRewriteRules,
 		}); err != nil {
 			return fmt.Errorf("Invalid feed settings for %q: %w", feed.FeedURL, err)
 		}

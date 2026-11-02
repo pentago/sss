@@ -13,6 +13,7 @@ import (
 // RuleErrorKind classifies rewrite rule validation errors.
 type RuleErrorKind int
 
+// Rule error kinds returned by rewrite rule validation.
 const (
 	RuleErrLexical RuleErrorKind = iota
 	RuleErrUnquote

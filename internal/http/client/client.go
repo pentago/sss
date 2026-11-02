@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package client provides an HTTP client for calling third-party JSON APIs.
 package client
 
 import (
@@ -76,8 +77,8 @@ func NewClientWithOptions(opts Options) *http.Client {
 	}
 }
 
-// requestBuilder builds and executes HTTP requests with the builder pattern.
-type requestBuilder struct {
+// RequestBuilder builds and executes HTTP requests with the builder pattern.
+type RequestBuilder struct {
 	err      error
 	endpoint string
 	method   string
@@ -93,8 +94,8 @@ type basicAuth struct {
 }
 
 // NewRequestBuilder creates a new request builder for the given endpoint.
-func NewRequestBuilder(endpoint string) *requestBuilder {
-	return &requestBuilder{
+func NewRequestBuilder(endpoint string) *RequestBuilder {
+	return &RequestBuilder{
 		endpoint: endpoint,
 		method:   http.MethodGet,
 		headers:  make(http.Header),
@@ -102,31 +103,31 @@ func NewRequestBuilder(endpoint string) *requestBuilder {
 }
 
 // WithMethod sets the HTTP method.
-func (r *requestBuilder) WithMethod(method string) *requestBuilder {
+func (r *RequestBuilder) WithMethod(method string) *RequestBuilder {
 	r.method = method
 	return r
 }
 
 // WithHeader sets a header value.
-func (r *requestBuilder) WithHeader(key, value string) *requestBuilder {
+func (r *RequestBuilder) WithHeader(key, value string) *RequestBuilder {
 	r.headers.Set(key, value)
 	return r
 }
 
 // WithBasicAuth sets HTTP basic authentication credentials.
-func (r *requestBuilder) WithBasicAuth(username, password string) *requestBuilder {
+func (r *RequestBuilder) WithBasicAuth(username, password string) *RequestBuilder {
 	r.auth = &basicAuth{username: username, password: password}
 	return r
 }
 
 // WithTimeout overrides the default request timeout.
-func (r *requestBuilder) WithTimeout(timeout time.Duration) *requestBuilder {
+func (r *RequestBuilder) WithTimeout(timeout time.Duration) *RequestBuilder {
 	r.timeout = timeout
 	return r
 }
 
 // WithJSON marshals payload as JSON, sets the body and Content-Type.
-func (r *requestBuilder) WithJSON(payload any) *requestBuilder {
+func (r *RequestBuilder) WithJSON(payload any) *RequestBuilder {
 	requestBody, err := json.Marshal(payload)
 	if err != nil {
 		r.err = fmt.Errorf("unable to encode request body: %w", err)
@@ -139,7 +140,7 @@ func (r *requestBuilder) WithJSON(payload any) *requestBuilder {
 // WithJSONBody sets an already-marshaled JSON body and the Content-Type.
 // It is useful when the caller needs the encoded payload for another
 // purpose (e.g. computing a signature) to avoid marshaling it twice.
-func (r *requestBuilder) WithJSONBody(body []byte) *requestBuilder {
+func (r *RequestBuilder) WithJSONBody(body []byte) *RequestBuilder {
 	r.body = bytes.NewReader(body)
 	r.headers.Set("Content-Type", "application/json")
 	return r
@@ -149,7 +150,7 @@ func (r *requestBuilder) WithJSONBody(body []byte) *requestBuilder {
 //
 // Private networks are blocked unless explicitly allowed through the
 // INTEGRATION_ALLOW_PRIVATE_NETWORKS option.
-func (r *requestBuilder) Do() (*http.Response, error) {
+func (r *RequestBuilder) Do() (*http.Response, error) {
 	if r.err != nil {
 		return nil, r.err
 	}

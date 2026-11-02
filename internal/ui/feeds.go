@@ -4,6 +4,7 @@
 package ui
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -70,7 +71,8 @@ func (h *handler) refreshFeeds(w http.ResponseWriter, r *http.Request, categoryI
 
 func (h *handler) refreshFeed(w http.ResponseWriter, r *http.Request) {
 	feedID := request.RouteInt64Param(r, "feedID")
-	if err := feedHandler.RefreshFeed(r.Context(), h.store, request.UserID(r), feedID, false); err != nil {
+	// A client disconnect must not abort the refresh.
+	if err := feedHandler.RefreshFeed(context.WithoutCancel(r.Context()), h.store, request.UserID(r), feedID, false); err != nil {
 		slog.Warn("Unable to refresh feed", slog.Int64("user_id", request.UserID(r)), slog.Int64("feed_id", feedID), slog.Any("error", err))
 		request.WebSession(r).SetErrorMessage(err.Error())
 	}
@@ -162,7 +164,7 @@ func (h *handler) updateFeed(w http.ResponseWriter, r *http.Request) {
 		KeeplistRules:         model.OptionalString(f.Get("keeplist_rules")),
 		ScraperRules:          model.OptionalString(f.Get("scraper_rules")),
 		RewriteRules:          model.OptionalString(f.Get("rewrite_rules")),
-		UrlRewriteRules:       model.OptionalString(f.Get("urlrewrite_rules")),
+		URLRewriteRules:       model.OptionalString(f.Get("urlrewrite_rules")),
 		ProxyURL:              model.OptionalString(f.Get("proxy_url")),
 		BlockFilterEntryRules: model.OptionalString(f.Get("block_filter_entry_rules")),
 		KeepFilterEntryRules:  model.OptionalString(f.Get("keep_filter_entry_rules")),
@@ -175,7 +177,7 @@ func (h *handler) updateFeed(w http.ResponseWriter, r *http.Request) {
 	feed.WithCategoryID(categoryID)
 	feed.ScraperRules = f.Get("scraper_rules")
 	feed.RewriteRules = f.Get("rewrite_rules")
-	feed.UrlRewriteRules = f.Get("urlrewrite_rules")
+	feed.URLRewriteRules = f.Get("urlrewrite_rules")
 	feed.BlocklistRules = f.Get("blocklist_rules")
 	feed.KeeplistRules = f.Get("keeplist_rules")
 	feed.BlockFilterEntryRules = f.Get("block_filter_entry_rules")

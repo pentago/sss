@@ -23,6 +23,8 @@ func NewClient(matrixBaseURL string) *Client {
 	return &Client{matrixBaseURL: matrixBaseURL}
 }
 
+// DiscoverEndpoints fetches the homeserver URL from the server's .well-known/matrix/client document.
+//
 // Specs: https://spec.matrix.org/v1.8/client-server-api/#getwell-knownmatrixclient
 func (c *Client) DiscoverEndpoints() (*DiscoveryEndpointResponse, error) {
 	endpointURL, err := url.JoinPath(c.matrixBaseURL, "/.well-known/matrix/client")
@@ -34,7 +36,7 @@ func (c *Client) DiscoverEndpoints() (*DiscoveryEndpointResponse, error) {
 		WithHeader("Accept", "application/json").
 		Do()
 	if err != nil {
-		return nil, fmt.Errorf("matrix: unable to send request: %v", err)
+		return nil, fmt.Errorf("matrix: unable to send request: %w", err)
 	}
 	defer response.Body.Close()
 
@@ -50,7 +52,9 @@ func (c *Client) DiscoverEndpoints() (*DiscoveryEndpointResponse, error) {
 	return &discoveryEndpointResponse, nil
 }
 
-// Specs https://spec.matrix.org/v1.8/client-server-api/#post_matrixclientv3login
+// Login authenticates with a username and password and returns the access token response.
+//
+// Specs: https://spec.matrix.org/v1.8/client-server-api/#post_matrixclientv3login
 func (c *Client) Login(homeServerURL, matrixUsername, matrixPassword string) (*LoginResponse, error) {
 	endpointURL, err := url.JoinPath(homeServerURL, "/_matrix/client/v3/login")
 	if err != nil {
@@ -72,7 +76,7 @@ func (c *Client) Login(homeServerURL, matrixUsername, matrixPassword string) (*L
 		WithJSON(loginRequest).
 		Do()
 	if err != nil {
-		return nil, fmt.Errorf("matrix: unable to send request: %v", err)
+		return nil, fmt.Errorf("matrix: unable to send request: %w", err)
 	}
 	defer response.Body.Close()
 
@@ -88,7 +92,9 @@ func (c *Client) Login(homeServerURL, matrixUsername, matrixPassword string) (*L
 	return &loginResponse, nil
 }
 
-// Specs https://spec.matrix.org/v1.8/client-server-api/#put_matrixclientv3roomsroomidsendeventtypetxnid
+// SendFormattedTextMessage posts a message with plain and HTML bodies to a room.
+//
+// Specs: https://spec.matrix.org/v1.8/client-server-api/#put_matrixclientv3roomsroomidsendeventtypetxnid
 func (c *Client) SendFormattedTextMessage(homeServerURL, accessToken, roomID, textMessage, formattedMessage string) error {
 	txnID := crypto.GenerateRandomStringHex(10)
 	endpointURL, err := url.JoinPath(homeServerURL, "/_matrix/client/v3/rooms/", roomID, "/send/m.room.message/", txnID)
@@ -110,7 +116,7 @@ func (c *Client) SendFormattedTextMessage(homeServerURL, accessToken, roomID, te
 		WithJSON(messageEvent).
 		Do()
 	if err != nil {
-		return fmt.Errorf("matrix: unable to send request: %v", err)
+		return fmt.Errorf("matrix: unable to send request: %w", err)
 	}
 	defer response.Body.Close()
 

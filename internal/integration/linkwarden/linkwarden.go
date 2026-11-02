@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package linkwarden saves entries to Linkwarden.
 package linkwarden
 
 import (
@@ -43,7 +44,7 @@ func (c *Client) CreateBookmark(entryURL, entryTitle string) error {
 
 	apiEndpoint, err := urllib.JoinBaseURLAndPath(c.baseURL, "/api/v1/links")
 	if err != nil {
-		return fmt.Errorf(`linkwarden: invalid API endpoint: %v`, err)
+		return fmt.Errorf(`linkwarden: invalid API endpoint: %w`, err)
 	}
 
 	payload := linkwardenRequest{
@@ -68,7 +69,7 @@ func (c *Client) CreateBookmark(entryURL, entryTitle string) error {
 	if response.StatusCode >= 400 {
 		responseBody, err := io.ReadAll(response.Body)
 		if err != nil {
-			return fmt.Errorf("linkwarden: unable to read response body: %v", err)
+			return fmt.Errorf("linkwarden: unable to read response body: %w", err)
 		}
 
 		return fmt.Errorf("linkwarden: unable to create link: status=%d body=%s", response.StatusCode, string(responseBody))

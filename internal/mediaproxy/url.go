@@ -46,8 +46,8 @@ func ProxifyAbsoluteURL(mediaURL string) string {
 	}
 
 	// Note that the proxyified URL is relative to the root URL.
-	proxifiedUrl := ProxifyRelativeURL(mediaURL)
-	absoluteURL, err := url.JoinPath(config.Opts.RootURL, proxifiedUrl)
+	proxifiedURL := ProxifyRelativeURL(mediaURL)
+	absoluteURL, err := url.JoinPath(config.Opts.RootURL, proxifiedURL)
 	if err != nil {
 		return mediaURL
 	}

@@ -49,7 +49,7 @@ func (h *handler) discoverSubscriptionsHandler(w http.ResponseWriter, r *http.Re
 		IgnoreTLSErrors(subscriptionDiscoveryRequest.AllowSelfSignedCertificates).
 		DisableHTTP2(subscriptionDiscoveryRequest.DisableHTTP2)
 
-	subscriptions, localizedError := subscription.NewSubscriptionFinder(requestBuilder).FindSubscriptions(
+	subscriptions, localizedError := subscription.NewFinder(requestBuilder).FindSubscriptions(
 		subscriptionDiscoveryRequest.URL,
 		rssbridgeURL,
 		rssbridgeToken,

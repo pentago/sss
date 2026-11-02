@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package sanitizer strips unsafe markup from HTML content.
 package sanitizer
 
 import (
@@ -156,13 +157,13 @@ var (
 	}
 )
 
-// SanitizerOptions holds options for the HTML sanitizer.
-type SanitizerOptions struct {
+// Options holds options for the HTML sanitizer.
+type Options struct {
 	OpenLinksInNewTab bool
 }
 
 // SanitizeHTML takes raw HTML input and removes any disallowed tags and attributes.
-func SanitizeHTML(baseURL, rawHTML string, sanitizerOptions *SanitizerOptions) string {
+func SanitizeHTML(baseURL, rawHTML string, sanitizerOptions *Options) string {
 	var buffer strings.Builder
 
 	// Educated guess about how big the sanitized HTML will be,
@@ -190,9 +191,9 @@ func SanitizeHTML(baseURL, rawHTML string, sanitizerOptions *SanitizerOptions) s
 	body := doc.FirstChild.FirstChild.NextSibling
 
 	// Errors are a non-issue, so they're handled in filterAndRenderHTML
-	parsedBaseUrl, _ := url.Parse(baseURL)
+	parsedBaseURL, _ := url.Parse(baseURL)
 	for c := body.FirstChild; c != nil; c = c.NextSibling {
-		if err := filterAndRenderHTML(&buffer, c, parsedBaseUrl, sanitizerOptions); err != nil {
+		if err := filterAndRenderHTML(&buffer, c, parsedBaseURL, sanitizerOptions); err != nil {
 			return ""
 		}
 	}
@@ -235,7 +236,7 @@ func findAllowedIframeSourceDomain(iframeSourceURL string) (string, bool) {
 	return "", false
 }
 
-func filterAndRenderHTML(buf *strings.Builder, n *html.Node, parsedBaseUrl *url.URL, sanitizerOptions *SanitizerOptions) error {
+func filterAndRenderHTML(buf *strings.Builder, n *html.Node, parsedBaseURL *url.URL, sanitizerOptions *Options) error {
 	if n == nil {
 		return nil
 	}
@@ -252,17 +253,17 @@ func filterAndRenderHTML(buf *strings.Builder, n *html.Node, parsedBaseUrl *url.
 		_, ok := allowedHTMLTagsAndAttributes[tag]
 		if !ok {
 			// The tag isn't allowed, but we're still interested in its content
-			return filterAndRenderHTMLChildren(buf, n, parsedBaseUrl, sanitizerOptions)
+			return filterAndRenderHTMLChildren(buf, n, parsedBaseURL, sanitizerOptions)
 		}
 
-		htmlAttributes, hasAllRequiredAttributes := sanitizeAttributes(parsedBaseUrl, tag, n.Attr, sanitizerOptions)
+		htmlAttributes, hasAllRequiredAttributes := sanitizeAttributes(parsedBaseURL, tag, n.Attr, sanitizerOptions)
 		if !hasAllRequiredAttributes {
 			if tag == "iframe" {
 				// A blocked iframe should not have its inner content rendered.
 				return nil
 			}
 			// The tag doesn't have every required attributes but we're still interested in its content
-			return filterAndRenderHTMLChildren(buf, n, parsedBaseUrl, sanitizerOptions)
+			return filterAndRenderHTMLChildren(buf, n, parsedBaseURL, sanitizerOptions)
 		}
 		buf.WriteByte('<')
 		buf.WriteString(n.Data)
@@ -278,7 +279,7 @@ func filterAndRenderHTML(buf *strings.Builder, n *html.Node, parsedBaseUrl *url.
 
 		if tag != "iframe" {
 			// iframes aren't allowed to have child nodes.
-			filterAndRenderHTMLChildren(buf, n, parsedBaseUrl, sanitizerOptions)
+			filterAndRenderHTMLChildren(buf, n, parsedBaseURL, sanitizerOptions)
 		}
 
 		buf.WriteString("</")
@@ -289,9 +290,9 @@ func filterAndRenderHTML(buf *strings.Builder, n *html.Node, parsedBaseUrl *url.
 	return nil
 }
 
-func filterAndRenderHTMLChildren(buf *strings.Builder, n *html.Node, parsedBaseUrl *url.URL, sanitizerOptions *SanitizerOptions) error {
+func filterAndRenderHTMLChildren(buf *strings.Builder, n *html.Node, parsedBaseURL *url.URL, sanitizerOptions *Options) error {
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		if err := filterAndRenderHTML(buf, c, parsedBaseUrl, sanitizerOptions); err != nil {
+		if err := filterAndRenderHTML(buf, c, parsedBaseURL, sanitizerOptions); err != nil {
 			return err
 		}
 	}
@@ -454,7 +455,7 @@ func trackAttributes(s *mandatoryAttributesStruct, attributeName string) {
 	}
 }
 
-func sanitizeAttributes(parsedBaseUrl *url.URL, tagName string, attributes []html.Attribute, sanitizerOptions *SanitizerOptions) (string, bool) {
+func sanitizeAttributes(parsedBaseURL *url.URL, tagName string, attributes []html.Attribute, sanitizerOptions *Options) (string, bool) {
 	var htmlAttrs strings.Builder
 	// Rough estimate: most attributes are short; ~24 bytes (key + ="value") is
 	// a reasonable starting point. Avoids early grows for typical elements.
@@ -506,14 +507,14 @@ func sanitizeAttributes(parsedBaseUrl *url.URL, tagName string, attributes []htm
 					continue
 				}
 			case "srcset":
-				value = sanitizeSrcsetAttr(parsedBaseUrl, value)
+				value = sanitizeSrcsetAttr(parsedBaseURL, value)
 				if value == "" {
 					continue
 				}
 			}
 		case "source":
 			if attribute.Key == "srcset" {
-				value = sanitizeSrcsetAttr(parsedBaseUrl, value)
+				value = sanitizeSrcsetAttr(parsedBaseURL, value)
 				if value == "" {
 					continue
 				}
@@ -544,7 +545,7 @@ func sanitizeAttributes(parsedBaseUrl *url.URL, tagName string, attributes []htm
 				}
 
 				var err error
-				value, err = urllib.ResolveToAbsoluteURLWithParsedBaseURL(parsedBaseUrl, value)
+				value, err = urllib.ResolveToAbsoluteURLWithParsedBaseURL(parsedBaseURL, value)
 				if err != nil {
 					continue
 				}
@@ -556,9 +557,9 @@ func sanitizeAttributes(parsedBaseUrl *url.URL, tagName string, attributes []htm
 				// Skip the parse + RemoveTrackingParameters round trip when there
 				// is no query string to clean, which is common for <img>.
 				if strings.IndexByte(value, '?') >= 0 {
-					parsedValueUrl, _ := url.Parse(value)
+					parsedValueURL, _ := url.Parse(value)
 					// TODO use feedURL instead of baseURL twice.
-					if cleanedURL, err := urlcleaner.RemoveTrackingParameters(parsedBaseUrl, parsedBaseUrl, parsedValueUrl); err == nil {
+					if cleanedURL, err := urlcleaner.RemoveTrackingParameters(parsedBaseURL, parsedBaseURL, parsedValueURL); err == nil {
 						value = cleanedURL
 					}
 				}
@@ -623,7 +624,7 @@ func sanitizeSrcsetAttr(parsedBaseURL *url.URL, value string) string {
 		sanitizedCandidates = append(sanitizedCandidates, imageCandidate)
 	}
 
-	return imageCandidates(sanitizedCandidates).String()
+	return ImageCandidates(sanitizedCandidates).String()
 }
 
 func shouldIgnoreTag(n *html.Node, tag string) bool {

@@ -70,7 +70,7 @@ func applyRequest(feed *model.Feed, userID int64, req *model.FeedCreationRequest
 	feed.KeeplistRules = req.KeeplistRules
 	feed.BlockFilterEntryRules = req.BlockFilterEntryRules
 	feed.KeepFilterEntryRules = req.KeepFilterEntryRules
-	feed.UrlRewriteRules = req.UrlRewriteRules
+	feed.URLRewriteRules = req.URLRewriteRules
 	feed.ProxyURL = req.ProxyURL
 	feed.WithCategoryID(req.CategoryID)
 }
@@ -184,7 +184,7 @@ func RefreshFeed(ctx context.Context, store *storage.Storage, userID, feedID int
 	feed.CheckedNow()
 	feed.ScheduleNextCheck(weeklyEntryCount, 0)
 
-	rb := requestBuilder(feed, user)
+	rb := requestBuilder(feed, user).WithContext(ctx)
 	ignoreHTTPCache := feed.IgnoreHTTPCache || forceRefresh
 	if !ignoreHTTPCache {
 		rb = rb.WithETag(feed.EtagHeader).WithLastModified(feed.LastModifiedHeader)
@@ -203,11 +203,11 @@ func RefreshFeed(ctx context.Context, store *storage.Storage, userID, feedID int
 
 	if err := rh.LocalizedError(); err != nil {
 		slog.Warn("Unable to fetch feed", slog.Int64("user_id", userID), slog.Int64("feed_id", feedID), slog.String("feed_url", feed.FeedURL), slog.Any("error", err))
-		return recordError(store, feed, err)
+		return recordError(ctx, store, feed, err)
 	}
 
 	if store.AnotherFeedURLExists(userID, feed.ID, rh.EffectiveURL()) {
-		return recordError(store, feed, ErrDuplicatedFeed)
+		return recordError(ctx, store, feed, ErrDuplicatedFeed)
 	}
 
 	if ignoreHTTPCache || rh.IsModified(feed.EtagHeader, feed.LastModifiedHeader) {
@@ -216,14 +216,14 @@ func RefreshFeed(ctx context.Context, store *storage.Storage, userID, feedID int
 		region.End()
 		if err != nil {
 			slog.Warn("Unable to fetch feed", slog.String("feed_url", feed.FeedURL), slog.Any("error", err))
-			return recordError(store, feed, err)
+			return recordError(ctx, store, feed, err)
 		}
 
 		region = trace.StartRegion(ctx, "parse")
 		updated, err := parser.ParseFeed(rh.EffectiveURL(), bytes.NewReader(body))
 		region.End()
 		if err != nil {
-			return recordError(store, feed, parseError(err))
+			return recordError(ctx, store, feed, parseError(err))
 		}
 
 		// Use the RSS TTL, Cache-Control max-age or Expires header when longer than the scheduler interval.
@@ -241,7 +241,7 @@ func RefreshFeed(ctx context.Context, store *storage.Storage, userID, feedID int
 		newEntries, err := store.RefreshFeedEntries(feed.UserID, feed.ID, feed.Entries, updateExisting)
 		region.End()
 		if err != nil {
-			return recordError(store, feed, databaseError(err))
+			return recordError(ctx, store, feed, databaseError(err))
 		}
 
 		if integ, err := store.Integration(userID); err != nil {
@@ -266,13 +266,17 @@ func RefreshFeed(ctx context.Context, store *storage.Storage, userID, feedID int
 
 	feed.ResetErrorCounter()
 	if err := store.UpdateFeed(feed); err != nil {
-		return recordError(store, feed, databaseError(err))
+		return recordError(ctx, store, feed, databaseError(err))
 	}
 	return nil
 }
 
-// recordError stores err as the feed's parsing error and returns it.
-func recordError(store *storage.Storage, feed *model.Feed, err error) error {
+// recordError stores err as the feed's parsing error and returns it. A cancelled
+// refresh (shutdown) is not the feed's fault, so nothing is stored then.
+func recordError(ctx context.Context, store *storage.Storage, feed *model.Feed, err error) error {
+	if ctx.Err() != nil {
+		return err
+	}
 	feed.WithErrorMessage(err.Error())
 	if storeErr := store.UpdateFeedError(feed); storeErr != nil {
 		slog.Error("Unable to update feed error", slog.Int64("feed_id", feed.ID), slog.Any("error", storeErr))

@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package instapaper saves entries to Instapaper.
 package instapaper
 
 import (
@@ -38,7 +39,7 @@ func (c *Client) AddURL(entryURL, entryTitle string) error {
 		WithBasicAuth(c.username, c.password).
 		Do()
 	if err != nil {
-		return fmt.Errorf("instapaper: unable to send request: %v", err)
+		return fmt.Errorf("instapaper: unable to send request: %w", err)
 	}
 	defer response.Body.Close()
 

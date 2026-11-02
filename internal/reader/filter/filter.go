@@ -20,7 +20,6 @@
 // The provided regex should use the RE2 syntax.
 // The order of the rules matters as the processor stops on the first match for both Block and Keep rules.
 // Invalid rules are ignored.
-
 package filter
 
 import (
@@ -41,7 +40,8 @@ type filterRule struct {
 	Value string
 }
 
-type filterRules []filterRule
+// Rules is an ordered list of parsed filter rules.
+type Rules []filterRule
 
 const maxCachedRegexes = 1024
 
@@ -71,8 +71,9 @@ func cachedRegex(pattern string) *regexp.Regexp {
 	return re
 }
 
-func ParseRules(userRules, feedRules string) filterRules {
-	rules := make(filterRules, 0)
+// ParseRules parses user and feed rules, one "Type=Value" per line, skipping malformed lines.
+func ParseRules(userRules, feedRules string) Rules {
+	rules := make(Rules, 0)
 	for _, rulesText := range []string{userRules, feedRules} {
 		for line := range strings.SplitSeq(strings.TrimSpace(rulesText), "\n") {
 			if valid, filterRule := parseRule(line); valid {
@@ -95,7 +96,9 @@ func parseRule(userDefinedRule string) (bool, filterRule) {
 	}
 }
 
-func IsBlockedEntry(blockRules filterRules, allowRules filterRules, feed *model.Feed, entry *model.Entry) bool {
+// IsBlockedEntry reports whether entry should be dropped: it matches a block rule or the feed's
+// blocklist, or allow rules (else the feed's keeplist) exist and it matches none of them.
+func IsBlockedEntry(blockRules Rules, allowRules Rules, feed *model.Feed, entry *model.Entry) bool {
 	if matchesEntryFilterRules(blockRules, entry) {
 		return true
 	}
@@ -149,7 +152,7 @@ func matchesEntryRegexRules(regexPattern string, entry *model.Entry) (bool, bool
 	return false, true // Pattern is valid but doesn't match
 }
 
-func matchesEntryFilterRules(rules filterRules, entry *model.Entry) bool {
+func matchesEntryFilterRules(rules Rules, entry *model.Entry) bool {
 	for _, rule := range rules {
 		if matchesRule(rule, entry) {
 			return true

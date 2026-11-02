@@ -14,14 +14,14 @@ import (
 var customReplaceRuleRegex = regexp.MustCompile(`^rewrite\("([^"]+)"\|"([^"]+)"\)$`)
 
 // IsValidURLRewriteRules reports whether the given URL rewrite rules string is
-// something RewriteEntryURL can actually apply. An empty or whitespace-only
+// something EntryURL can actually apply. An empty or whitespace-only
 // string is valid and means "no rewriting".
 //
 // The only supported form is rewrite("search-regex"|"replacement"), and the
 // search term must be a compilable regular expression. Anything else — a bare
 // regex, an unknown function name, or a malformed rewrite() call — is rejected
 // so it is caught at save time instead of being silently ignored during feed
-// refresh (RewriteEntryURL just logs a debug line and returns the URL
+// refresh (EntryURL just logs a debug line and returns the URL
 // unchanged for rules it cannot parse).
 func IsValidURLRewriteRules(rules string) bool {
 	if strings.TrimSpace(rules) == "" {
@@ -37,19 +37,21 @@ func IsValidURLRewriteRules(rules string) bool {
 	return err == nil
 }
 
-func RewriteEntryURL(feed *model.Feed, entry *model.Entry) string {
-	if feed.UrlRewriteRules == "" {
+// EntryURL returns entry.URL rewritten by the feed's URL rewrite rule, or
+// unchanged when the feed has no valid rule.
+func EntryURL(feed *model.Feed, entry *model.Entry) string {
+	if feed.URLRewriteRules == "" {
 		return entry.URL
 	}
 
-	parts := customReplaceRuleRegex.FindStringSubmatch(feed.UrlRewriteRules)
+	parts := customReplaceRuleRegex.FindStringSubmatch(feed.URLRewriteRules)
 	if len(parts) != 3 {
 		return entry.URL
 	}
 	re, err := regexp.Compile(parts[1])
 	if err != nil {
 		slog.Error("Failed on regexp compilation",
-			slog.String("url_rewrite_rules", feed.UrlRewriteRules),
+			slog.String("url_rewrite_rules", feed.URLRewriteRules),
 			slog.Any("error", err),
 		)
 		return entry.URL

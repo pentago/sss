@@ -47,7 +47,7 @@ func ScrapeWebsite(requestBuilder *fetcher.RequestBuilder, pageURL, rules string
 	)
 
 	if err != nil {
-		return "", "", fmt.Errorf("scraper: unable to read HTML document with charset reader: %v", err)
+		return "", "", fmt.Errorf("scraper: unable to read HTML document with charset reader: %w", err)
 	}
 
 	// Custom rules are ignored when the entry URL redirects to another domain.

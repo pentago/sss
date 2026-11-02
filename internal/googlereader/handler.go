@@ -219,7 +219,7 @@ func (h *handler) quickAdd(w http.ResponseWriter, r *http.Request) {
 		rssBridgeURL, rssBridgeToken = intg.RSSBridgeURL, intg.RSSBridgeToken
 	}
 
-	subscriptions, err := subscription.NewSubscriptionFinder(requestBuilder).FindSubscriptions(feedURL, rssBridgeURL, rssBridgeToken)
+	subscriptions, err := subscription.NewFinder(requestBuilder).FindSubscriptions(feedURL, rssBridgeURL, rssBridgeToken)
 	if err != nil {
 		response.JSONServerError(w, r, err)
 		return

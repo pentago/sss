@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package model defines the data structures shared across sss.
 package model
 
 // Number is a numeric type accepted by OptionalNumber.

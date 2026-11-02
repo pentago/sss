@@ -90,7 +90,7 @@ func fetchYouTubeWatchTime(websiteURL string) (int, error) {
 
 	parsedDuration, err := parseISO8601Duration(duration)
 	if err != nil {
-		return 0, fmt.Errorf("unable to parse iso duration %s: %v", duration, err)
+		return 0, fmt.Errorf("unable to parse iso duration %s: %w", duration, err)
 	}
 	return int(parsedDuration.Minutes()), nil
 }
@@ -149,7 +149,7 @@ func fetchYouTubeWatchTimeFromAPIInBulk(videoIDs []string) (map[string]time.Dura
 		} `json:"items"`
 	}
 	if err := json.NewDecoder(responseHandler.Body(config.Opts.HTTPClientMaxBodySize)).Decode(&videos); err != nil {
-		return nil, fmt.Errorf("youtube: unable to decode JSON: %v", err)
+		return nil, fmt.Errorf("youtube: unable to decode JSON: %w", err)
 	}
 
 	watchTimeMap := make(map[string]time.Duration, len(videos.Items))

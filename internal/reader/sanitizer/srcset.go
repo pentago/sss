@@ -14,9 +14,10 @@ type imageCandidate struct {
 	Descriptor string
 }
 
-type imageCandidates []*imageCandidate
+// ImageCandidates is a parsed srcset attribute value.
+type ImageCandidates []*imageCandidate
 
-func (c imageCandidates) String() string {
+func (c ImageCandidates) String() string {
 	htmlCandidates := make([]string, 0, len(c))
 
 	for _, imageCandidate := range c {
@@ -36,12 +37,12 @@ func (c imageCandidates) String() string {
 // ParseSrcSetAttribute returns the list of image candidates from the set.
 // Parsing behavior follows the WebKit HTMLSrcsetParser implementation.
 // https://html.spec.whatwg.org/#parse-a-srcset-attribute
-func ParseSrcSetAttribute(attributeValue string) (candidates imageCandidates) {
+func ParseSrcSetAttribute(attributeValue string) (candidates ImageCandidates) {
 	if attributeValue == "" {
 		return nil
 	}
 
-	var position uint = 0
+	var position uint
 	for position < uint(len(attributeValue)) {
 		position = skipWhileHTMLSpaceOrComma(attributeValue, position)
 		if position >= uint(len(attributeValue)) {

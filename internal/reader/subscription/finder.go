@@ -36,30 +36,30 @@ func NewSubscription(title, url, kind string) *Subscription {
 // Subscriptions is a list of discovered feeds.
 type Subscriptions []*Subscription
 
-// SubscriptionFinder discovers feeds; when the URL is itself a feed it keeps the downloaded body.
-type SubscriptionFinder struct {
+// Finder discovers feeds; when the URL is itself a feed it keeps the downloaded body.
+type Finder struct {
 	requestBuilder   *fetcher.RequestBuilder
 	feedDownloaded   bool
 	feedResponseInfo *model.FeedCreationRequestFromSubscriptionDiscovery
 }
 
-// NewSubscriptionFinder returns a finder using requestBuilder for every request.
-func NewSubscriptionFinder(requestBuilder *fetcher.RequestBuilder) *SubscriptionFinder {
-	return &SubscriptionFinder{requestBuilder: requestBuilder}
+// NewFinder returns a finder using requestBuilder for every request.
+func NewFinder(requestBuilder *fetcher.RequestBuilder) *Finder {
+	return &Finder{requestBuilder: requestBuilder}
 }
 
 // IsFeedAlreadyDownloaded reports whether the website URL was a feed.
-func (f *SubscriptionFinder) IsFeedAlreadyDownloaded() bool {
+func (f *Finder) IsFeedAlreadyDownloaded() bool {
 	return f.feedDownloaded
 }
 
 // FeedResponseInfo returns the downloaded document and its cache validators.
-func (f *SubscriptionFinder) FeedResponseInfo() *model.FeedCreationRequestFromSubscriptionDiscovery {
+func (f *Finder) FeedResponseInfo() *model.FeedCreationRequestFromSubscriptionDiscovery {
 	return f.feedResponseInfo
 }
 
 // FindSubscriptions discovers feeds for websiteURL. rssBridgeURL is empty when RSS-Bridge is not configured.
-func (f *SubscriptionFinder) FindSubscriptions(websiteURL, rssBridgeURL, rssBridgeToken string) (Subscriptions, error) {
+func (f *Finder) FindSubscriptions(websiteURL, rssBridgeURL, rssBridgeToken string) (Subscriptions, error) {
 	responseHandler := fetcher.NewResponseHandler(f.requestBuilder.ExecuteRequest(websiteURL))
 	defer responseHandler.Close()
 
@@ -168,7 +168,7 @@ func findSubscriptionsFromWebPage(baseURL string, doc *goquery.Document) Subscri
 	return subscriptions
 }
 
-func (f *SubscriptionFinder) findSubscriptionsFromWellKnownURLs(websiteURL string) Subscriptions {
+func (f *Finder) findSubscriptionsFromWellKnownURLs(websiteURL string) Subscriptions {
 	knownURLs := []struct{ path, format string }{
 		{"atom.xml", parser.FormatAtom},
 		{"feed.atom", parser.FormatAtom},
