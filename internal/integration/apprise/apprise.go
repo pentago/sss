@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package apprise sends new entry notifications to an Apprise server.
 package apprise
 
 import (
@@ -35,7 +36,7 @@ func (c *Client) SendNotification(feed *model.Feed, entries model.Entries) error
 		message := "[" + entry.Title + "]" + "(" + entry.URL + ")" + "\n\n"
 		apiEndpoint, err := urllib.JoinBaseURLAndPath(c.baseURL, "/notify")
 		if err != nil {
-			return fmt.Errorf(`apprise: invalid API endpoint: %v`, err)
+			return fmt.Errorf(`apprise: invalid API endpoint: %w`, err)
 		}
 
 		slog.Debug("Sending Apprise notification",
@@ -55,7 +56,7 @@ func (c *Client) SendNotification(feed *model.Feed, entries model.Entries) error
 			}).
 			Do()
 		if err != nil {
-			return fmt.Errorf("apprise: unable to send request: %v", err)
+			return fmt.Errorf("apprise: unable to send request: %w", err)
 		}
 		response.Body.Close()
 

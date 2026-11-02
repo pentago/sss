@@ -173,50 +173,50 @@ func TestIsBlockedEntry(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		blockRules filterRules
-		allowRules filterRules
+		blockRules Rules
+		allowRules Rules
 		setup      func()
 		expected   bool
 	}{
 		{
 			name:       "no rules - not blocked",
-			blockRules: filterRules{},
-			allowRules: filterRules{},
+			blockRules: Rules{},
+			allowRules: Rules{},
 			setup:      func() {},
 			expected:   false,
 		},
 		{
 			name:       "matching block rule",
-			blockRules: filterRules{{Type: "EntryTitle", Value: "Test"}},
-			allowRules: filterRules{},
+			blockRules: Rules{{Type: "EntryTitle", Value: "Test"}},
+			allowRules: Rules{},
 			setup:      func() {},
 			expected:   true,
 		},
 		{
 			name:       "block rule takes precedence over allow rule",
-			blockRules: filterRules{{Type: "EntryTitle", Value: "Test"}},
-			allowRules: filterRules{{Type: "EntryTitle", Value: "Test"}},
+			blockRules: Rules{{Type: "EntryTitle", Value: "Test"}},
+			allowRules: Rules{{Type: "EntryTitle", Value: "Test"}},
 			setup:      func() {},
 			expected:   true, // Block rules are checked first
 		},
 		{
 			name:       "non-matching block rule",
-			blockRules: filterRules{{Type: "EntryTitle", Value: "NonMatching"}},
-			allowRules: filterRules{},
+			blockRules: Rules{{Type: "EntryTitle", Value: "NonMatching"}},
+			allowRules: Rules{},
 			setup:      func() {},
 			expected:   false,
 		},
 		{
 			name:       "allow rule matches - entry should be allowed",
-			blockRules: filterRules{},
-			allowRules: filterRules{{Type: "EntryTitle", Value: "Test"}},
+			blockRules: Rules{},
+			allowRules: Rules{{Type: "EntryTitle", Value: "Test"}},
 			setup:      func() {},
 			expected:   false,
 		},
 		{
 			name:       "allow rule exists but doesn't match - entry should be blocked",
-			blockRules: filterRules{},
-			allowRules: filterRules{{Type: "EntryTitle", Value: "NonMatching"}},
+			blockRules: Rules{},
+			allowRules: Rules{{Type: "EntryTitle", Value: "NonMatching"}},
 			setup:      func() {},
 			expected:   true,
 		},
@@ -239,31 +239,31 @@ func TestAllowRulesExclusiveBehavior(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		allowRules  filterRules
+		allowRules  Rules
 		expected    bool
 		description string
 	}{
 		{
 			name:        "no allow rules - entry should pass",
-			allowRules:  filterRules{},
+			allowRules:  Rules{},
 			expected:    false,
 			description: "When no allow rules exist, entry should not be blocked",
 		},
 		{
 			name:        "allow rule matches - entry should pass",
-			allowRules:  filterRules{{Type: "EntryTitle", Value: "Test"}},
+			allowRules:  Rules{{Type: "EntryTitle", Value: "Test"}},
 			expected:    false,
 			description: "When allow rules exist and match, entry should not be blocked",
 		},
 		{
 			name:        "allow rule doesn't match - entry should be blocked",
-			allowRules:  filterRules{{Type: "EntryTitle", Value: "NonMatching"}},
+			allowRules:  Rules{{Type: "EntryTitle", Value: "NonMatching"}},
 			expected:    true,
 			description: "When allow rules exist but don't match, entry should be blocked",
 		},
 		{
 			name: "multiple allow rules - one matches",
-			allowRules: filterRules{
+			allowRules: Rules{
 				{Type: "EntryTitle", Value: "NonMatching"},
 				{Type: "EntryAuthor", Value: "Test"},
 			},
@@ -272,7 +272,7 @@ func TestAllowRulesExclusiveBehavior(t *testing.T) {
 		},
 		{
 			name: "multiple allow rules - none match",
-			allowRules: filterRules{
+			allowRules: Rules{
 				{Type: "EntryTitle", Value: "NonMatching1"},
 				{Type: "EntryAuthor", Value: "NonMatching2"},
 			},
@@ -283,7 +283,7 @@ func TestAllowRulesExclusiveBehavior(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := IsBlockedEntry(filterRules{}, tt.allowRules, feed, entry)
+			result := IsBlockedEntry(Rules{}, tt.allowRules, feed, entry)
 			if result != tt.expected {
 				t.Errorf("IsBlockedEntry() = %v, expected %v (%s)", result, tt.expected, tt.description)
 			}
@@ -297,36 +297,36 @@ func TestAllowRulesWithBlockRulesPrecedence(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		blockRules  filterRules
-		allowRules  filterRules
+		blockRules  Rules
+		allowRules  Rules
 		expected    bool
 		description string
 	}{
 		{
 			name:        "block rule takes precedence over matching allow rule",
-			blockRules:  filterRules{{Type: "EntryTitle", Value: "Test"}},
-			allowRules:  filterRules{{Type: "EntryTitle", Value: "Test"}},
+			blockRules:  Rules{{Type: "EntryTitle", Value: "Test"}},
+			allowRules:  Rules{{Type: "EntryTitle", Value: "Test"}},
 			expected:    true,
 			description: "Block rules should always take precedence, even when allow rules would match",
 		},
 		{
 			name:        "block rule takes precedence, allow rule would fail anyway",
-			blockRules:  filterRules{{Type: "EntryTitle", Value: "Test"}},
-			allowRules:  filterRules{{Type: "EntryTitle", Value: "NonMatching"}},
+			blockRules:  Rules{{Type: "EntryTitle", Value: "Test"}},
+			allowRules:  Rules{{Type: "EntryTitle", Value: "NonMatching"}},
 			expected:    true,
 			description: "Block rules should take precedence regardless of allow rule matching",
 		},
 		{
 			name:        "no block rule, allow rule matches",
-			blockRules:  filterRules{},
-			allowRules:  filterRules{{Type: "EntryTitle", Value: "Test"}},
+			blockRules:  Rules{},
+			allowRules:  Rules{{Type: "EntryTitle", Value: "Test"}},
 			expected:    false,
 			description: "When no block rules match and allow rule matches, entry should pass",
 		},
 		{
 			name:        "non-matching block rule, allow rule doesn't match",
-			blockRules:  filterRules{{Type: "EntryTitle", Value: "NonMatching"}},
-			allowRules:  filterRules{{Type: "EntryTitle", Value: "NonMatching"}},
+			blockRules:  Rules{{Type: "EntryTitle", Value: "NonMatching"}},
+			allowRules:  Rules{{Type: "EntryTitle", Value: "NonMatching"}},
 			expected:    true,
 			description: "When block rules don't match but allow rules also don't match, entry should be blocked",
 		},
@@ -400,7 +400,7 @@ func TestKeeplistRulesBehavior(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			feed.KeeplistRules = tt.keeplistRule
 			feed.BlocklistRules = "" // Ensure no blocklist interference
-			result := IsBlockedEntry(filterRules{}, filterRules{}, feed, entry)
+			result := IsBlockedEntry(Rules{}, Rules{}, feed, entry)
 			if result != tt.expected {
 				t.Errorf("IsBlockedEntry() with keeplist '%s' = %v, expected %v (%s)",
 					tt.keeplistRule, result, tt.expected, tt.description)
@@ -504,31 +504,31 @@ func TestMatchesEntryFilterRules(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		rules    filterRules
+		rules    Rules
 		expected bool
 	}{
 		{
 			name:     "empty rules",
-			rules:    filterRules{},
+			rules:    Rules{},
 			expected: false,
 		},
 		{
 			name: "matching rule",
-			rules: filterRules{
+			rules: Rules{
 				{Type: "EntryTitle", Value: "Test"},
 			},
 			expected: true,
 		},
 		{
 			name: "non-matching rule",
-			rules: filterRules{
+			rules: Rules{
 				{Type: "EntryTitle", Value: "NonMatching"},
 			},
 			expected: false,
 		},
 		{
 			name: "multiple rules - one matches",
-			rules: filterRules{
+			rules: Rules{
 				{Type: "EntryTitle", Value: "NonMatching"},
 				{Type: "EntryAuthor", Value: "Test"},
 			},
@@ -927,14 +927,14 @@ func TestIsBlockedEntryWithRegexRules(t *testing.T) {
 
 	// Test with blocklist regex rules
 	feed.BlocklistRules = "Test.*Title"
-	result := IsBlockedEntry(filterRules{}, filterRules{}, feed, entry)
+	result := IsBlockedEntry(Rules{}, Rules{}, feed, entry)
 	if !result {
 		t.Errorf("IsBlockedEntry() should block entry matching blocklist regex")
 	}
 
 	// Test with both blocklist and keeplist regex rules - blocklist takes precedence
 	feed.KeeplistRules = "Test.*Title"
-	result = IsBlockedEntry(filterRules{}, filterRules{}, feed, entry)
+	result = IsBlockedEntry(Rules{}, Rules{}, feed, entry)
 	if !result {
 		t.Errorf("IsBlockedEntry() should block entry when both blocklist and keeplist match (blocklist takes precedence)")
 	}
@@ -942,14 +942,14 @@ func TestIsBlockedEntryWithRegexRules(t *testing.T) {
 	// Reset blocklist and test with keeplist only
 	feed.BlocklistRules = ""
 	feed.KeeplistRules = "Test.*Title"
-	result = IsBlockedEntry(filterRules{}, filterRules{}, feed, entry)
+	result = IsBlockedEntry(Rules{}, Rules{}, feed, entry)
 	if result {
 		t.Errorf("IsBlockedEntry() should not block entry matching keeplist only")
 	}
 
 	// Test with keeplist that doesn't match - should block
 	feed.KeeplistRules = "NonMatchingPattern"
-	result = IsBlockedEntry(filterRules{}, filterRules{}, feed, entry)
+	result = IsBlockedEntry(Rules{}, Rules{}, feed, entry)
 	if !result {
 		t.Errorf("IsBlockedEntry() should block entry when keeplist doesn't match")
 	}
@@ -990,8 +990,8 @@ func TestComplexFilterScenarios(t *testing.T) {
 	feed := createTestFeed()
 
 	// Test complex scenario: block filter rules + blocklist regex + allow filter rules + keeplist regex
-	blockRules := filterRules{{Type: "EntryAuthor", Value: "Test.*Author"}}
-	allowRules := filterRules{{Type: "EntryTitle", Value: "Test.*Title"}}
+	blockRules := Rules{{Type: "EntryAuthor", Value: "Test.*Author"}}
+	allowRules := Rules{{Type: "EntryTitle", Value: "Test.*Title"}}
 	feed.BlocklistRules = "golang"
 	feed.KeeplistRules = "testing"
 
@@ -1002,27 +1002,27 @@ func TestComplexFilterScenarios(t *testing.T) {
 	}
 
 	// Remove block filter rules, now blocklist regex should block
-	result = IsBlockedEntry(filterRules{}, allowRules, feed, entry)
+	result = IsBlockedEntry(Rules{}, allowRules, feed, entry)
 	if !result {
 		t.Errorf("Complex scenario: blocklist regex should block when no filter block rules")
 	}
 
 	// Remove blocklist regex, allow filter rules should allow (since they match)
 	feed.BlocklistRules = ""
-	result = IsBlockedEntry(filterRules{}, allowRules, feed, entry)
+	result = IsBlockedEntry(Rules{}, allowRules, feed, entry)
 	if result {
 		t.Errorf("Complex scenario: allow filter rules should not block when they match")
 	}
 
 	// Change allow filter rules to non-matching, should block
-	allowRules = filterRules{{Type: "EntryTitle", Value: "NonMatching"}}
-	result = IsBlockedEntry(filterRules{}, allowRules, feed, entry)
+	allowRules = Rules{{Type: "EntryTitle", Value: "NonMatching"}}
+	result = IsBlockedEntry(Rules{}, allowRules, feed, entry)
 	if !result {
 		t.Errorf("Complex scenario: non-matching allow filter rules should block")
 	}
 
 	// Remove allow filter rules, keeplist regex should allow
-	result = IsBlockedEntry(filterRules{}, filterRules{}, feed, entry)
+	result = IsBlockedEntry(Rules{}, Rules{}, feed, entry)
 	if result {
 		t.Errorf("Complex scenario: keeplist regex should not block when it matches")
 	}
@@ -1319,12 +1319,12 @@ EntryTag=tag2`
 func BenchmarkIsBlockedEntry(b *testing.B) {
 	entry := createTestEntry()
 	feed := createTestFeed()
-	blockRules := filterRules{
+	blockRules := Rules{
 		{Type: "EntryTitle", Value: "test"},
 		{Type: "EntryAuthor", Value: "author"},
 		{Type: "EntryURL", Value: "example"},
 	}
-	allowRules := filterRules{
+	allowRules := Rules{
 		{Type: "EntryContent", Value: "content"},
 		{Type: "EntryTag", Value: "tag"},
 	}

@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package readability extracts the main content of a web page.
 package readability
 
 import (
@@ -104,15 +105,15 @@ func getArticle(topCandidate *candidate, candidates candidateList) string {
 	siblingScoreThreshold := max(10, topCandidate.score/5)
 
 	topCandidate.selection.Siblings().Union(topCandidate.selection).Each(func(i int, s *goquery.Selection) {
-		append := false
+		include := false
 		tag := "div"
 		node := s.Get(0)
 
 		topNode := topCandidate.Node()
 		if topNode != nil && node == topNode {
-			append = true
+			include = true
 		} else if c, ok := candidates[node]; ok && c.score >= siblingScoreThreshold {
-			append = true
+			include = true
 		} else if s.Is("p") {
 			tag = node.Data
 			linkDensity := getLinkDensity(s)
@@ -120,19 +121,19 @@ func getArticle(topCandidate *candidate, candidates candidateList) string {
 
 			if contentLength >= 80 {
 				if linkDensity < .25 {
-					append = true
+					include = true
 				}
 			} else {
 				if linkDensity == 0 {
 					// It's a small selection, so .Text doesn't impact performances too much.
 					if containsSentence(s.Text()) {
-						append = true
+						include = true
 					}
 				}
 			}
 		}
 
-		if append {
+		if include {
 			html, _ := s.Html()
 			output.WriteByte('<')
 			output.WriteString(tag)

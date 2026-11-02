@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -86,6 +87,18 @@ func TestCreateAndRefreshFeed(t *testing.T) {
 	}
 	if n := countEntries(); n != 3 {
 		t.Fatalf("entries after refresh = %d, want 3", n)
+	}
+
+	// A refresh cancelled by shutdown fails without counting against the feed.
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	if err := RefreshFeed(ctx, store, user.ID, feed.ID, false); err == nil {
+		t.Fatal("cancelled refresh: got nil error")
+	}
+	if got, err := store.FeedByID(user.ID, feed.ID); err != nil {
+		t.Fatal(err)
+	} else if got.ParsingErrorCount != 0 || got.ParsingErrorMsg != "" {
+		t.Errorf("cancelled refresh recorded a feed error: count=%d msg=%q", got.ParsingErrorCount, got.ParsingErrorMsg)
 	}
 
 	if err := RefreshFeed(t.Context(), store, user.ID, feed.ID+1, false); err != ErrFeedNotFound {

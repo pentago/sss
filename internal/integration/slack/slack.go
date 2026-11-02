@@ -1,8 +1,9 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// Slack Webhooks documentation: https://api.slack.com/messaging/webhooks
-
+// Package slack sends new entry notifications to Slack webhooks.
+//
+// Webhooks documentation: https://api.slack.com/messaging/webhooks
 package slack
 
 import (

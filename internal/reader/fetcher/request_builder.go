@@ -38,6 +38,7 @@ var ErrPrivateNetworkHost = errors.New("fetcher: refusing to access private netw
 
 // RequestBuilder configures and executes a single outgoing GET request.
 type RequestBuilder struct {
+	ctx                context.Context
 	headers            http.Header
 	cookie             string
 	cookieSiteHost     string
@@ -57,7 +58,13 @@ func NewRequestBuilder() *RequestBuilder {
 	if config.Opts != nil && config.Opts.HTTPClientTimeout > 0 {
 		clientTimeout = config.Opts.HTTPClientTimeout
 	}
-	return &RequestBuilder{headers: make(http.Header), clientTimeout: clientTimeout}
+	return &RequestBuilder{ctx: context.Background(), headers: make(http.Header), clientTimeout: clientTimeout}
+}
+
+// WithContext makes the request abort when ctx is cancelled.
+func (r *RequestBuilder) WithContext(ctx context.Context) *RequestBuilder {
+	r.ctx = ctx
+	return r
 }
 
 // Clone returns an independent copy of the builder.
@@ -243,7 +250,7 @@ func (r *RequestBuilder) ExecuteRequest(requestURL string) (*http.Response, erro
 		client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	}
 
-	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
+	req, err := http.NewRequestWithContext(r.ctx, http.MethodGet, requestURL, nil)
 	if err != nil {
 		return nil, err
 	}

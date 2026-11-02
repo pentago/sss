@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package response provides helpers to build HTTP responses.
 package response
 
 import (

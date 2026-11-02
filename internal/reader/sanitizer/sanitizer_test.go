@@ -15,7 +15,7 @@ import (
 )
 
 func sanitizeHTMLWithDefaultOptions(baseURL, rawHTML string) string {
-	return SanitizeHTML(baseURL, rawHTML, &SanitizerOptions{
+	return SanitizeHTML(baseURL, rawHTML, &Options{
 		OpenLinksInNewTab: true,
 	})
 }
@@ -531,7 +531,7 @@ func TestIFrameWithReferrerPolicy(t *testing.T) {
 func TestLinkWithTarget(t *testing.T) {
 	input := `<p>This link is <a href="http://example.org/index.html">an anchor</a></p>`
 	expected := `<p>This link is <a href="http://example.org/index.html" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">an anchor</a></p>`
-	output := SanitizeHTML("http://example.org/", input, &SanitizerOptions{OpenLinksInNewTab: true})
+	output := SanitizeHTML("http://example.org/", input, &Options{OpenLinksInNewTab: true})
 
 	if expected != output {
 		t.Errorf(`Wrong output: "%s" != "%s"`, expected, output)
@@ -541,7 +541,7 @@ func TestLinkWithTarget(t *testing.T) {
 func TestLinkWithNoTarget(t *testing.T) {
 	input := `<p>This link is <a href="http://example.org/index.html">an anchor</a></p>`
 	expected := `<p>This link is <a href="http://example.org/index.html" rel="noopener noreferrer" referrerpolicy="no-referrer">an anchor</a></p>`
-	output := SanitizeHTML("http://example.org/", input, &SanitizerOptions{OpenLinksInNewTab: false})
+	output := SanitizeHTML("http://example.org/", input, &Options{OpenLinksInNewTab: false})
 
 	if expected != output {
 		t.Errorf(`Wrong output: "%s" != "%s"`, expected, output)

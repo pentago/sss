@@ -159,7 +159,7 @@ func main() {
 	switch {
 	case flagRefreshFeeds:
 		start := time.Now()
-		pool := worker.NewPool(store, cfg.WorkerPoolSize)
+		pool := worker.NewPool(context.Background(), store, cfg.WorkerPoolSize)
 		worker.RefreshBatch(store, pool)
 		pool.Shutdown()
 		slog.Info("Refreshed a batch of feeds", slog.Duration("duration", time.Since(start)))
@@ -191,7 +191,7 @@ func runDaemon(store *storage.Storage) {
 		go metric.Collect(ctx, store)
 	}
 
-	pool := worker.NewPool(store, config.Opts.WorkerPoolSize)
+	pool := worker.NewPool(ctx, store, config.Opts.WorkerPoolSize)
 	if !config.Opts.DisableSchedulerService && !config.Opts.MaintenanceMode {
 		worker.StartScheduler(store, pool)
 	}

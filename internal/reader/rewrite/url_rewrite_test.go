@@ -9,7 +9,7 @@ import (
 	"sss/internal/model"
 )
 
-func TestRewriteEntryURL(t *testing.T) {
+func TestEntryURL(t *testing.T) {
 	scenarios := []struct {
 		name        string
 		feed        *model.Feed
@@ -22,7 +22,7 @@ func TestRewriteEntryURL(t *testing.T) {
 			feed: &model.Feed{
 				ID:              1,
 				FeedURL:         "https://example.com/feed.xml",
-				UrlRewriteRules: "",
+				URLRewriteRules: "",
 			},
 			entry: &model.Entry{
 				URL: "https://example.com/article/123",
@@ -35,7 +35,7 @@ func TestRewriteEntryURL(t *testing.T) {
 			feed: &model.Feed{
 				ID:              1,
 				FeedURL:         "https://example.com/feed.xml",
-				UrlRewriteRules: "   ",
+				URLRewriteRules: "   ",
 			},
 			entry: &model.Entry{
 				URL: "https://example.com/article/123",
@@ -48,7 +48,7 @@ func TestRewriteEntryURL(t *testing.T) {
 			feed: &model.Feed{
 				ID:              1,
 				FeedURL:         "https://example.com/feed.xml",
-				UrlRewriteRules: `rewrite("^https://example.com/article/(.+)"|"https://example.com/full-article/$1")`,
+				URLRewriteRules: `rewrite("^https://example.com/article/(.+)"|"https://example.com/full-article/$1")`,
 			},
 			entry: &model.Entry{
 				URL: "https://example.com/article/123",
@@ -61,7 +61,7 @@ func TestRewriteEntryURL(t *testing.T) {
 			feed: &model.Feed{
 				ID:              1,
 				FeedURL:         "https://news.ycombinator.com/rss",
-				UrlRewriteRules: `rewrite("^https://news\.ycombinator\.com/item\?id=(.+)"|"https://hn.algolia.com/api/v1/items/$1")`,
+				URLRewriteRules: `rewrite("^https://news\.ycombinator\.com/item\?id=(.+)"|"https://hn.algolia.com/api/v1/items/$1")`,
 			},
 			entry: &model.Entry{
 				URL: "https://news.ycombinator.com/item?id=12345",
@@ -74,7 +74,7 @@ func TestRewriteEntryURL(t *testing.T) {
 			feed: &model.Feed{
 				ID:              1,
 				FeedURL:         "https://example.com/feed.xml",
-				UrlRewriteRules: `rewrite("^https://different.com/(.+)"|"https://rewritten.com/$1")`,
+				URLRewriteRules: `rewrite("^https://different.com/(.+)"|"https://rewritten.com/$1")`,
 			},
 			entry: &model.Entry{
 				URL: "https://example.com/article/123",
@@ -87,7 +87,7 @@ func TestRewriteEntryURL(t *testing.T) {
 			feed: &model.Feed{
 				ID:              1,
 				FeedURL:         "https://example.com/feed.xml",
-				UrlRewriteRules: `rewrite("^https://example.com/[invalid"|"https://rewritten.com/$1")`,
+				URLRewriteRules: `rewrite("^https://example.com/[invalid"|"https://rewritten.com/$1")`,
 			},
 			entry: &model.Entry{
 				URL: "https://example.com/article/123",
@@ -100,7 +100,7 @@ func TestRewriteEntryURL(t *testing.T) {
 			feed: &model.Feed{
 				ID:              1,
 				FeedURL:         "https://example.com/feed.xml",
-				UrlRewriteRules: `rewrite("invalid format")`,
+				URLRewriteRules: `rewrite("invalid format")`,
 			},
 			entry: &model.Entry{
 				URL: "https://example.com/article/123",
@@ -113,7 +113,7 @@ func TestRewriteEntryURL(t *testing.T) {
 			feed: &model.Feed{
 				ID:              1,
 				FeedURL:         "https://example.com/feed.xml",
-				UrlRewriteRules: `rewrite("^https://example.com/([^/]+)/article/(.+)"|"https://example.com/full/$1/story/$2")`,
+				URLRewriteRules: `rewrite("^https://example.com/([^/]+)/article/(.+)"|"https://example.com/full/$1/story/$2")`,
 			},
 			entry: &model.Entry{
 				URL: "https://example.com/tech/article/ai-news",
@@ -126,7 +126,7 @@ func TestRewriteEntryURL(t *testing.T) {
 			feed: &model.Feed{
 				ID:              1,
 				FeedURL:         "https://example.com/feed.xml",
-				UrlRewriteRules: `rewrite("^https://example.com/(.+)"|"https://proxy.example.com/$1")`,
+				URLRewriteRules: `rewrite("^https://example.com/(.+)"|"https://proxy.example.com/$1")`,
 			},
 			entry: &model.Entry{
 				URL: "https://example.com/article/test?param=value&other=123#section",
@@ -139,7 +139,7 @@ func TestRewriteEntryURL(t *testing.T) {
 			feed: &model.Feed{
 				ID:              1,
 				FeedURL:         "https://example.com/feed.xml",
-				UrlRewriteRules: `rewrite("^https://example.com/(.+)"|"https://static.example.com/reader")`,
+				URLRewriteRules: `rewrite("^https://example.com/(.+)"|"https://static.example.com/reader")`,
 			},
 			entry: &model.Entry{
 				URL: "https://example.com/article/123",
@@ -152,7 +152,7 @@ func TestRewriteEntryURL(t *testing.T) {
 			feed: &model.Feed{
 				ID:              1,
 				FeedURL:         "https://example.com/feed.xml",
-				UrlRewriteRules: `rewrite("^https://example.com/(.+)"|"x")`,
+				URLRewriteRules: `rewrite("^https://example.com/(.+)"|"x")`,
 			},
 			entry: &model.Entry{
 				URL: "https://example.com/article/123",
@@ -165,7 +165,7 @@ func TestRewriteEntryURL(t *testing.T) {
 			feed: &model.Feed{
 				ID:              1,
 				FeedURL:         "https://example.com/feed.xml",
-				UrlRewriteRules: `rewrite("^https://example.com/(.+)"|"")`,
+				URLRewriteRules: `rewrite("^https://example.com/(.+)"|"")`,
 			},
 			entry: &model.Entry{
 				URL: "https://example.com/article/123",
@@ -178,7 +178,7 @@ func TestRewriteEntryURL(t *testing.T) {
 			feed: &model.Feed{
 				ID:              1,
 				FeedURL:         "https://example.com/feed.xml",
-				UrlRewriteRules: `not-a-rewrite-rule`,
+				URLRewriteRules: `not-a-rewrite-rule`,
 			},
 			entry: &model.Entry{
 				URL: "https://example.com/article/123",
@@ -190,7 +190,7 @@ func TestRewriteEntryURL(t *testing.T) {
 
 	for _, scenario := range scenarios {
 		t.Run(scenario.name, func(t *testing.T) {
-			result := RewriteEntryURL(scenario.feed, scenario.entry)
+			result := EntryURL(scenario.feed, scenario.entry)
 			if result != scenario.expectedURL {
 				t.Errorf("Expected URL %q, got %q. Description: %s", scenario.expectedURL, result, scenario.description)
 			}
@@ -198,7 +198,7 @@ func TestRewriteEntryURL(t *testing.T) {
 	}
 }
 
-func TestRewriteEntryURLWithNilValues(t *testing.T) {
+func TestEntryURLWithNilValues(t *testing.T) {
 	t.Run("NilFeed", func(t *testing.T) {
 		entry := &model.Entry{URL: "https://example.com/article/123"}
 
@@ -209,14 +209,14 @@ func TestRewriteEntryURLWithNilValues(t *testing.T) {
 			}
 		}()
 
-		RewriteEntryURL(nil, entry)
+		EntryURL(nil, entry)
 	})
 
 	t.Run("NilEntry", func(t *testing.T) {
 		feed := &model.Feed{
 			ID:              1,
 			FeedURL:         "https://example.com/feed.xml",
-			UrlRewriteRules: `rewrite("^https://example.com/(.+)"|"https://rewritten.com/$1")`,
+			URLRewriteRules: `rewrite("^https://example.com/(.+)"|"https://rewritten.com/$1")`,
 		}
 
 		// This should panic or handle gracefully - let's see what happens
@@ -226,7 +226,7 @@ func TestRewriteEntryURLWithNilValues(t *testing.T) {
 			}
 		}()
 
-		RewriteEntryURL(feed, nil)
+		EntryURL(feed, nil)
 	})
 }
 

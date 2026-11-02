@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func TestShutdownUnblocksPendingPush(t *testing.T) {
-	pool := NewPool(nil, 0)
+	pool := NewPool(context.Background(), nil, 0)
 
 	pushed := make(chan struct{})
 	go func() {

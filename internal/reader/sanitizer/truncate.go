@@ -31,7 +31,7 @@ func TruncateHTML(input string, limit int) string {
 
 		for word := range strings.FieldsSeq(token) {
 			if needspace {
-				if count += 1; count > limit {
+				if count++; count > limit {
 					return false
 				}
 			}
@@ -39,13 +39,13 @@ func TruncateHTML(input string, limit int) string {
 			// Compute how much of the word we can use later.
 			wordlen := 0
 			for wordlen < len(word) {
-				if count += 1; count > limit {
+				if count++; count > limit {
 					break
 				}
 
 				r, w := utf8.DecodeRuneInString(word[wordlen:])
 				if r == utf8.RuneError {
-					wordlen += 1
+					wordlen++
 					continue
 				}
 

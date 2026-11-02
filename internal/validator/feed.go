@@ -44,7 +44,7 @@ func ValidateFeedCreation(store Store, userID int64, request *model.FeedCreation
 		return err
 	}
 
-	if err := validateFeedRules(request.ScraperRules, request.RewriteRules, request.UrlRewriteRules); err != nil {
+	if err := validateFeedRules(request.ScraperRules, request.RewriteRules, request.URLRewriteRules); err != nil {
 		return err
 	}
 
@@ -111,7 +111,7 @@ func ValidateFeedModification(store Store, userID, feedID int64, request *model.
 		}
 	}
 
-	if err := validateFeedRules(deref(request.ScraperRules), deref(request.RewriteRules), deref(request.UrlRewriteRules)); err != nil {
+	if err := validateFeedRules(deref(request.ScraperRules), deref(request.RewriteRules), deref(request.URLRewriteRules)); err != nil {
 		return err
 	}
 

@@ -60,7 +60,7 @@ func subscriptionForm(r *http.Request) *model.FeedCreationRequest {
 		Password:                    r.FormValue("feed_password"),
 		ScraperRules:                r.FormValue("scraper_rules"),
 		RewriteRules:                r.FormValue("rewrite_rules"),
-		UrlRewriteRules:             r.FormValue("urlrewrite_rules"),
+		URLRewriteRules:             r.FormValue("urlrewrite_rules"),
 		BlocklistRules:              r.FormValue("blocklist_rules"),
 		KeeplistRules:               r.FormValue("keeplist_rules"),
 		BlockFilterEntryRules:       r.FormValue("block_filter_entry_rules"),
@@ -82,7 +82,7 @@ func (h *handler) submitSubscription(w http.ResponseWriter, r *http.Request) {
 	if intg, err := h.store.Integration(request.UserID(r)); err == nil && intg != nil && intg.RSSBridgeEnabled {
 		rssBridgeURL, rssBridgeToken = intg.RSSBridgeURL, intg.RSSBridgeToken
 	}
-	finder := subscription.NewSubscriptionFinder(fetcher.NewRequestBuilder().
+	finder := subscription.NewFinder(fetcher.NewRequestBuilder().
 		UseCustomApplicationProxyURL(form.FetchViaProxy).
 		WithUserAgent(form.UserAgent, currentUser(r).DefaultUserAgent()).
 		WithCookie(form.Cookie, form.FeedURL).

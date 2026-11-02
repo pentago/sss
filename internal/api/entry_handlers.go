@@ -333,7 +333,7 @@ func (h *handler) updateEntryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if entryUpdateRequest.Content != nil {
-		sanitizedContent := sanitizer.SanitizeHTML(entry.URL, *entryUpdateRequest.Content, &sanitizer.SanitizerOptions{OpenLinksInNewTab: user.OpenExternalLinksInNewTab})
+		sanitizedContent := sanitizer.SanitizeHTML(entry.URL, *entryUpdateRequest.Content, &sanitizer.Options{OpenLinksInNewTab: user.OpenExternalLinksInNewTab})
 		entryUpdateRequest.Content = &sanitizedContent
 	}
 
@@ -425,7 +425,7 @@ func (h *handler) importFeedEntryHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	if importRequest.Content != "" {
-		entry.Content = sanitizer.SanitizeHTML(entry.URL, importRequest.Content, &sanitizer.SanitizerOptions{OpenLinksInNewTab: user.OpenExternalLinksInNewTab})
+		entry.Content = sanitizer.SanitizeHTML(entry.URL, importRequest.Content, &sanitizer.Options{OpenLinksInNewTab: user.OpenExternalLinksInNewTab})
 	}
 
 	if user.ShowReadingTime {

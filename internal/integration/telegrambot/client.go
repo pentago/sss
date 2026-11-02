@@ -31,6 +31,8 @@ func NewClient(botToken, chatID string) *Client {
 	}
 }
 
+// SendMessage sends a message through the Telegram Bot API.
+//
 // Specs: https://core.telegram.org/bots/api#sendmessage
 func (c *Client) SendMessage(message *MessageRequest) error {
 	endpointURL, err := url.JoinPath(telegramAPIEndpoint, "/bot"+c.botToken, "/sendMessage")
@@ -44,7 +46,7 @@ func (c *Client) SendMessage(message *MessageRequest) error {
 		WithJSON(message).
 		Do()
 	if err != nil {
-		return fmt.Errorf("telegram: unable to send request: %v", err)
+		return fmt.Errorf("telegram: unable to send request: %w", err)
 	}
 	defer response.Body.Close()
 

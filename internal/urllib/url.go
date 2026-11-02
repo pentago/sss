@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package urllib provides URL parsing and manipulation helpers.
 package urllib
 
 import (

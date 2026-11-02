@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	// Register GIF, JPEG, and PNG decoders so image.DecodeConfig can read icon dimensions.
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"

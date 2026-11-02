@@ -27,7 +27,7 @@ func find(t *testing.T, h http.HandlerFunc, path, bridge string) Subscriptions {
 	if bridge == "bridge" {
 		bridge = s.URL + "/bridge/"
 	}
-	subs, err := NewSubscriptionFinder(fetcher.NewRequestBuilder()).FindSubscriptions(s.URL+path, bridge, "")
+	subs, err := NewFinder(fetcher.NewRequestBuilder()).FindSubscriptions(s.URL+path, bridge, "")
 	if err != nil {
 		t.Fatal(err)
 	}

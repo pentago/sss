@@ -63,12 +63,12 @@ func TestValidateFeedRules(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			creation := &model.FeedCreationRequest{FeedURL: "https://example.org/feed", CategoryID: 1,
-				ScraperRules: tc.scraper, RewriteRules: tc.rewrite, UrlRewriteRules: tc.urlRewrite}
+				ScraperRules: tc.scraper, RewriteRules: tc.rewrite, URLRewriteRules: tc.urlRewrite}
 			if err := ValidateFeedCreation(fakeStore{}, 1, creation); (err != nil) != tc.wantErr {
 				t.Errorf("creation: expected error %v, got %v", tc.wantErr, err)
 			}
 			modification := &model.FeedModificationRequest{ScraperRules: model.OptionalString(tc.scraper),
-				RewriteRules: model.OptionalString(tc.rewrite), UrlRewriteRules: model.OptionalString(tc.urlRewrite)}
+				RewriteRules: model.OptionalString(tc.rewrite), URLRewriteRules: model.OptionalString(tc.urlRewrite)}
 			if err := ValidateFeedModification(fakeStore{}, 1, 1, modification); (err != nil) != tc.wantErr {
 				t.Errorf("modification: expected error %v, got %v", tc.wantErr, err)
 			}

@@ -25,8 +25,8 @@ type Pool struct {
 	wg           sync.WaitGroup
 }
 
-// NewPool starts nbWorkers workers.
-func NewPool(store *storage.Storage, nbWorkers int) *Pool {
+// NewPool starts nbWorkers workers. Cancelling ctx aborts in-flight feed fetches.
+func NewPool(ctx context.Context, store *storage.Storage, nbWorkers int) *Pool {
 	p := &Pool{queue: make(chan model.Job), shutdown: make(chan struct{})}
 	for range nbWorkers {
 		p.wg.Go(func() {
@@ -36,7 +36,7 @@ func NewPool(store *storage.Storage, nbWorkers int) *Pool {
 					return
 				case job := <-p.queue:
 					start := time.Now()
-					err := handler.RefreshFeed(context.Background(), store, job.UserID, job.FeedID, false)
+					err := handler.RefreshFeed(ctx, store, job.UserID, job.FeedID, false)
 					metric.ObserveSince(metric.BackgroundFeedRefreshDuration, start, err)
 					if err != nil {
 						slog.Warn("Unable to refresh feed", slog.Int64("user_id", job.UserID), slog.Int64("feed_id", job.FeedID), slog.Any("error", err))

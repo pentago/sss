@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package webhook sends entry events to a user-defined webhook URL.
 package webhook
 
 import (
@@ -38,7 +39,7 @@ func (c *Client) SendSaveEntryWebhookEvent(entry *model.Entry) error {
 	webhookEntry := toWebhookEntry(entry)
 	webhookEntry.Feed = toWebhookFeed(entry.Feed)
 
-	return c.makeRequest(SaveEntryEventType, &WebhookSaveEntryEvent{
+	return c.makeRequest(SaveEntryEventType, &SaveEntryEvent{
 		EventType: SaveEntryEventType,
 		Entry:     webhookEntry,
 	})
@@ -50,19 +51,19 @@ func (c *Client) SendNewEntriesWebhookEvent(feed *model.Feed, entries model.Entr
 		return nil
 	}
 
-	webhookEntries := make([]*WebhookEntry, 0, len(entries))
+	webhookEntries := make([]*Entry, 0, len(entries))
 	for _, entry := range entries {
 		webhookEntries = append(webhookEntries, toWebhookEntry(entry))
 	}
-	return c.makeRequest(NewEntriesEventType, &WebhookNewEntriesEvent{
+	return c.makeRequest(NewEntriesEventType, &NewEntriesEvent{
 		EventType: NewEntriesEventType,
 		Feed:      toWebhookFeed(feed),
 		Entries:   webhookEntries,
 	})
 }
 
-func toWebhookEntry(entry *model.Entry) *WebhookEntry {
-	return &WebhookEntry{
+func toWebhookEntry(entry *model.Entry) *Entry {
+	return &Entry{
 		ID:          entry.ID,
 		UserID:      entry.UserID,
 		FeedID:      entry.FeedID,
@@ -84,12 +85,12 @@ func toWebhookEntry(entry *model.Entry) *WebhookEntry {
 	}
 }
 
-func toWebhookFeed(feed *model.Feed) *WebhookFeed {
-	return &WebhookFeed{
+func toWebhookFeed(feed *model.Feed) *Feed {
+	return &Feed{
 		ID:         feed.ID,
 		UserID:     feed.UserID,
 		CategoryID: feed.Category.ID,
-		Category:   &WebhookCategory{ID: feed.Category.ID, Title: feed.Category.Title},
+		Category:   &Category{ID: feed.Category.ID, Title: feed.Category.Title},
 		FeedURL:    feed.FeedURL,
 		SiteURL:    feed.SiteURL,
 		Title:      feed.Title,
@@ -104,7 +105,7 @@ func (c *Client) makeRequest(eventType string, payload any) error {
 
 	requestBody, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("webhook: unable to encode request body: %v", err)
+		return fmt.Errorf("webhook: unable to encode request body: %w", err)
 	}
 
 	response, err := client.NewRequestBuilder(c.webhookURL).
@@ -125,26 +126,26 @@ func (c *Client) makeRequest(eventType string, payload any) error {
 	return nil
 }
 
-// WebhookFeed is the feed as serialized in webhook payloads.
-type WebhookFeed struct {
-	ID         int64            `json:"id"`
-	UserID     int64            `json:"user_id"`
-	CategoryID int64            `json:"category_id"`
-	Category   *WebhookCategory `json:"category,omitempty"`
-	FeedURL    string           `json:"feed_url"`
-	SiteURL    string           `json:"site_url"`
-	Title      string           `json:"title"`
-	CheckedAt  time.Time        `json:"checked_at"`
+// Feed is the feed as serialized in webhook payloads.
+type Feed struct {
+	ID         int64     `json:"id"`
+	UserID     int64     `json:"user_id"`
+	CategoryID int64     `json:"category_id"`
+	Category   *Category `json:"category,omitempty"`
+	FeedURL    string    `json:"feed_url"`
+	SiteURL    string    `json:"site_url"`
+	Title      string    `json:"title"`
+	CheckedAt  time.Time `json:"checked_at"`
 }
 
-// WebhookCategory is the category as serialized in webhook payloads.
-type WebhookCategory struct {
+// Category is the category as serialized in webhook payloads.
+type Category struct {
 	ID    int64  `json:"id"`
 	Title string `json:"title"`
 }
 
-// WebhookEntry is the entry as serialized in webhook payloads.
-type WebhookEntry struct {
+// Entry is the entry as serialized in webhook payloads.
+type Entry struct {
 	ID          int64               `json:"id"`
 	UserID      int64               `json:"user_id"`
 	FeedID      int64               `json:"feed_id"`
@@ -163,18 +164,18 @@ type WebhookEntry struct {
 	ReadingTime int                 `json:"reading_time"`
 	Enclosures  model.EnclosureList `json:"enclosures"`
 	Tags        []string            `json:"tags"`
-	Feed        *WebhookFeed        `json:"feed,omitempty"`
+	Feed        *Feed               `json:"feed,omitempty"`
 }
 
-// WebhookNewEntriesEvent is the new_entries event payload.
-type WebhookNewEntriesEvent struct {
-	EventType string          `json:"event_type"`
-	Feed      *WebhookFeed    `json:"feed"`
-	Entries   []*WebhookEntry `json:"entries"`
+// NewEntriesEvent is the new_entries event payload.
+type NewEntriesEvent struct {
+	EventType string   `json:"event_type"`
+	Feed      *Feed    `json:"feed"`
+	Entries   []*Entry `json:"entries"`
 }
 
-// WebhookSaveEntryEvent is the save_entry event payload.
-type WebhookSaveEntryEvent struct {
-	EventType string        `json:"event_type"`
-	Entry     *WebhookEntry `json:"entry"`
+// SaveEntryEvent is the save_entry event payload.
+type SaveEntryEvent struct {
+	EventType string `json:"event_type"`
+	Entry     *Entry `json:"entry"`
 }

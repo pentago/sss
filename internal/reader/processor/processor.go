@@ -55,7 +55,7 @@ func ProcessFeedEntries(store EntryStore, feed *model.Feed, user *model.User, fo
 		}
 
 		webpageBaseURL := ""
-		entry.URL = rewrite.RewriteEntryURL(feed, entry)
+		entry.URL = rewrite.EntryURL(feed, entry)
 		entryIsNew := store.IsNewEntry(feed.ID, entry.Hash)
 		contentExtractedSuccessfully := false
 		if (feed.Crawler || user.GlobalCrawler) && (forceRefresh || entryIsNew) {
@@ -92,7 +92,7 @@ func ProcessFeedEntries(store EntryStore, feed *model.Feed, user *model.User, fo
 		}
 
 		// The sanitizer should always run at the end of the process to make sure unsafe HTML is filtered out.
-		entry.Content = sanitizer.SanitizeHTML(webpageBaseURL, entry.Content, &sanitizer.SanitizerOptions{OpenLinksInNewTab: user.OpenExternalLinksInNewTab})
+		entry.Content = sanitizer.SanitizeHTML(webpageBaseURL, entry.Content, &sanitizer.Options{OpenLinksInNewTab: user.OpenExternalLinksInNewTab})
 
 		updateEntryReadingTime(store, feed, entry, entryIsNew, user)
 
@@ -108,7 +108,7 @@ func ProcessFeedEntries(store EntryStore, feed *model.Feed, user *model.User, fo
 
 // ProcessEntryWebPage downloads the entry web page and applies rewrite rules and the sanitizer.
 func ProcessEntryWebPage(feed *model.Feed, entry *model.Entry, user *model.User) error {
-	entry.URL = rewrite.RewriteEntryURL(feed, entry)
+	entry.URL = rewrite.EntryURL(feed, entry)
 
 	start := time.Now()
 	webpageBaseURL, extractedContent, scraperErr := scraper.ScrapeWebsite(newRequestBuilder(feed, user), entry.URL, feed.ScraperRules)
@@ -125,7 +125,7 @@ func ProcessEntryWebPage(feed *model.Feed, entry *model.Entry, user *model.User)
 	}
 
 	rewrite.ApplyContentRewriteRules(entry, feed.RewriteRules)
-	entry.Content = sanitizer.SanitizeHTML(webpageBaseURL, entry.Content, &sanitizer.SanitizerOptions{OpenLinksInNewTab: user.OpenExternalLinksInNewTab})
+	entry.Content = sanitizer.SanitizeHTML(webpageBaseURL, entry.Content, &sanitizer.Options{OpenLinksInNewTab: user.OpenExternalLinksInNewTab})
 
 	return nil
 }

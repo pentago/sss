@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package urlcleaner removes tracking parameters from URLs.
 package urlcleaner
 
 import (
@@ -126,16 +127,17 @@ func isTrackingParam(param string) bool {
 	return trackingParams[param]
 }
 
-func RemoveTrackingParameters(parsedFeedURL, parsedSiteURL, parsedInputUrl *url.URL) (string, error) {
-	if parsedFeedURL == nil || parsedSiteURL == nil || parsedInputUrl == nil {
+// RemoveTrackingParameters returns parsedInputURL without known tracking query parameters.
+func RemoveTrackingParameters(parsedFeedURL, parsedSiteURL, parsedInputURL *url.URL) (string, error) {
+	if parsedFeedURL == nil || parsedSiteURL == nil || parsedInputURL == nil {
 		return "", errors.New("urlcleaner: one of the URLs is nil")
 	}
 
-	if parsedInputUrl.RawQuery == "" {
-		return parsedInputUrl.String(), nil
+	if parsedInputURL.RawQuery == "" {
+		return parsedInputURL.String(), nil
 	}
 
-	queryParams := parsedInputUrl.Query()
+	queryParams := parsedInputURL.Query()
 	hasTrackers := false
 	feedHostname := parsedFeedURL.Hostname()
 	siteHostname := parsedSiteURL.Hostname()
@@ -164,11 +166,11 @@ func RemoveTrackingParameters(parsedFeedURL, parsedSiteURL, parsedInputUrl *url.
 
 	// Do not modify the URL if there are no tracking parameters
 	if !hasTrackers {
-		return parsedInputUrl.String(), nil
+		return parsedInputURL.String(), nil
 	}
 
-	parsedInputUrl.RawQuery = queryParams.Encode()
-	cleanedURL := strings.TrimSuffix(parsedInputUrl.String(), "?")
+	parsedInputURL.RawQuery = queryParams.Encode()
+	cleanedURL := strings.TrimSuffix(parsedInputURL.String(), "?")
 
 	return cleanedURL, nil
 }

@@ -37,7 +37,7 @@ type Feed struct {
 	KeeplistRules               string    `json:"keeplist_rules"`
 	BlockFilterEntryRules       string    `json:"block_filter_entry_rules"`
 	KeepFilterEntryRules        string    `json:"keep_filter_entry_rules"`
-	UrlRewriteRules             string    `json:"urlrewrite_rules"`
+	URLRewriteRules             string    `json:"urlrewrite_rules"`
 	UserAgent                   string    `json:"user_agent"`
 	Cookie                      string    `json:"cookie"`
 	Username                    string    `json:"username"`
@@ -157,7 +157,7 @@ type FeedCreationRequest struct {
 	KeeplistRules               string `json:"keeplist_rules"`
 	BlockFilterEntryRules       string `json:"block_filter_entry_rules"`
 	KeepFilterEntryRules        string `json:"keep_filter_entry_rules"`
-	UrlRewriteRules             string `json:"urlrewrite_rules"`
+	URLRewriteRules             string `json:"urlrewrite_rules"`
 	ProxyURL                    string `json:"proxy_url"`
 }
 
@@ -179,7 +179,7 @@ type FeedModificationRequest struct {
 	ScraperRules                *string `json:"scraper_rules"`
 	RewriteRules                *string `json:"rewrite_rules"`
 	BlocklistRules              *string `json:"blocklist_rules"`
-	UrlRewriteRules             *string `json:"urlrewrite_rules"`
+	URLRewriteRules             *string `json:"urlrewrite_rules"`
 	KeeplistRules               *string `json:"keeplist_rules"`
 	BlockFilterEntryRules       *string `json:"block_filter_entry_rules"`
 	KeepFilterEntryRules        *string `json:"keep_filter_entry_rules"`
@@ -226,8 +226,8 @@ func (f *FeedModificationRequest) Patch(feed *Feed) {
 		feed.RewriteRules = *f.RewriteRules
 	}
 
-	if f.UrlRewriteRules != nil {
-		feed.UrlRewriteRules = *f.UrlRewriteRules
+	if f.URLRewriteRules != nil {
+		feed.URLRewriteRules = *f.URLRewriteRules
 	}
 
 	if f.KeeplistRules != nil {

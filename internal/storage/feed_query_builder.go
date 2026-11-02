@@ -177,7 +177,7 @@ func (f *FeedQueryBuilder) GetFeeds() (model.Feeds, error) {
 			&feed.ParsingErrorMsg,
 			&feed.ScraperRules,
 			&feed.RewriteRules,
-			&feed.UrlRewriteRules,
+			&feed.URLRewriteRules,
 			&feed.BlocklistRules,
 			&feed.KeeplistRules,
 			&feed.BlockFilterEntryRules,

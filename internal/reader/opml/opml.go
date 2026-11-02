@@ -47,7 +47,7 @@ type outline struct {
 
 	ScraperRules                string `xml:"sss:scraperRules,attr,omitempty"`
 	RewriteRules                string `xml:"sss:rewriteRules,attr,omitempty"`
-	UrlRewriteRules             string `xml:"sss:urlRewriteRules,attr,omitempty"`
+	URLRewriteRules             string `xml:"sss:urlRewriteRules,attr,omitempty"`
 	BlocklistRules              string `xml:"sss:blocklistRules,attr,omitempty"`
 	KeeplistRules               string `xml:"sss:keeplistRules,attr,omitempty"`
 	BlockFilterEntryRules       string `xml:"sss:blockFilterEntryRules,attr,omitempty"`
@@ -83,7 +83,7 @@ func (o *outline) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 		case "rewriteRules":
 			o.RewriteRules = v
 		case "urlRewriteRules":
-			o.UrlRewriteRules = v
+			o.URLRewriteRules = v
 		case "blocklistRules":
 			o.BlocklistRules = v
 		case "keeplistRules":
@@ -154,7 +154,7 @@ func feedsFromOutlines(outlines []outline, category string) []*model.Feed {
 			Category:                    &model.Category{Title: category},
 			ScraperRules:                o.ScraperRules,
 			RewriteRules:                o.RewriteRules,
-			UrlRewriteRules:             o.UrlRewriteRules,
+			URLRewriteRules:             o.URLRewriteRules,
 			BlocklistRules:              o.BlocklistRules,
 			KeeplistRules:               o.KeeplistRules,
 			BlockFilterEntryRules:       o.BlockFilterEntryRules,
@@ -197,7 +197,7 @@ func Serialize(feeds []*model.Feed) (string, error) {
 			Type:                        "rss",
 			ScraperRules:                f.ScraperRules,
 			RewriteRules:                f.RewriteRules,
-			UrlRewriteRules:             f.UrlRewriteRules,
+			URLRewriteRules:             f.URLRewriteRules,
 			BlocklistRules:              f.BlocklistRules,
 			KeeplistRules:               f.KeeplistRules,
 			BlockFilterEntryRules:       f.BlockFilterEntryRules,

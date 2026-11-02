@@ -7,6 +7,7 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -250,7 +251,7 @@ func serve(srv *http.Server, ln net.Listener, useTLS bool) {
 		} else {
 			err = srv.Serve(ln)
 		}
-		if err != http.ErrServerClosed {
+		if !errors.Is(err, http.ErrServerClosed) {
 			slog.Error("HTTP server failed", slog.String("listen_address", srv.Addr), slog.Any("error", err))
 			os.Exit(1)
 		}

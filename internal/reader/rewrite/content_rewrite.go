@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package rewrite applies content and URL rewrite rules to feed entries.
 package rewrite
 
 import (
@@ -61,7 +62,7 @@ var knownRules = map[string]ruleSpec{
 		entry.Content = addYoutubeVideoUsingInvidiousPlayer(entryURL, entry.Content)
 	}},
 	"add_youtube_video_from_id": {apply: func(_ string, entry *model.Entry, _ []string) {
-		entry.Content = addYoutubeVideoFromId(entry.Content)
+		entry.Content = addYoutubeVideoFromID(entry.Content)
 	}},
 	"add_pdf_download_link": {apply: func(entryURL string, entry *model.Entry, _ []string) {
 		entry.Content = addPDFLink(entryURL, entry.Content)
@@ -135,6 +136,7 @@ func (rule rule) applyRule(entryURL string, entry *model.Entry) {
 	spec.apply(entryURL, entry, rule.args)
 }
 
+// ApplyContentRewriteRules rewrites entry content using customRewriteRules, or the predefined rules for the entry domain when empty.
 func ApplyContentRewriteRules(entry *model.Entry, customRewriteRules string) {
 	rulesList := predefinedRules[urllib.DomainWithoutWWW(entry.URL)]
 	if customRewriteRules != "" {

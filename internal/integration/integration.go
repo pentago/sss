@@ -1,6 +1,7 @@
 // Copyright The Miniflux Authors. Modified by The sss Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package integration dispatches entries to the third-party services enabled by a user.
 package integration
 
 import (

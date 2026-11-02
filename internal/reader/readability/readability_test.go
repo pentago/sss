@@ -575,7 +575,7 @@ func TestRemoveUnlikelyCandidatesPreservation(t *testing.T) {
 			}
 
 			// Count specific elements before removal
-			beforeHtml := doc.Find("html").Length()
+			beforeHTML := doc.Find("html").Length()
 			beforeBody := doc.Find("body").Length()
 			beforePre := doc.Find("pre").Length()
 			beforeCode := doc.Find("code").Length()
@@ -583,14 +583,14 @@ func TestRemoveUnlikelyCandidatesPreservation(t *testing.T) {
 			removeUnlikelyCandidates(doc)
 
 			// Count specific elements after removal
-			afterHtml := doc.Find("html").Length()
+			afterHTML := doc.Find("html").Length()
 			afterBody := doc.Find("body").Length()
 			afterPre := doc.Find("pre").Length()
 			afterCode := doc.Find("code").Length()
 
 			// These elements should always be preserved
-			if beforeHtml != afterHtml {
-				t.Errorf("HTML elements were removed: before=%d, after=%d", beforeHtml, afterHtml)
+			if beforeHTML != afterHTML {
+				t.Errorf("HTML elements were removed: before=%d, after=%d", beforeHTML, afterHTML)
 			}
 			if beforeBody != afterBody {
 				t.Errorf("Body elements were removed: before=%d, after=%d", beforeBody, afterBody)
@@ -1794,13 +1794,13 @@ func TestTransformMisusedDivsIntoParagraphs(t *testing.T) {
 			transformMisusedDivsIntoParagraphs(doc)
 
 			// Extract the body content
-			bodyHtml, err := doc.Find("body").Html()
+			bodyHTML, err := doc.Find("body").Html()
 			if err != nil {
 				t.Fatalf("Failed to get body HTML: %v", err)
 			}
 
 			// Clean up whitespace for comparison
-			result := strings.TrimSpace(bodyHtml)
+			result := strings.TrimSpace(bodyHTML)
 			expected := strings.TrimSpace(tc.expected)
 
 			if result != expected {
@@ -1822,10 +1822,10 @@ func TestTransformMisusedDivsIntoParagraphsEdgeCases(t *testing.T) {
 		// Should not panic or cause issues
 		transformMisusedDivsIntoParagraphs(doc)
 
-		bodyHtml, _ := doc.Find("body").Html()
+		bodyHTML, _ := doc.Find("body").Html()
 		expected := `<p>No divs here</p><span>Just other elements</span>`
 
-		if strings.TrimSpace(bodyHtml) != expected {
+		if strings.TrimSpace(bodyHTML) != expected {
 			t.Errorf("Expected no changes to document without divs")
 		}
 	})
@@ -1841,8 +1841,8 @@ func TestTransformMisusedDivsIntoParagraphsEdgeCases(t *testing.T) {
 		// Should not panic with empty document
 		transformMisusedDivsIntoParagraphs(doc)
 
-		bodyHtml, _ := doc.Find("body").Html()
-		if strings.TrimSpace(bodyHtml) != "" {
+		bodyHTML, _ := doc.Find("body").Html()
+		if strings.TrimSpace(bodyHTML) != "" {
 			t.Errorf("Expected empty body to remain empty")
 		}
 	})
@@ -1857,13 +1857,13 @@ func TestTransformMisusedDivsIntoParagraphsEdgeCases(t *testing.T) {
 
 		transformMisusedDivsIntoParagraphs(doc)
 
-		bodyHtml, _ := doc.Find("body").Html()
+		bodyHTML, _ := doc.Find("body").Html()
 		// The outer divs contain other divs (matches regex), so they remain divs
 		// Only the innermost div with just text gets converted to p
 		expected := `<div><div><p>Deep text</p></div></div>`
 
-		if strings.TrimSpace(bodyHtml) != expected {
-			t.Errorf("Expected nested div transformation\nGot: %s\nExpected: %s", strings.TrimSpace(bodyHtml), expected)
+		if strings.TrimSpace(bodyHTML) != expected {
+			t.Errorf("Expected nested div transformation\nGot: %s\nExpected: %s", strings.TrimSpace(bodyHTML), expected)
 		}
 	})
 
