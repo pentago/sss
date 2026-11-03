@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{.title}} - sss</title>
 <meta name="color-scheme" content="{{.colorScheme}}">
-<link rel="manifest" href="{{route "/manifest.json"}}">
+<link rel="manifest" href="{{route "/manifest.json"}}" crossorigin="use-credentials">
 <link rel="icon" href="{{route "/favicon.ico"}}">
 <link rel="apple-touch-icon" href="{{appIconURL "apple-touch-icon.png"}}">
 {{range .stylesheets}}<link rel="stylesheet" href="{{.Href}}"{{with .Media}} media="{{.}}"{{end}}>
