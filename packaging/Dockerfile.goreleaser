@@ -1,19 +1,20 @@
 FROM alpine:3.24 AS build
 
-RUN apk add --no-cache ca-certificates
-
-RUN mkdir -p /out/config && printf 'LISTEN_ADDR=0.0.0.0:8080\nDATABASE_PATH=/config/sss.db\nRUN_MIGRATIONS=1\n' > /out/config/sss.conf
+RUN mkdir -p /out/config && cat <<'EOF' > /out/config/sss.conf
+LISTEN_ADDR=0.0.0.0:8080
+DATABASE_PATH=/config/sss.db
+RUN_MIGRATIONS=1
+EOF
 
 FROM scratch
 ARG TARGETPLATFORM
 
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY $TARGETPLATFORM/sss /sss
 COPY --from=build --chown=65534:65534 /out/config /config
+COPY $TARGETPLATFORM/sss /sss
 
-EXPOSE 8080
-
-VOLUME /config
 USER 65534
+VOLUME /config
+EXPOSE 8080
 HEALTHCHECK CMD ["/sss","-c","/config/sss.conf","-healthcheck","auto"]
 ENTRYPOINT ["/sss","-c","/config/sss.conf"]
