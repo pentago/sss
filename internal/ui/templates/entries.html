@@ -1,5 +1,5 @@
 {{define "content"}}
-<h1>{{if eq .page "tag"}}Tag: {{end}}{{.title}} <data value="{{.total}}">({{.total}})</data></h1>
+{{if ne .page "unread"}}<h1>{{if eq .page "tag"}}Tag: {{end}}{{.title}} <data value="{{.total}}">({{.total}})</data></h1>{{end}}
 {{if eq .page "search"}}
 <form role="search" action="{{route "/search"}}"><fieldset><legend>Search</legend>
 <label>Query <input type="search" name="q" value="{{.searchQuery}}" required{{if not .searchQuery}} autofocus{{end}}></label>

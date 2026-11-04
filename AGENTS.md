@@ -169,7 +169,7 @@ The user unit may be tested live, with the user's approval:
 - **Themes:**
   - `model.ThemeDefault = "dark_serif"`. Values are `{light,dark,oled,readability_light,system,time,time_oled,time_dark_oled}_{serif,sans_serif}` or `none`.
   - The `time_*` themes (`time`, `time_oled`, `time_dark_oled`) are resolved on the server by `User.ThemeAt`; `system_*` uses CSS `media` queries.
-  - `light.css`, `dark.css`, `oled.css` and `readability_light.css` define the color variables. A new variable must be added to all four. Only `readability_light.css` also has rules: its red content links (list titles, entry content), hidden feed icons in lists, white top borders on list items, and the top shadow (`body::before`).
+  - `light.css`, `dark.css`, `oled.css` and `readability_light.css` define the color variables. A new variable must be added to all four. Only `readability_light.css` also has rules: larger black list titles, red content links, faded read titles and meta lines (lists only, via `:not(:has(> section))`), hidden feed icons in lists, white top borders on list items, italic gray blockquotes, and the top and bottom shadows (`body::before`/`body::after`).
 
 ## Important Files
 - `main.go`: flags, startup order, `runDaemon`, `setupLogger`, `healthCheck`.

@@ -22,7 +22,7 @@ Key differences from Miniflux:
 - **Classless semantic HTML.** Pages use only plain elements, with no `class`, `id` or `style` attributes, so themes are easier to write CSS for.
 - **Mark as read on scroll** - optional. It marks entries as read when they scroll out of view.
 - **Minimal JavaScript.** Actions are plain HTML forms. One tiny always-loaded script reloads pages the browser restores from its back/forward cache, and sends "Read page"/"Read all" without adding history entries, so going back doesn't leave already-read entries listed. "Read all" on a feed or category then returns to Feeds or Categories. On touch screens, long-pressing an entry in a list turns it into "▲ Mark all above as read"; tapping it marks the unread entries above as read without confirmation. Keyboard shortcuts, swipe gestures, gesture navigation, mark-as-read-on-scroll, the offline service worker and passkeys are optional.
-- **Themes:** dark_serif theme by default. sss adds `oled_*` (true black), `readability_light_*` (after the Readability iOS app), `time_*` / `time_oled_*` / `time_dark_oled_*` (switch by time of day, picked by the server) and `none` (Custom CSS only), see [Themes](#themes).
+- **Themes:** dark_serif theme by default. sss adds `oled_*` (true black), `readability_light_*`, `time_*` / `time_oled_*` / `time_dark_oled_*` (switch by time of day, picked by the server) and `none` (Custom CSS only), see [Themes](#themes).
 - **Readability:** Bundled-in amazing [Noto fonts](https://fonts.google.com/noto) (Latin and Latin Extended; other scripts fall back to system fonts).
 - **Simpler header:** Top of reader is now less crowded, with links collapsable into a menu on narrow screens.
 - **Minimal entry lists:** Less crowded lists with focus on content and less misclicks.
@@ -128,7 +128,7 @@ User settings → Theme. A theme is a color scheme followed by `_serif` or `_san
 
 - `light_*` / `dark_*`: the built-in reference themes.
 - `oled_*`: true black background with dimmed text, for OLED screens and night reading.
-- `readability_light_*`: revives the reading experience of the late Readability iOS app: gray paper, red content links and stars, tan dividers, no feed icons in lists and a soft shadow along the top.
+- `readability_light_*`: revives the newspaper-ish reading experience of the late Readability iOS app: gray paper, wine-red accent, tan dividers, iconsless lists and a soft shadows.
 - `system_*`: follows the device's light or dark preference (`prefers-color-scheme`).
 - `time_*`: light between two hours of the day in your timezone, dark otherwise. Both hours are configurable. The server picks the theme, so no JavaScript is needed.
 - `time_oled_*`: like `time_*`, but true black OLED at night.
