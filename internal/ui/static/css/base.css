@@ -683,4 +683,9 @@ dialog h2 {
     main > article > header p {
         font-size: 0.8125rem;
     }
+
+    /* Content images span the column; height: auto (above) keeps their aspect ratio. */
+    main > article > section img {
+        width: 100%;
+    }
 }
