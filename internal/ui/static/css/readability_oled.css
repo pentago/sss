@@ -1,0 +1,95 @@
+/* sss Readability OLED theme: readability_dark.css on true black, with dimmer
+ * text and a dimmer wine red. Same extra rules as the light theme, except
+ * content links are not bold; the shadows are invisible on black but kept so
+ * the readability_* files stay in sync. Layout lives in base.css. */
+
+:root {
+    color-scheme: dark;
+
+    /* Page */
+    --bg: #000;
+    --fg: #b0aba2;
+    --muted: #9a6665;
+    --border: #2a2721;
+    --surface: #121214;   /* code, table headers, dialogs */
+    --selected: #1f1c15;  /* keyboard-selected list item */
+
+    /* Links and controls */
+    --link: #7a7a7a;
+    --accent: #7a7a7a;    /* focus rings, current nav item */
+    --button-bg: #5a2b2d;
+    --button-fg: #d8d2ca;
+    --input-bg: #0a0a0a;
+
+    /* Messages */
+    --alert-fg: #e0a49e;
+    --alert-bg: #2a1513;
+    --status-fg: #93c4a3;
+    --status-bg: #142419;
+    --star: #9a6665;
+}
+
+/* Article list titles font size */
+main > article > header h2 {
+    font-size: 1rem;
+}
+
+/* Article list titles */
+main > article > header h2 a {
+    color: var(--fg);
+}
+
+/* Links in article content */
+main > article > section a {
+    color: var(--muted);
+}
+
+/* Read article titles */
+main > article[data-status="read"] > header h2 a,
+main > article[data-unread="0"] > header h2 a {
+    color: color-mix(in srgb, var(--fg) 25%, transparent);
+}
+
+/* Read article feed name and times: same colors, as transparent as the
+ * titles (hex alpha 40 = 25%) */
+main > article[data-status="read"]:not(:has(> section)) > header p {
+    opacity: 0.25;
+}
+
+/* Hidden feed favicons */
+main > article:not(:has(> section)) > header img {
+    display: none;
+}
+
+/* Article list top border: a faint highlight, like the light theme's white */
+main > article {
+    border-top: 1px solid #161616;
+}
+
+/* Article blockquotes */
+main > article > section blockquote {
+    color: var(--link);
+    font-style: italic;
+    border-left-color: var(--muted);
+}
+
+/* Top and bottom shadows: a strip just outside the viewport casts inward */
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: 10px;
+    box-shadow: 0 0 30px 10px #00000080;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+body::before {
+    top: -10px;
+}
+
+body::after {
+    bottom: -10px;
+}

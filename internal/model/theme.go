@@ -19,6 +19,7 @@ const (
 	SchemeOLED             = "oled"              // True black variant of the dark scheme, for OLED screens.
 	SchemeReadabilityLight = "readability_light" // Light scheme after the Readability iOS app.
 	SchemeReadabilityDark  = "readability_dark"  // Night counterpart of SchemeReadabilityLight.
+	SchemeReadabilityOLED  = "readability_oled"  // True black variant of SchemeReadabilityDark.
 	SchemeTime             = "time"              // Light between ThemeLightHour and ThemeDarkHour, dark otherwise.
 	SchemeTimeOLED         = "time_oled"         // Like "time", but the OLED scheme at night.
 	SchemeTimeDarkOLED     = "time_dark_oled"    // Like "time", but dark by day and OLED at night.
@@ -37,6 +38,8 @@ func Themes() map[string]string {
 		"readability_light_sans_serif": "Readability light – Sans-serif",
 		"readability_dark_serif":       "Readability dark – Serif",
 		"readability_dark_sans_serif":  "Readability dark – Sans-serif",
+		"readability_oled_serif":       "Readability OLED – Serif",
+		"readability_oled_sans_serif":  "Readability OLED – Sans-serif",
 		"system_serif":                 "System – Serif",
 		"system_sans_serif":            "System – Sans-serif",
 		"time_serif":                   "Light by day, dark by night – Serif",
