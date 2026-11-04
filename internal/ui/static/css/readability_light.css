@@ -1,14 +1,15 @@
 /* sss Readability light theme, after the Readability iOS app. Unlike the
- * other theme files it adds a few rules: black list titles, red content links,
- * faded read entries, no feed icons in lists, italic blockquotes, and shadows
- * along the top and bottom of the viewport. Layout lives in base.css. */
+ * other theme files it adds a few rules: larger black list titles, bold red
+ * content links, faded read entries, no feed icons and white top borders in
+ * lists, italic gray blockquotes, and shadows along the top and bottom of the
+ * viewport. Layout lives in base.css. */
 
 :root {
     color-scheme: light;
 
     /* Page */
     --bg: #e6e7ea;
-    --fg: #000000;
+    --fg: #000;
     --muted: #a00204;
     --border: #d2cbb9;
     --surface: #dedfe5;   /* code, table headers, dialogs */
@@ -29,31 +30,32 @@
     --star: #a00204;
 }
 
-/* Article list titles  font size */
+/* Article list titles font size */
 main > article > header h2 {
-  font-size: 1rem;
+    font-size: 1rem;
 }
 
 /* Article list titles */
-main > article > header h2 > a {
-  color: #000000;
+main > article > header h2 a {
+    color: var(--fg);
 }
 
 /* Links in article content */
 main > article > section a {
-  color: #a00204;
-  font-weight: bold;
+    color: var(--muted);
+    font-weight: bold;
 }
 
-/* Read article titles  */
+/* Read article titles */
 main > article[data-status="read"] > header h2 a,
 main > article[data-unread="0"] > header h2 a {
-  color: #00000040;
+    color: #00000040;
 }
 
-/* Read article feed name and times: same colors, as transparent as the titles (hex alpha 40 = 25%) */
+/* Read article feed name and times: same colors, as transparent as the
+ * titles (hex alpha 40 = 25%) */
 main > article[data-status="read"]:not(:has(> section)) > header p {
-  opacity: 0.25;
+    opacity: 0.25;
 }
 
 /* Hidden feed favicons */
@@ -68,9 +70,9 @@ main > article {
 
 /* Article blockquotes */
 main > article > section blockquote {
-  color: #5c5c5c;
-  font-style: italic;
-  border-left-color: #a00204;
+    color: var(--link);
+    font-style: italic;
+    border-left-color: var(--muted);
 }
 
 /* Top and bottom shadows: a strip just outside the viewport casts inward */
