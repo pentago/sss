@@ -82,6 +82,7 @@ func TestPageAssets(t *testing.T) {
 		{"oled serif", &model.User{Theme: "oled_serif", GestureNav: "none"}, noon, []string{"base.css", "oled.css", "serif.css"}, "dark", nil},
 		{"readability light", &model.User{Theme: "readability_light_serif", GestureNav: "none"}, noon, []string{"base.css", "readability_light.css", "serif.css"}, "light", nil},
 		{"readability dark", &model.User{Theme: "readability_dark_sans_serif", GestureNav: "none"}, noon, []string{"base.css", "readability_dark.css"}, "dark", nil},
+		{"readability oled", &model.User{Theme: "readability_oled_serif", GestureNav: "none"}, noon, []string{"base.css", "readability_oled.css", "serif.css"}, "dark", nil},
 		{"time day", timeUser, noon, []string{"base.css", "light.css"}, "light", nil},
 		{"time night", timeUser, night, []string{"base.css", "dark.css"}, "dark", nil},
 		{"time oled day", oledTimeUser, noon, []string{"base.css", "light.css"}, "light", nil},

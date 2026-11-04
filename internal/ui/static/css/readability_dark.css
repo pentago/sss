@@ -8,7 +8,7 @@
 
     /* Page */
     --bg: #232427;
-    --fg: #cfcac1;
+    --fg: #b8b3aa;
     --muted: #b07574;
     --border: #3b372e;
     --surface: #2b2c30;   /* code, table headers, dialogs */
@@ -47,7 +47,7 @@ main > article > section a {
 /* Read article titles */
 main > article[data-status="read"] > header h2 a,
 main > article[data-unread="0"] > header h2 a {
-    color: #cfcac140;
+    color: color-mix(in srgb, var(--fg) 25%, transparent);
 }
 
 /* Read article feed name and times: same colors, as transparent as the
