@@ -1,0 +1,55 @@
+/* sss Readability light theme, after the Readability iOS app. Unlike the
+ * other theme files it adds a few rules: content links in red, no feed
+ * icons in lists, and a shadow along the top of the viewport. Layout lives
+ * in base.css. */
+:root {
+    color-scheme: light;
+
+    /* Page */
+    --bg: #e6e7ea;
+    --fg: #1f2023;
+    --muted: #a1a1a2;
+    --border: #d2cbb9;
+    --surface: #dedfe5;   /* code, table headers, dialogs */
+    --selected: #f5efdc;  /* keyboard-selected list item */
+
+    /* Links and controls */
+    --link: #5c5c5c;
+    --accent: #5c5c5c;    /* focus rings, current nav item */
+    --button-bg: #a00204;
+    --button-fg: #fff;
+    --input-bg: #f7f7f9;
+
+    /* Messages */
+    --alert-fg: #9b1c1c;
+    --alert-bg: #f6e1e1;
+    --status-fg: #1e5b32;
+    --status-bg: #dcefe1;
+    --star: #a00204;
+}
+
+/* List titles and links in entry content. Read entries keep base.css's muted titles. */
+main > article > header h2 > a,
+main > article > section a {
+    color: #a00204;
+}
+
+main > article:not(:has(> section)) > header img {
+    display: none;
+}
+
+main > article {
+    border-top: 1px solid #fff;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: -10px;
+    left: 0;
+    right: 0;
+    height: 10px;
+    box-shadow: 0 0 25px 10px rgb(0 0 0 / 0.4);
+    pointer-events: none;
+    z-index: 9999;
+}
