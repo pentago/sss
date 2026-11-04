@@ -239,13 +239,13 @@ func pageAssets(user *model.User, sessionTheme string, now time.Time) (styles []
 	scheme, serif := themeUser.ThemeAt(now)
 	css := func(name string) string { return route("/stylesheets/%s/%s", assets["css/"+name].checksum, name) }
 	switch scheme {
-	case model.SchemeLight, model.SchemeDark, model.SchemeOLED, model.SchemeReadability:
+	case model.SchemeLight, model.SchemeDark, model.SchemeOLED, model.SchemeReadabilityLight, model.SchemeReadabilityDark:
 		styles = []stylesheet{{Href: css("base.css")}, {Href: css(scheme + ".css")}}
 		colorScheme = scheme
-		switch scheme { // "oled" and "readability_light" are not color-scheme keywords.
-		case model.SchemeOLED:
+		switch scheme { // "oled" and "readability_*" are not color-scheme keywords.
+		case model.SchemeOLED, model.SchemeReadabilityDark:
 			colorScheme = model.SchemeDark
-		case model.SchemeReadability:
+		case model.SchemeReadabilityLight:
 			colorScheme = model.SchemeLight
 		}
 	case model.ThemeNone:
