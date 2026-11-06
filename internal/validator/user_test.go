@@ -72,6 +72,7 @@ func TestValidateUserModification(t *testing.T) {
 		{"invalid font hosts", model.UserModificationRequest{ExternalFontHosts: new("not a/domain")}, true},
 		{"short password", model.UserModificationRequest{Password: new("short")}, true},
 		{"password", model.UserModificationRequest{Password: new("longenough")}, false},
+		{"rename to invalid username", model.UserModificationRequest{Username: new("bad name")}, true},
 	}
 	for _, tc := range tests {
 		if err := ValidateUserModification(nil, 0, &tc.req); (err != nil) != tc.wantErr {

@@ -71,6 +71,7 @@ func (h *handler) withSession(next http.Handler) http.Handler {
 			return
 		}
 		public := isPublicRoute(r.URL.Path)
+		persisted := session != nil
 		if session == nil {
 			if !public {
 				response.HTMLRedirect(w, r, loginRedirectURL(r.RequestURI))
@@ -78,11 +79,16 @@ func (h *handler) withSession(next http.Handler) http.Handler {
 			}
 			var secret string
 			session, secret = model.NewWebSession(r.UserAgent(), request.ClientIP(r))
-			if err := h.store.CreateWebSession(session); err != nil {
-				response.HTMLServerError(w, r, err)
-				return
+			// Other public routes only render pages or expect a session started
+			// earlier, so an in-memory session is enough for them.
+			if isSessionStartRoute(r) {
+				if err := h.store.CreateWebSession(session); err != nil {
+					response.HTMLServerError(w, r, err)
+					return
+				}
+				setSessionCookie(w, r, session, secret)
+				persisted = true
 			}
-			setSessionCookie(w, r, session, secret)
 		}
 
 		r = h.withUser(r, session)
@@ -103,7 +109,9 @@ func (h *handler) withSession(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r)
-		h.saveSession(session)
+		if persisted {
+			h.saveSession(session)
+		}
 	})
 }
 
@@ -154,7 +162,14 @@ func authenticateWebSession(w http.ResponseWriter, r *http.Request, store *stora
 	session := request.WebSession(r)
 	session.SetUser(user)
 	oldID, secret := session.Rotate()
-	if err := store.RotateWebSession(oldID, session); err != nil {
+	var err error
+	if session.CreatedAt.IsZero() {
+		// An in-memory session (e.g. a login form posted without a prior visit) has no row yet.
+		err = store.CreateWebSession(session)
+	} else {
+		err = store.RotateWebSession(oldID, session)
+	}
+	if err != nil {
 		return err
 	}
 	setSessionCookie(w, r, session, secret)
@@ -202,6 +217,23 @@ func isPublicRoute(path string) bool {
 	}
 	return strings.HasPrefix(path, "/oauth2/") && (strings.HasSuffix(path, "/redirect") || strings.HasSuffix(path, "/callback")) ||
 		strings.HasPrefix(path, "/share/")
+}
+
+// isSessionStartRoute reports whether the request starts state a later request must
+// find (WebAuthn challenge, OAuth2 state), so a visitor without a session needs one persisted.
+// sss: unlike upstream, the login page isn't one: without a CSRF token, signing in needs no
+// earlier state, and authenticateWebSession persists the session.
+func isSessionStartRoute(r *http.Request) bool {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		return false
+	}
+	switch path := r.URL.Path; {
+	case path == "/webauthn/login/begin":
+		return config.Opts.WebAuthn
+	case strings.HasPrefix(path, "/oauth2/") && strings.HasSuffix(path, "/redirect"):
+		return config.Opts.OAuth2Provider != ""
+	}
+	return false
 }
 
 func loginRedirectURL(requestURI string) string {

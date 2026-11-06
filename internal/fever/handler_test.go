@@ -118,6 +118,11 @@ func TestFever(t *testing.T) {
 	if unread := call("unread_item_ids", url.Values{})["unread_item_ids"]; unread == "" {
 		t.Fatal("before was ignored")
 	}
+	// Group 0 with before must not mark entries that arrived after the client's last sync.
+	call("", url.Values{"mark": {"group"}, "as": {"read"}, "id": {"0"}, "before": {strconv.FormatInt(now.Add(-time.Hour).Unix(), 10)}})
+	if unread := call("unread_item_ids", url.Values{})["unread_item_ids"]; unread == "" {
+		t.Fatal("group 0 ignored before")
+	}
 	call("", url.Values{"mark": {"group"}, "as": {"read"}, "id": {"0"}})
 	if unread := call("unread_item_ids", url.Values{})["unread_item_ids"]; unread != "" {
 		t.Fatalf("group 0 should mark all read, got %v", unread)

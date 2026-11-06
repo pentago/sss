@@ -10,8 +10,8 @@
       <td>{{.Username}}</td>
       <td>{{if .IsAdmin}}Yes{{else}}No{{end}}</td>
       <td>{{with .LastLoginAt}}<time datetime="{{isodate .}}" title="{{date $.user.Timezone .}}">{{elapsed $.user.Timezone .}}</time>{{else}}Never{{end}}</td>
-      <td><a href="{{route "/users/%d/edit" .ID}}">Edit</a>
-        {{if ne .ID $.user.ID}}<details><summary>Remove</summary><form method="post" action="{{route "/users/%d/remove" .ID}}"><button>Confirm removal</button></form></details>{{end}}</td>
+      <td>{{if ne .ID $.user.ID}}<a href="{{route "/users/%d/edit" .ID}}">Edit</a>
+        <details><summary>Remove</summary><form method="post" action="{{route "/users/%d/remove" .ID}}"><button>Confirm removal</button></form></details>{{end}}</td>
     </tr>
   {{end}}
   </tbody>
