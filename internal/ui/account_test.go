@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -102,6 +104,31 @@ func TestLogin(t *testing.T) {
 	}
 }
 
+// Anonymous page views (login page, shared entries, failed logins) must not
+// store a web session each; only flows that need state across requests do.
+func TestAnonymousVisitsDoNotPersistSessions(t *testing.T) {
+	h, _ := newAccountTestServer(t, "WEBAUTHN=1", "BASE_URL=http://localhost")
+	for _, r := range []*http.Request{
+		httptest.NewRequest(http.MethodGet, "/", nil),
+		httptest.NewRequest(http.MethodGet, "/share/unknown", nil),
+		httptest.NewRequest(http.MethodPost, "/webauthn/login/begin", nil),
+	} {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		if c := sessionCookie(w); c != nil {
+			t.Errorf("%s %s set a session cookie", r.Method, r.URL)
+		}
+	}
+	if w := postForm(h, "/login", url.Values{"username": {"alice"}, "password": {"wrong"}}); sessionCookie(w) != nil {
+		t.Error("failed login set a session cookie")
+	}
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/webauthn/login/begin", nil))
+	if sessionCookie(w) == nil {
+		t.Errorf("WebAuthn login challenge did not persist a session: code %d", w.Code)
+	}
+}
+
 func TestLoginRedirect(t *testing.T) {
 	config.Opts, _ = config.Parse(nil)
 	user := &model.User{DefaultHomePage: "unread"}
@@ -193,6 +220,53 @@ func TestAboutConfigAdminOnly(t *testing.T) {
 	}
 	if body := about(); strings.Contains(body, "Global configuration options") {
 		t.Fatal("non-admin sees the config")
+	}
+}
+
+// A stolen admin session must not change the owner's password without the current one.
+func TestAdminCannotEditSelf(t *testing.T) {
+	h, store := newAccountTestServer(t)
+	c := login(t, h)
+	alice, _ := store.UserByUsername("alice")
+	path := "/users/" + strconv.FormatInt(alice.ID, 10) + "/update"
+	w := postForm(h, path, url.Values{"username": {"alice"}, "password": {"hijacked1"}, "confirmation": {"hijacked1"}, "is_admin": {"on"}}, c)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("self update: code %d", w.Code)
+	}
+	if store.CheckPassword("alice", "secret123") != nil {
+		t.Fatal("password was changed through the admin form")
+	}
+}
+
+// Admins must keep their role when the provider only puts the group claim in the ID token.
+func TestOIDCProfileGroups(t *testing.T) {
+	user := map[string]any{"preferred_username": "alice"}
+	with := func(m map[string]any, v any) map[string]any {
+		c := map[string]any{"groups": v}
+		for k, x := range m {
+			c[k] = x
+		}
+		return c
+	}
+	for name, tc := range map[string]struct {
+		info, id map[string]any
+		want     []string
+		wantErr  bool
+	}{
+		"userinfo list":      {info: with(user, []any{"admins", "users"}), id: with(nil, "ignored"), want: []string{"admins", "users"}},
+		"id token string":    {info: user, id: with(nil, "admins"), want: []string{"admins"}},
+		"missing everywhere": {info: user, id: map[string]any{}},
+		"non-string entry":   {info: with(user, []any{"admins", 1.0}), wantErr: true},
+		"wrong type":         {info: user, id: with(nil, 1.0), wantErr: true},
+	} {
+		p, err := oidcProfile("sub", tc.info, tc.id, "groups")
+		if (err != nil) != tc.wantErr {
+			t.Errorf("%s: err %v, wantErr %v", name, err, tc.wantErr)
+			continue
+		}
+		if err == nil && !slices.Equal(p.groups, tc.want) {
+			t.Errorf("%s: groups %v, want %v", name, p.groups, tc.want)
+		}
 	}
 }
 

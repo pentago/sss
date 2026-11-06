@@ -40,7 +40,11 @@ func ValidateUserModification(store Store, userID int64, changes *model.UserModi
 	if changes.Username != nil {
 		if *changes.Username == "" {
 			return errUserMandatoryFields
-		} else if store.AnotherUserExists(userID, *changes.Username) {
+		}
+		if err := validateUsername(*changes.Username); err != nil {
+			return err
+		}
+		if store.AnotherUserExists(userID, *changes.Username) {
 			return errUserAlreadyExists
 		}
 	}

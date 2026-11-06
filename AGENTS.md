@@ -149,6 +149,7 @@ The user unit may be tested live, with the user's approval:
   - On validation errors, re-render the form instead of redirecting.
   - The middleware chain is `withSecurityHeaders(CrossOriginProtection(withSession(mux)))`. CSRF protection is Go's `http.NewCrossOriginProtection()`; do not add CSRF token fields.
   - New routes go in `ui/ui.go` or `registerAccountRoutes`. If they must work without login, also add them to `isPublicRoute` or `isStaticAssetRoute`. Static assets skip the session, except `/custom.css`, `/custom.js` and `/manifest.json`, which load the user. Admin pages are wrapped in `adminOnly(...)`.
+  - Visitors without a session get an in-memory one; only `isSessionStartRoute` (WebAuthn login challenge, OAuth2 redirect) stores it and sets the cookie, and `authenticateWebSession` stores it at sign-in. A new anonymous flow that keeps state across requests must be added there.
 - **Templates (`internal/ui/templates/*.html`, embedded):**
   - Each page is built from `layout.html` + `*partials.html` + the page file, which defines `{{define "content"}}`.
   - Strings are hard-coded English. Use `{{route …}}` for internal URLs and `{{untrustedURL …}}` for feed links.

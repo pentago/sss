@@ -60,8 +60,14 @@ func (h *handler) saveUser(w http.ResponseWriter, r *http.Request) {
 	response.HTMLRedirect(w, r, route("/users"))
 }
 
+// selectedUser loads the user named by the path, rejecting the logged-in user: they change
+// their own username and password on the authentication page, which asks for the current password.
 func (h *handler) selectedUser(w http.ResponseWriter, r *http.Request) *model.User {
 	id, _ := strconv.ParseInt(r.PathValue("userID"), 10, 64)
+	if id == request.UserID(r) {
+		response.HTMLBadRequest(w, r, errors.New("you cannot edit or remove yourself"))
+		return nil
+	}
 	user, err := h.store.UserByID(id)
 	if err != nil {
 		response.HTMLServerError(w, r, err)
@@ -105,8 +111,7 @@ func (h *handler) updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if password != "" {
-		// Administrators editing their own account keep their current session.
-		if err := h.store.RemoveUserWebSessionsExcept(selected.ID, request.WebSession(r).ID); err != nil {
+		if err := h.store.RemoveUserWebSessionsExcept(selected.ID, ""); err != nil {
 			response.HTMLServerError(w, r, err)
 			return
 		}
@@ -117,10 +122,6 @@ func (h *handler) updateUser(w http.ResponseWriter, r *http.Request) {
 func (h *handler) removeUser(w http.ResponseWriter, r *http.Request) {
 	selected := h.selectedUser(w, r)
 	if selected == nil {
-		return
-	}
-	if selected.ID == request.UserID(r) {
-		response.HTMLBadRequest(w, r, errors.New("you cannot remove yourself"))
 		return
 	}
 	if err := h.store.RemoveUser(selected.ID); err != nil {

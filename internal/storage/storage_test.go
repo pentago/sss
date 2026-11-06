@@ -756,3 +756,22 @@ func TestRemoveCategoriesReassignsToUncategorized(t *testing.T) {
 		t.Fatalf("feed category = %+v, want Uncategorized (%d): %v", got.Category, uncategorized.ID, err)
 	}
 }
+
+// Google Reader labels and OPML imports must reuse a category whose title only differs by case.
+func TestCategoryByTitleIgnoresCase(t *testing.T) {
+	s := newTestStorage(t)
+	user := mustCreateUser(t, s, "alice")
+	var ids []int64
+	for _, title := range []string{"News", "news"} {
+		c, err := s.CreateCategory(user.ID, &model.CategoryCreationRequest{Title: title})
+		if err != nil {
+			t.Fatal(err)
+		}
+		ids = append(ids, c.ID)
+	}
+	for title, want := range map[string]int64{"news": ids[1], "News": ids[0], "NEWS": ids[0]} {
+		if got, err := s.CategoryByTitle(user.ID, title); err != nil || got == nil || got.ID != want {
+			t.Errorf("CategoryByTitle(%q) = %+v, %v; want ID %d", title, got, err, want)
+		}
+	}
+}

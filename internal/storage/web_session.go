@@ -17,7 +17,8 @@ const webSessionColumns = `id, secret_hash, user_id, created_at, user_agent, ip,
 // anonymousWebSessionLifetime is how long a web session that never signed in is kept.
 const anonymousWebSessionLifetime = 24 * time.Hour
 
-// CreateWebSession persists a new web session built via model.NewWebSession.
+// CreateWebSession persists a new web session built via model.NewWebSession,
+// already bound to a user when it is created at sign-in.
 func (s *Storage) CreateWebSession(session *model.WebSession) error {
 	state, err := session.MarshalState()
 	if err != nil {
@@ -25,10 +26,10 @@ func (s *Storage) CreateWebSession(session *model.WebSession) error {
 	}
 
 	err = s.db.QueryRow(`
-		INSERT INTO web_sessions (id, secret_hash, user_agent, ip, state)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO web_sessions (id, secret_hash, user_id, user_agent, ip, state)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING created_at`,
-		session.ID, session.SecretHash, session.UserAgent,
+		session.ID, session.SecretHash, session.NullUserID(), session.UserAgent,
 		sql.NullString{String: session.IP, Valid: session.IP != ""}, string(state),
 	).Scan(unixTime{&session.CreatedAt})
 	if err != nil {

@@ -273,6 +273,10 @@ func (h *handler) handleWriteItems(w http.ResponseWriter, r *http.Request) {
 	case "unread":
 		err = h.store.SetEntriesStatus(userID, []int64{entryID}, model.EntryStatusUnread)
 	case "saved":
+		// Retries and resyncs repeat saves; only a newly starred entry goes to integrations.
+		if entry.Starred {
+			break
+		}
 		if err = h.store.SetEntriesStarredState(userID, []int64{entryID}, true); err != nil {
 			break
 		}
@@ -316,10 +320,14 @@ func (h *handler) handleWriteGroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var err error
-	if groupID == 0 {
+	before := request.FormInt64Value(r, "before")
+	switch {
+	case groupID == 0 && before <= 0:
 		err = h.store.MarkAllAsRead(userID)
-	} else {
-		err = h.store.MarkCategoryAsRead(userID, groupID, time.Unix(request.FormInt64Value(r, "before"), 0))
+	case groupID == 0:
+		err = h.store.MarkAllAsReadBeforeDate(userID, time.Unix(before, 0))
+	default:
+		err = h.store.MarkCategoryAsRead(userID, groupID, time.Unix(before, 0))
 	}
 	if err != nil {
 		response.JSONServerError(w, r, err)

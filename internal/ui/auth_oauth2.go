@@ -114,11 +114,14 @@ func (p *oauth2Provider) profile(ctx context.Context, code, verifier string) (*o
 	if idToken.Subject != info.Subject {
 		return nil, errors.New("ui: oidc: id token subject does not match userinfo subject")
 	}
-	var claims map[string]any
+	var claims, idClaims map[string]any
 	if err := info.Claims(&claims); err != nil {
 		return nil, fmt.Errorf("ui: oidc: parse claims: %w", err)
 	}
-	return oidcProfile(info.Subject, claims, config.Opts.OAuth2GroupClaim)
+	if err := idToken.Claims(&idClaims); err != nil {
+		return nil, fmt.Errorf("ui: oidc: parse id token claims: %w", err)
+	}
+	return oidcProfile(info.Subject, claims, idClaims, config.Opts.OAuth2GroupClaim)
 }
 
 func googleProfile(ctx context.Context, client *http.Client) (*oauth2Profile, error) {
@@ -142,8 +145,9 @@ func googleProfile(ctx context.Context, client *http.Client) (*oauth2Profile, er
 }
 
 // oidcProfile builds a profile from userinfo claims: username is the first non-empty of
-// preferred_username, email, name, profile; groups come from groupClaim (string or string array).
-func oidcProfile(subject string, claims map[string]any, groupClaim string) (*oauth2Profile, error) {
+// preferred_username, email, name, profile; groups come from groupClaim (string or string array),
+// read from userinfo, else from the ID token, where some providers (Entra ID, Keycloak) only put it.
+func oidcProfile(subject string, claims, idClaims map[string]any, groupClaim string) (*oauth2Profile, error) {
 	p := &oauth2Profile{id: subject}
 	for _, key := range []string{"preferred_username", "email", "name", "profile"} {
 		if s, _ := claims[key].(string); s != "" {
@@ -151,22 +155,33 @@ func oidcProfile(subject string, claims map[string]any, groupClaim string) (*oau
 			break
 		}
 	}
-	if groupClaim != "" {
-		switch v := claims[groupClaim].(type) {
-		case string:
-			p.groups = []string{v}
-		case []any:
-			for _, g := range v {
-				s, ok := g.(string)
-				if !ok {
-					return nil, fmt.Errorf("ui: oidc: claim %q must only contain strings", groupClaim)
-				}
-				p.groups = append(p.groups, s)
-			}
-		}
-	}
 	if p.username == "" {
 		return nil, errors.New("ui: oidc: username is empty")
+	}
+	if groupClaim == "" {
+		return p, nil
+	}
+	raw, found := claims[groupClaim]
+	if !found {
+		raw, found = idClaims[groupClaim]
+	}
+	if !found {
+		slog.Warn("OIDC group claim not found in the ID token or user info", slog.String("claim", groupClaim), slog.String("username", p.username))
+		return p, nil
+	}
+	switch v := raw.(type) {
+	case string:
+		p.groups = []string{v}
+	case []any:
+		for _, g := range v {
+			s, ok := g.(string)
+			if !ok {
+				return nil, fmt.Errorf("ui: oidc: claim %q must only contain strings", groupClaim)
+			}
+			p.groups = append(p.groups, s)
+		}
+	default:
+		return nil, fmt.Errorf("ui: oidc: claim %q must be a string or a list of strings", groupClaim)
 	}
 	return p, nil
 }
@@ -266,6 +281,12 @@ func (h *handler) oauth2Callback(w http.ResponseWriter, r *http.Request) {
 			response.HTMLServerError(w, r, err)
 			return
 		}
+		slog.Info("Updated admin role from OIDC group membership",
+			slog.Int64("user_id", user.ID),
+			slog.String("username", user.Username),
+			slog.Bool("is_admin", isAdmin),
+			slog.String("admin_group", config.Opts.OAuth2AdminGroup),
+		)
 	}
 
 	slog.Info("User authenticated successfully using OAuth2",
